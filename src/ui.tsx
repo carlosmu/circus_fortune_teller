@@ -15,7 +15,7 @@ function uiComponent() {
   const category = fortune?.category ?? ''
   const capitalizedCategory =
     category ? category.charAt(0).toUpperCase() + category.slice(1) : ''
-  
+  const guestName = gameData.currentGuestName ?? ''
 
   return (
     <UiEntity
@@ -72,7 +72,7 @@ function uiComponent() {
                 width: '90%',
                 height: '70%'
               }}
-              value={`${capitalizedCategory}: \n${text}`}
+              value={`${guestName ? guestName + ':\n' : ''}${capitalizedCategory}: \n${text}`}
               textAlign="middle-center"
               fontSize={24}
             />

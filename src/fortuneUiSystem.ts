@@ -29,11 +29,12 @@ export function setupFortuneUiSystem() {
 
       // Cerrar la sesión y liberar al guest (local)
       gameData.currentGuestId = null
+      gameData.currentGuestName = null
       gameData.currentFortune = null
       gameData.gameState = 'LIBRE'
 
       // Avisar a todos los jugadores para que oculten el panel
-      fortuneMessageBus.emit('hide-fortune')
+      fortuneMessageBus.emit('hide-fortune', {})
 
       // TODO: Desbloquear movimiento del player guest
     }

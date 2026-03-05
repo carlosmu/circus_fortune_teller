@@ -10,6 +10,7 @@ import {
 import { Vector3, Color4 } from '@dcl/sdk/math'
 import type { Fortune } from './types'
 import { WIZARD } from './scene'
+import { gameData } from './gameState'
 
 const FORTUNE_3D_DURATION = 5 // segundos
 
@@ -68,7 +69,11 @@ export function showFortune3DText(fortune: Fortune): void {
     parent,
     position: Vector3.create(0, 0, -0.15)
   })
-  const label = `${capitalizeCategory(fortune.category)}: \n${fortune.text}`
+  const guestName = gameData.currentGuestName ?? ''
+  const categoryLabel = capitalizeCategory(fortune.category)
+  const label = guestName
+    ? `${guestName}: \n${categoryLabel}: \n${fortune.text}`
+    : `${categoryLabel}: \n${fortune.text}`
   TextShape.create(textEntity, {
     text: label,
     fontSize: 2,

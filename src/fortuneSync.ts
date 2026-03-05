@@ -10,6 +10,7 @@ export type ShowFortuneMessage = {
   text: string
   category: FortuneCategory
   guestId: string | null
+  guestName: string | null
 }
 
 /**
@@ -20,13 +21,15 @@ export function setupFortuneSync() {
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {
     gameData.currentFortune = { text: data.text, category: data.category }
     gameData.currentGuestId = data.guestId
+    gameData.currentGuestName = data.guestName
     gameData.gameState = 'MOSTRANDO_FORTUNA'
     // Texto 3D sobre el mago en todos los clientes (quien revela y el resto en el mismo realm)
     showFortune3DText({ text: data.text, category: data.category })
   })
 
-  fortuneMessageBus.on('hide-fortune', () => {
+  fortuneMessageBus.on('hide-fortune', (_data: unknown) => {
     gameData.currentGuestId = null
+    gameData.currentGuestName = null
     gameData.currentFortune = null
     gameData.gameState = 'LIBRE'
   })

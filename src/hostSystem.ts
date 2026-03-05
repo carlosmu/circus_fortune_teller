@@ -35,7 +35,8 @@ export function setupHostSystem() {
       fortuneMessageBus.emit('show-fortune', {
         text: fortune.text,
         category: fortune.category,
-        guestId: gameData.currentGuestId
+        guestId: gameData.currentGuestId,
+        guestName: gameData.currentGuestName ?? null
       })
 
       // Debug: loguear la fortuna seleccionada
