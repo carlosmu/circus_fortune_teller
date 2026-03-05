@@ -13,6 +13,9 @@ function uiComponent() {
 
   const text = fortune?.text ?? ''
   const category = fortune?.category ?? ''
+  const capitalizedCategory =
+    category ? category.charAt(0).toUpperCase() + category.slice(1) : ''
+  
 
   return (
     <UiEntity
@@ -47,20 +50,21 @@ function uiComponent() {
             width: '100%',
             height: '100%',
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
             alignItems: 'center'
           }}
         >
           <UiEntity
             uiTransform={{
-              width: '60%',
-              height: '35%',
+              width: '30%',
+              height: '20%',
               flexDirection: 'column',
-              justifyContent: 'space-between',
+              // justifyContent: 'space-between',
+              justifyContent: 'center',
               alignItems: 'center'
             }}
             uiBackground={{
-              color: Color4.create(0, 0, 0, 0.7)
+              color: Color4.create(0, 0, 0, 0.95)
             }}
           >
             <Label
@@ -68,20 +72,11 @@ function uiComponent() {
                 width: '90%',
                 height: '70%'
               }}
-              value={text}
+              value={`${capitalizedCategory}: \n${text}`}
               textAlign="middle-center"
               fontSize={24}
             />
 
-            <Label
-              uiTransform={{
-                width: '90%',
-                height: '20%'
-              }}
-              value={`Categoría: ${category}`}
-              textAlign="middle-center"
-              fontSize={18}
-            />
           </UiEntity>
         </UiEntity>
       )}

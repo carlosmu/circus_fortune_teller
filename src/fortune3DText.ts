@@ -68,7 +68,7 @@ export function showFortune3DText(fortune: Fortune): void {
     parent,
     position: Vector3.create(0, 0, -0.15)
   })
-  const label = `${capitalizeCategory(fortune.category)}: ${fortune.text}`
+  const label = `${capitalizeCategory(fortune.category)}: \n${fortune.text}`
   TextShape.create(textEntity, {
     text: label,
     fontSize: 2,

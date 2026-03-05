@@ -4,7 +4,7 @@ import { fortuneMessageBus } from './fortuneSync'
 
 let uiSystemInitialized = false
 let uiTimer = 0
-const UI_SHOW_TIME = 8 // segundos aprox. de lectura
+const UI_SHOW_TIME = 5 // segundos aprox. de lectura
 
 export function setupFortuneUiSystem() {
   if (uiSystemInitialized) return
