@@ -1,10 +1,10 @@
 import { engine } from '@dcl/sdk/ecs'
 import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
+import { FORTUNE_DISPLAY_DURATION } from './sceneConfig'
 
 let uiSystemInitialized = false
 let uiTimer = 0
-const UI_SHOW_TIME = 5 // segundos aprox. de lectura
 
 export function setupFortuneUiSystem() {
   if (uiSystemInitialized) return
@@ -24,7 +24,7 @@ export function setupFortuneUiSystem() {
 
     uiTimer += dt
 
-    if (uiTimer >= UI_SHOW_TIME) {
+    if (uiTimer >= FORTUNE_DISPLAY_DURATION) {
       uiTimer = 0
 
       // Cerrar la sesión y liberar al guest (local)

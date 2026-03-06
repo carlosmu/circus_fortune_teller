@@ -11,8 +11,7 @@ import { Vector3, Color4 } from '@dcl/sdk/math'
 import type { Fortune } from './types'
 import { WIZARD } from './scene'
 import { gameData } from './gameState'
-
-const FORTUNE_3D_DURATION = 5 // segundos
+import { FORTUNE_DISPLAY_DURATION, SHOW_3D_FORTUNE } from './sceneConfig'
 
 // Tamaño del área de texto (igual que width/height del TextShape)
 const TEXT_WIDTH = 4
@@ -28,9 +27,10 @@ function capitalizeCategory(category: string): string {
 
 /**
  * Muestra la fortuna en 3D sobre la cabeza del mago (mismo X,Z; Y + 3m),
- * con un recuadro negro de fondo. Desaparece a los 5 segundos.
+ * con un recuadro negro de fondo. Desaparece tras FORTUNE_DISPLAY_DURATION segundos.
  */
 export function showFortune3DText(fortune: Fortune): void {
+  if (!SHOW_3D_FORTUNE) return
   if (fortuneTextEntity !== null) {
     removeEntityWithChildren(engine, fortuneTextEntity)
     fortuneTextEntity = null
@@ -86,7 +86,7 @@ export function showFortune3DText(fortune: Fortune): void {
   })
 
   fortuneTextEntity = parent
-  fortuneTextRemaining = FORTUNE_3D_DURATION
+  fortuneTextRemaining = FORTUNE_DISPLAY_DURATION
 
   if (!systemAdded) {
     systemAdded = true

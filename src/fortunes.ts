@@ -1,11 +1,11 @@
 import type { Fortune } from './types'
 
 export const FORTUNES: Fortune[] = [
-  { text: 'Encontrarás un nuevo amor inesperado.', category: 'amor' },
-  { text: 'Una sorpresa económica llegará pronto.', category: 'dinero' },
-  { text: 'Tu salud se fortalecerá si escuchas a tu cuerpo.', category: 'salud' },
-  { text: 'Un cambio en tu trabajo abrirá nuevas puertas.', category: 'trabajo' },
-  { text: 'Un misterio del pasado se revelará en breve.', category: 'misterio' }
-  // TODO: agregar hasta llegar a 100 frases
+  { text: 'You will find new love when you least expect it.', category: 'love' },
+  { text: 'Good news about money is on its way soon.', category: 'money' },
+  { text: 'Your health will get better if you listen to your body.', category: 'health' },
+  { text: 'A change at work will open new doors for you.', category: 'work' },
+  { text: 'A mystery from the past will be revealed soon.', category: 'mystery' }
+  // TODO: add more until we have 100 phrases
 ]
 

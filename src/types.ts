@@ -1,4 +1,4 @@
-export type FortuneCategory = 'amor' | 'dinero' | 'salud' | 'trabajo' | 'misterio'
+export type FortuneCategory = 'love' | 'money' | 'health' | 'work' | 'mystery'
 
 export type Fortune = {
   text: string

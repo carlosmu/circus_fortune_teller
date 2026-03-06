@@ -6,7 +6,7 @@ import {
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
-import { getPlayer } from '@dcl/sdk/network'
+import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { TABLE } from './scene'
 

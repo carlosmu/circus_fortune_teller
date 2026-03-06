@@ -1,6 +1,7 @@
 import { MessageBus } from '@dcl/sdk/message-bus'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
+import { SHOW_3D_FORTUNE } from './sceneConfig'
 import type { FortuneCategory } from './types'
 
 /** MessageBus para sincronizar el estado de la fortuna entre todos los jugadores en la escena */
@@ -23,8 +24,9 @@ export function setupFortuneSync() {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'MOSTRANDO_FORTUNA'
-    // Texto 3D sobre el mago en todos los clientes (quien revela y el resto en el mismo realm)
-    showFortune3DText({ text: data.text, category: data.category })
+    if (SHOW_3D_FORTUNE) {
+      showFortune3DText({ text: data.text, category: data.category })
+    }
   })
 
   fortuneMessageBus.on('hide-fortune', (_data: unknown) => {

@@ -1,7 +1,8 @@
 import ReactEcs, { UiEntity, Label } from '@dcl/sdk/react-ecs'
 import { ReactEcsRenderer } from '@dcl/sdk/react-ecs'
-import { Color4 } from '@dcl/sdk/math'
 import { gameData } from './gameState'
+import { SHOW_UI_FORTUNE } from './sceneConfig'
+import { Color4 } from '@dcl/sdk/math'
 
 export function setupUi() {
   ReactEcsRenderer.setUiRenderer(uiComponent)
@@ -9,7 +10,8 @@ export function setupUi() {
 
 function uiComponent() {
   const fortune = gameData.currentFortune
-  const isVisible = gameData.gameState === 'MOSTRANDO_FORTUNA' && !!fortune
+  const isVisible =
+    SHOW_UI_FORTUNE && gameData.gameState === 'MOSTRANDO_FORTUNA' && !!fortune
 
   const text = fortune?.text ?? ''
   const category = fortune?.category ?? ''
@@ -40,6 +42,7 @@ function uiComponent() {
           value={`Estado: ${gameData.gameState}`}
           textAlign="top-left"
           fontSize={14}
+          font="serif"
         />
       </UiEntity>
 
@@ -50,31 +53,44 @@ function uiComponent() {
             width: '100%',
             height: '100%',
             flexDirection: 'column',
-            justifyContent: 'flex-end',
+            justifyContent: 'flex-start',
             alignItems: 'center'
           }}
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '20%',
+              width: '25%',
+              height: '50%',
               flexDirection: 'column',
               // justifyContent: 'space-between',
               justifyContent: 'center',
               alignItems: 'center'
             }}
             uiBackground={{
-              color: Color4.create(0, 0, 0, 0.95)
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch'
             }}
           >
             <Label
               uiTransform={{
-                width: '90%',
-                height: '70%'
+                width: '80%',
+                height: '50%'
               }}
-              value={`${guestName ? guestName + ':\n' : ''}${capitalizedCategory}: \n${text}`}
-              textAlign="middle-center"
+              value={`${guestName ? guestName + '\n' : ''}- ${capitalizedCategory} -`}
+              textAlign="bottom-center"
+              fontSize={18}
+              font="serif"
+              color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+            />
+            <Label
+              uiTransform={{
+                width: '80%',
+                height: '50%'
+              }}
+              value={`${text}`}
+              textAlign="top-center"
               fontSize={24}
+              font="serif"
             />
 
           </UiEntity>
