@@ -13,42 +13,53 @@ import { TABLE } from './scene'
 
 export const GUEST_SPOT = engine.addEntity()
 
-export function setupGuestSpot() {
-  // Posición donde se sentará/parará el guest, frente a la mesa
-  Transform.create(GUEST_SPOT, {
-    position: Vector3.create(8, 1, 8.6)
-  })
+const TABLE_HOVER_REVEAL = 'Reveal Your Fortune'
+const TABLE_HOVER_WAIT = 'Wait for the next turn'
 
+function tableClickCallback() {
+  if (gameData.gameState !== 'LIBRE') return
+  executeTask(async () => {
+    const player = getPlayer()
+    const userId = player?.userId ?? 'desconocido'
+    const name = player?.name ?? 'Visitante'
+    gameData.currentGuestId = userId
+    gameData.currentGuestName = name
+    gameData.gameState = 'OCUPADO'
+    fortuneMessageBus.emit('guest-requested-fortune', {
+      guestId: userId,
+      guestName: name
+    })
+  })
+}
+
+function registerTablePointer(showWaitMessage: boolean) {
+  pointerEventsSystem.removeOnPointerDown(TABLE)
   pointerEventsSystem.onPointerDown(
     {
       entity: TABLE,
       opts: {
         button: InputAction.IA_POINTER,
-        hoverText: 'Reveal Your Fortune'
+        hoverText: showWaitMessage ? TABLE_HOVER_WAIT : TABLE_HOVER_REVEAL
       }
     },
-    () => {
-      // Si ya hay sesión, ignorar
-      if (gameData.gameState !== 'LIBRE') return
-
-      // En SDK7 puedes identificar al player actual y usar sus datos
-      executeTask(async () => {
-        const player = getPlayer()
-
-        const userId = player?.userId ?? 'desconocido'
-        const name = player?.name ?? 'Visitante'
-
-        gameData.currentGuestId = userId
-        gameData.currentGuestName = name
-        gameData.gameState = 'OCUPADO'
-
-        fortuneMessageBus.emit('guest-requested-fortune', {
-          guestId: userId,
-          guestName: name
-        })
-
-        // TODO: mover al player al GUEST_SPOT y bloquear su movimiento
-      })
-    }
+    showWaitMessage ? () => {} : tableClickCallback
   )
+}
+
+let tableShowingWait = false
+
+export function setupGuestSpot() {
+  Transform.create(GUEST_SPOT, {
+    position: Vector3.create(8, 1, 8.6)
+  })
+
+  registerTablePointer(false)
+
+  engine.addSystem(() => {
+    const showWait = gameData.gameState === 'MOSTRANDO_FORTUNA'
+    if (showWait !== tableShowingWait) {
+      tableShowingWait = showWait
+      registerTablePointer(showWait)
+    }
+  })
 }
