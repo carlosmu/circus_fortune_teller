@@ -5,6 +5,7 @@ export const gameData: GlobalGameData = {
   currentGuestName: null,
   currentHostId: null,
   gameState: 'LIBRE',
-  currentFortune: null
+  currentFortune: null,
+  currentHostChoiceOptions: null
 }
 
