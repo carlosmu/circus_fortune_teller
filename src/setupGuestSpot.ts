@@ -8,6 +8,7 @@ import {
 import { Vector3 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
+import { fortuneMessageBus } from './fortuneSync'
 import { TABLE } from './scene'
 
 export const GUEST_SPOT = engine.addEntity()
@@ -40,6 +41,11 @@ export function setupGuestSpot() {
         gameData.currentGuestId = userId
         gameData.currentGuestName = name
         gameData.gameState = 'OCUPADO'
+
+        fortuneMessageBus.emit('guest-requested-fortune', {
+          guestId: userId,
+          guestName: name
+        })
 
         // TODO: mover al player al GUEST_SPOT y bloquear su movimiento
       })
