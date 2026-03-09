@@ -1,4 +1,4 @@
-import { engine, GltfContainer, Transform } from '@dcl/sdk/ecs'
+import { engine, GltfContainer, Transform, VisibilityComponent } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
 
 export const TABLE = engine.addEntity()
@@ -32,6 +32,7 @@ export function setupScene() {
   GltfContainer.create(WIZARD, {
     src: 'assets/models/wizard.glb'
   })
+  VisibilityComponent.create(WIZARD, { visible: true })
 
   // HOST COLLIDER: mismo lugar que el wizard, para hacer clic en "Become Host"
   Transform.create(HOST_COLLIDER, {
