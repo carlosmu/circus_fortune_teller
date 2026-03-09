@@ -68,15 +68,16 @@ function uiComponent() {
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
+              textureMode: 'stretch',
             }}
           >
             <Label
               uiTransform={{
                 width: '80%',
-                height: '50%'
+                height: '30%'
               }}
-              value={`${guestName ? guestName + '\n' : ''}- ${capitalizedCategory} -`}
+              // value={`User: ${guestName ? guestName + '\n' : ''}Category: ${capitalizedCategory}`}
+              value={`${guestName ? guestName: ''} | ${capitalizedCategory}`}
               textAlign="bottom-center"
               fontSize={18}
               font="serif"
@@ -84,15 +85,14 @@ function uiComponent() {
             />
             <Label
               uiTransform={{
-                width: '80%',
+                width: '60%',
                 height: '50%'
               }}
               value={`${text}`}
               textAlign="top-center"
-              fontSize={24}
+              fontSize={22}
               font="serif"
             />
-
           </UiEntity>
         </UiEntity>
       )}

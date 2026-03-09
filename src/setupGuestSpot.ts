@@ -23,7 +23,7 @@ export function setupGuestSpot() {
       entity: TABLE,
       opts: {
         button: InputAction.IA_POINTER,
-        hoverText: 'Consultar tu fortuna'
+        hoverText: 'Reveal Your Fortune'
       }
     },
     () => {
