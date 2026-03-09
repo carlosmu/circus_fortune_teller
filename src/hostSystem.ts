@@ -1,4 +1,5 @@
 import { engine } from '@dcl/sdk/ecs'
+import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { FORTUNES } from './fortunes'
 import { fortuneMessageBus } from './fortuneSync'
@@ -16,6 +17,11 @@ export function setupHostSystem() {
       hostTimer = 0
       return
     }
+
+    const localUserId = getPlayer()?.userId ?? null
+    const isHost =
+      gameData.currentHostId === null || gameData.currentHostId === localUserId
+    if (!isHost) return
 
     // Contar tiempo mientras el host "conjura"
     hostTimer += dt

@@ -35,4 +35,8 @@ export function setupFortuneSync() {
     gameData.currentFortune = null
     gameData.gameState = 'LIBRE'
   })
+
+  fortuneMessageBus.on('set-host', (data: { hostId: string | null }) => {
+    gameData.currentHostId = data.hostId
+  })
 }
