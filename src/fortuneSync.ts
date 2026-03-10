@@ -36,9 +36,7 @@ function playRevealSound() {
     volume: 1
   })
   setTimeout(() => {
-    if (engine.entityExists(audioEntity)) {
-      engine.removeEntity(audioEntity)
-    }
+    engine.removeEntity(audioEntity)
   }, 8000)
 }
 
