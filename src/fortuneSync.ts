@@ -1,8 +1,9 @@
-import { VisibilityComponent } from '@dcl/sdk/ecs'
+import { engine, AudioSource, Transform, VisibilityComponent } from '@dcl/sdk/ecs'
 import { MessageBus } from '@dcl/sdk/message-bus'
+import { Vector3 } from '@dcl/sdk/math'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
-import { WIZARD } from './scene'
+import { HOST_POSITION, WIZARD } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import type { FortuneCategory } from './types'
 
@@ -21,6 +22,26 @@ export type GuestRequestedMessage = {
   guestName: string
 }
 
+const REVEAL_SOUND_FILENAME = 'Into_the_Depths.mp3'
+const REVEAL_SOUND_PATH = 'assets/audio/' + encodeURIComponent(REVEAL_SOUND_FILENAME)
+
+function playRevealSound() {
+  const audioEntity = engine.addEntity()
+  Transform.create(audioEntity, {
+    position: Vector3.create(HOST_POSITION.x, HOST_POSITION.y + 1, HOST_POSITION.z)
+  })
+  AudioSource.create(audioEntity, {
+    audioClipUrl: REVEAL_SOUND_PATH,
+    playing: true,
+    volume: 1
+  })
+  setTimeout(() => {
+    if (engine.entityExists(audioEntity)) {
+      engine.removeEntity(audioEntity)
+    }
+  }, 8000)
+}
+
 /**
  * Registra los listeners para que todos los clientes actualicen su gameData
  * y muestren el texto 3D cuando alguien revela la fortuna (mismo realm).
@@ -37,6 +58,7 @@ export function setupFortuneSync() {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'MOSTRANDO_FORTUNA'
+    playRevealSound()
     if (SHOW_3D_FORTUNE) {
       showFortune3DText({ text: data.text, category: data.category })
     }
