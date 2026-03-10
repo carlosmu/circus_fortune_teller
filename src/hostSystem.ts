@@ -20,8 +20,9 @@ export function revealFortuneForCategory(category: FortuneCategory): void {
   gameData.currentFortune = fortune
   gameData.gameState = 'MOSTRANDO_FORTUNA'
 
+  const fortuneIndex = FORTUNES.indexOf(fortune)
   fortuneMessageBus.emit('show-fortune', {
-    text: fortune.text,
+    fortuneIndex: fortuneIndex >= 0 ? fortuneIndex : 0,
     category: fortune.category,
     guestId: gameData.currentGuestId,
     guestName: gameData.currentGuestName ?? null
@@ -57,8 +58,9 @@ export function setupHostSystem() {
       gameData.currentFortune = fortune
       gameData.gameState = 'MOSTRANDO_FORTUNA'
 
+      const fortuneIndex = FORTUNES.indexOf(fortune)
       fortuneMessageBus.emit('show-fortune', {
-        text: fortune.text,
+        fortuneIndex: fortuneIndex >= 0 ? fortuneIndex : 0,
         category: fortune.category,
         guestId: gameData.currentGuestId,
         guestName: gameData.currentGuestName ?? null

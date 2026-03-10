@@ -1,6 +1,7 @@
 import { engine, AudioSource, Transform, VisibilityComponent } from '@dcl/sdk/ecs'
 import { MessageBus } from '@dcl/sdk/message-bus'
 import { Vector3 } from '@dcl/sdk/math'
+import { FORTUNES } from './fortunes'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
 import { HOST_POSITION, WIZARD } from './scene'
@@ -10,8 +11,9 @@ import type { FortuneCategory } from './types'
 /** MessageBus para sincronizar el estado de la fortuna entre todos los jugadores en la escena */
 export const fortuneMessageBus = new MessageBus()
 
+/** Índice en FORTUNES en lugar del texto completo para no superar el límite del MessageBus. */
 export type ShowFortuneMessage = {
-  text: string
+  fortuneIndex: number
   category: FortuneCategory
   guestId: string | null
   guestName: string | null
@@ -52,13 +54,19 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {
-    gameData.currentFortune = { text: data.text, category: data.category }
-    gameData.currentGuestId = data.guestId
-    gameData.currentGuestName = data.guestName
-    gameData.gameState = 'MOSTRANDO_FORTUNA'
-    playRevealSound()
-    if (SHOW_3D_FORTUNE) {
-      showFortune3DText({ text: data.text, category: data.category })
+    const fortune =
+      data.fortuneIndex >= 0 && data.fortuneIndex < FORTUNES.length
+        ? FORTUNES[data.fortuneIndex]
+        : null
+    if (fortune) {
+      gameData.currentFortune = { text: fortune.text, category: fortune.category }
+      gameData.currentGuestId = data.guestId
+      gameData.currentGuestName = data.guestName
+      gameData.gameState = 'MOSTRANDO_FORTUNA'
+      playRevealSound()
+      if (SHOW_3D_FORTUNE) {
+        showFortune3DText({ text: fortune.text, category: fortune.category })
+      }
     }
   })
 
