@@ -18,5 +18,7 @@ export type GlobalGameData = {
   currentFortune: Fortune | null
   /** Opciones de categoría para el host en la ronda actual (3 aleatorias). */
   currentHostChoiceOptions: HostChoiceCategories
+  /** Alpha del texto "Waiting for the host..." (0.5–1.0, animado en bucle). */
+  waitingPanelAlpha: number
 }
 

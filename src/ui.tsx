@@ -1,3 +1,4 @@
+import { engine } from '@dcl/sdk/ecs'
 import ReactEcs, { UiEntity, Label } from '@dcl/sdk/react-ecs'
 import { ReactEcsRenderer } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
@@ -6,6 +7,9 @@ import { gameData } from './gameState'
 import { SHOW_UI_FORTUNE } from './sceneConfig'
 import { revealFortuneForCategory } from './hostSystem'
 import type { FortuneCategory } from './types'
+
+let waitingPanelTime = 0
+const WAITING_ALPHA_SPEED = 3
 
 const ALL_CATEGORIES: FortuneCategory[] = ['love', 'money', 'health', 'work', 'mystery']
 
@@ -24,6 +28,16 @@ function pickThreeRandomCategories(): [FortuneCategory, FortuneCategory, Fortune
 
 export function setupUi() {
   ReactEcsRenderer.setUiRenderer(uiComponent)
+
+  engine.addSystem((dt: number) => {
+    if (gameData.gameState === 'OCUPADO') {
+      waitingPanelTime += dt * WAITING_ALPHA_SPEED
+      gameData.waitingPanelAlpha = 0.5 + 0.5 * Math.sin(waitingPanelTime)
+    } else {
+      waitingPanelTime = 0
+      gameData.waitingPanelAlpha = 1
+    }
+  })
 }
 
 function uiComponent() {
@@ -35,6 +49,9 @@ function uiComponent() {
   const isHost =
     !!player && gameData.currentHostId !== null && gameData.currentHostId === player.userId
   const showHostChoice = gameData.gameState === 'OCUPADO' && isHost
+  const showWaitingPanel =
+    SHOW_UI_FORTUNE && gameData.gameState === 'OCUPADO' && !isHost
+  const waitingAlpha = gameData.waitingPanelAlpha
 
   if (gameData.gameState !== 'OCUPADO') {
     gameData.currentHostChoiceOptions = null
@@ -76,6 +93,46 @@ function uiComponent() {
           font="serif"
         />
       </UiEntity>
+
+      {/* Panel "Waiting for the host..." para el guest mientras el host elige */}
+      {showWaitingPanel && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '25%',
+              height: '50%',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              alignItems: 'center'
+            }}
+            uiBackground={{
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch',
+            }}
+          >
+            <Label
+              uiTransform={{
+                width: '80%',
+                height: '70%',
+                margin: { top: '5%' }
+              }}
+              value="Waiting for the host..."
+              textAlign="middle-center"
+              fontSize={22}
+              font="serif"
+              color={Color4.create(1, 1, 1, waitingAlpha)}
+            />
+          </UiEntity>
+        </UiEntity>
+      )}
 
       {/* Panel de fortuna centrado, solo cuando corresponde */}
       {isVisible && (

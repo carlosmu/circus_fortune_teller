@@ -1,6 +1,8 @@
+import { VisibilityComponent } from '@dcl/sdk/ecs'
 import { MessageBus } from '@dcl/sdk/message-bus'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
+import { WIZARD } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import type { FortuneCategory } from './types'
 
@@ -49,5 +51,10 @@ export function setupFortuneSync() {
 
   fortuneMessageBus.on('set-host', (data: { hostId: string | null }) => {
     gameData.currentHostId = data.hostId
+    if (VisibilityComponent.has(WIZARD)) {
+      VisibilityComponent.getMutable(WIZARD).visible = data.hostId === null
+    } else {
+      VisibilityComponent.create(WIZARD, { visible: data.hostId === null })
+    }
   })
 }
