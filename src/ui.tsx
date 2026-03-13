@@ -11,7 +11,7 @@ import type { FortuneCategory } from './types'
 let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
 
-const ALL_CATEGORIES: FortuneCategory[] = ['love', 'money', 'health', 'work', 'mystery']
+const ALL_CATEGORIES: FortuneCategory[] = ['love', 'money', 'health', 'work', 'mystery', 'pets', 'family', 'travel', 'luck']
 
 const CATEGORY_LABELS: Record<FortuneCategory, string> = {
   love: 'Love',

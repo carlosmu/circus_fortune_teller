@@ -7,6 +7,7 @@ import type { FortuneCategory } from './types'
 
 let hostSystemInitialized = false
 let hostTimer = 0
+let lastAutoCategory: FortuneCategory | null = null
 const HOST_REVEAL_DELAY = 3 // segundos (solo cuando no hay host designado)
 
 /**
@@ -52,8 +53,18 @@ export function setupHostSystem() {
     if (hostTimer >= HOST_REVEAL_DELAY) {
       hostTimer = 0
 
-      const randomIndex = Math.floor(Math.random() * FORTUNES.length)
-      const fortune = FORTUNES[randomIndex]
+      // Elegir fortuna aleatoria asegurando que la categoría no repita la inmediata anterior
+      let fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
+      let attempts = 0
+      while (
+        lastAutoCategory !== null &&
+        fortune.category === lastAutoCategory &&
+        attempts < 10
+      ) {
+        fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
+        attempts++
+      }
+      lastAutoCategory = fortune.category
 
       gameData.currentFortune = fortune
       gameData.gameState = 'MOSTRANDO_FORTUNA'

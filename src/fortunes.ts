@@ -43,6 +43,11 @@ export const FORTUNES: Fortune[] = [
   { text: 'Luck helps your wallet.', category: 'money' },
   { text: 'More money comes.', category: 'money' },
   { text: 'Stars bless money.', category: 'money' },
+
+  { text: 'Airdrop energy nearby.', category: 'money' },
+  { text: 'MANA rises soon.', category: 'money' },
+  { text: 'The market smiles.', category: 'money' },
+  { text: 'Profit comes slowly.', category: 'money' },
   
   { text: 'Energy returns soon.', category: 'health' },
   { text: 'Strength grows inside.', category: 'health' },
