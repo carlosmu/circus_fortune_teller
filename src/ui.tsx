@@ -18,6 +18,10 @@ const CATEGORY_LABELS: Record<FortuneCategory, string> = {
   money: 'Money',
   health: 'Health',
   work: 'Work',
+  luck: 'Luck',
+  travel: 'Travel',
+  pets: 'Pets',
+  family: 'Family',
   mystery: 'Mystery'
 }
 
