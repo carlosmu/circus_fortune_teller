@@ -31,8 +31,6 @@ const FONT_SIZE = 0.8
 const PROFILE_API_URL = 'https://peer.decentraland.org/lambdas/profiles'
 
 let parentEntity: ReturnType<typeof engine.addEntity> | null = null
-let textHeaderEntity: ReturnType<typeof engine.addEntity> | null = null
-let textContentEntity: ReturnType<typeof engine.addEntity> | null = null
 
 function shortWallet(wallet: string): string {
   if (!wallet || wallet.length < 12) return wallet
@@ -94,10 +92,9 @@ function getRankTag(index: number): string {
 function formatStats(
   data: GetStatsResponse,
   profileNames: Map<string, string>
-): { headerText: string; contentText: string } {
+): { headerLines: string[]; contentLines: string[] } {
   if (data.status !== 'ok' || !data.stats) {
-    const msg = 'Loading...'
-    return { headerText: msg, contentText: msg }
+    return { headerLines: ['Loading...'], contentLines: [''] }
   }
 
   const lines: string[] = []
@@ -109,7 +106,7 @@ function formatStats(
   // TOP VISITORS
   lines.push('----------  🏆 TOP VISITORS   ----------')
   isHeaderLine.push(true)
-  lines.push(`   ${' '.repeat(RNK_WIDTH - 3)}  Name${' '.repeat(NAME_WIDTH - 4)}  Days`)
+  lines.push(`Rnk${' '.repeat(RNK_WIDTH - 3)}  Name${' '.repeat(NAME_WIDTH - 4)}  Days`)
   isHeaderLine.push(true)
   ;(s.mostVisited ?? []).slice(0, 10).forEach((p, i) => {
     const rank = getRankTag(i).padEnd(RNK_WIDTH, ' ')
@@ -123,7 +120,7 @@ function formatStats(
   // BEST STREAKS
   lines.push('----------  🔥 BEST STREAKS   ----------')
   isHeaderLine.push(true)
-  lines.push(`   ${' '.repeat(RNK_WIDTH - 3)}  Name${' '.repeat(NAME_WIDTH - 4)}  Days`)
+  lines.push(`Rnk${' '.repeat(RNK_WIDTH - 3)}  Name${' '.repeat(NAME_WIDTH - 4)}  Streak`)
   isHeaderLine.push(true)
   ;(s.bestStreak ?? []).slice(0, 3).forEach((p, i) => {
     const rank = getRankTag(i).padEnd(RNK_WIDTH, ' ')
@@ -137,7 +134,7 @@ function formatStats(
   // CROWDED DAYS
   lines.push('----------  👥 CROWDED DAYS   ----------')
   isHeaderLine.push(true)
-  lines.push(`   ${' '.repeat(RNK_WIDTH - 3)}  Date${' '.repeat(NAME_WIDTH - 4)}  Visits`)
+  lines.push(`Rnk${' '.repeat(RNK_WIDTH - 3)}  Date${' '.repeat(NAME_WIDTH - 4)}  Visits`)
   isHeaderLine.push(true)
   ;(s.crowdedDays ?? []).slice(0, 3).forEach((row, i) => {
     const rank = getRankTag(i).padEnd(RNK_WIDTH, ' ')
@@ -164,25 +161,32 @@ function formatStats(
   }
 
   const maxLen = Math.max(...lines.map((l) => l.length), 1)
-  const headerText = lines
-    .map((line, i) => (isHeaderLine[i] ? line.padEnd(maxLen) : ' '.repeat(maxLen)))
-    .join('\n')
-  const contentText = lines
-    .map((line, i) => (isHeaderLine[i] ? ' '.repeat(maxLen) : line.padEnd(maxLen)))
-    .join('\n')
-  return { headerText, contentText }
+  const headerLines = lines.map((line, i) =>
+    isHeaderLine[i] ? line.padEnd(maxLen) : ' '.repeat(maxLen)
+  )
+  const contentLines = lines.map((line, i) =>
+    isHeaderLine[i] ? ' '.repeat(maxLen) : line.padEnd(maxLen)
+  )
+  return { headerLines, contentLines }
 }
 
 const TEXT_POS = Vector3.create(-PANEL_WIDTH / 2 + 0.2, PANEL_HEIGHT / 2 - 0.2, -0.02)
 const TEXT_SIZE = { width: PANEL_WIDTH - 0.4, height: PANEL_HEIGHT - 0.4 }
 
+/** Una entidad por línea para que cada mensaje de sincronización sea pequeño (< límite de escena). */
+const MAX_LINES = 40
+const LINE_HEIGHT = ((PANEL_HEIGHT - 0.4) / MAX_LINES) * 2.2
+
+let lineHeaderEntities: ReturnType<typeof engine.addEntity>[] = []
+let lineContentEntities: ReturnType<typeof engine.addEntity>[] = []
+
 function ensureEntities(): {
   parent: ReturnType<typeof engine.addEntity>
-  textHeader: ReturnType<typeof engine.addEntity>
-  textContent: ReturnType<typeof engine.addEntity>
+  lineHeaders: ReturnType<typeof engine.addEntity>[]
+  lineContents: ReturnType<typeof engine.addEntity>[]
 } {
-  if (parentEntity !== null && textHeaderEntity !== null && textContentEntity !== null) {
-    return { parent: parentEntity, textHeader: textHeaderEntity, textContent: textContentEntity }
+  if (parentEntity !== null && lineHeaderEntities.length > 0) {
+    return { parent: parentEntity, lineHeaders: lineHeaderEntities, lineContents: lineContentEntities }
   }
 
   const parent = engine.addEntity()
@@ -217,46 +221,54 @@ function ensureEntities(): {
     diffuseColor: COLOR_BG
   })
 
-  const textHeader = engine.addEntity()
-  Transform.create(textHeader, {
-    parent,
-    position: Vector3.create(TEXT_POS.x, TEXT_POS.y, -0.02)
-  })
-  TextShape.create(textHeader, {
-    text: 'Loading...',
-    fontSize: FONT_SIZE,
-    font: Font.F_MONOSPACE,
-    textAlign: TextAlignMode.TAM_TOP_LEFT,
-    textColor: COLOR_HEADER,
-    outlineColor: COLOR_OUTLINE,
-    outlineWidth: 0.08,
-    width: TEXT_SIZE.width,
-    height: TEXT_SIZE.height,
-    textWrapping: false
-  })
+  const lineHeaders: ReturnType<typeof engine.addEntity>[] = []
+  const lineContents: ReturnType<typeof engine.addEntity>[] = []
 
-  const textContent = engine.addEntity()
-  Transform.create(textContent, {
-    parent,
-    position: Vector3.create(TEXT_POS.x, TEXT_POS.y, -0.03)
-  })
-  TextShape.create(textContent, {
-    text: '',
-    fontSize: FONT_SIZE,
-    font: Font.F_MONOSPACE,
-    textAlign: TextAlignMode.TAM_TOP_LEFT,
-    textColor: COLOR_TEXT,
-    outlineColor: COLOR_OUTLINE,
-    outlineWidth: 0.08,
-    width: TEXT_SIZE.width,
-    height: TEXT_SIZE.height,
-    textWrapping: false
-  })
+  for (let i = 0; i < MAX_LINES; i++) {
+    const y = TEXT_POS.y - i * LINE_HEIGHT
+    const headerEntity = engine.addEntity()
+    Transform.create(headerEntity, {
+      parent,
+      position: Vector3.create(TEXT_POS.x, y, -0.02)
+    })
+    TextShape.create(headerEntity, {
+      text: '',
+      fontSize: FONT_SIZE,
+      font: Font.F_MONOSPACE,
+      textAlign: TextAlignMode.TAM_TOP_LEFT,
+      textColor: COLOR_HEADER,
+      outlineColor: COLOR_OUTLINE,
+      outlineWidth: 0.08,
+      width: TEXT_SIZE.width,
+      height: LINE_HEIGHT,
+      textWrapping: false
+    })
+    lineHeaders.push(headerEntity)
+
+    const contentEntity = engine.addEntity()
+    Transform.create(contentEntity, {
+      parent,
+      position: Vector3.create(TEXT_POS.x, y, -0.03)
+    })
+    TextShape.create(contentEntity, {
+      text: '',
+      fontSize: FONT_SIZE,
+      font: Font.F_MONOSPACE,
+      textAlign: TextAlignMode.TAM_TOP_LEFT,
+      textColor: COLOR_TEXT,
+      outlineColor: COLOR_OUTLINE,
+      outlineWidth: 0.08,
+      width: TEXT_SIZE.width,
+      height: LINE_HEIGHT,
+      textWrapping: false
+    })
+    lineContents.push(contentEntity)
+  }
 
   parentEntity = parent
-  textHeaderEntity = textHeader
-  textContentEntity = textContent
-  return { parent, textHeader, textContent }
+  lineHeaderEntities = lineHeaders
+  lineContentEntities = lineContents
+  return { parent, lineHeaders, lineContents }
 }
 
 export function setupLeaderboard3D(): void {
@@ -265,10 +277,14 @@ export function setupLeaderboard3D(): void {
 }
 
 export async function setLeaderboardData(data: GetStatsResponse | null): Promise<void> {
-  const entities = ensureEntities()
+  const { lineHeaders, lineContents } = ensureEntities()
   if (!data) {
-    TextShape.getMutable(entities.textHeader).text = 'Loading...'
-    TextShape.getMutable(entities.textContent).text = ''
+    TextShape.getMutable(lineHeaders[0]).text = 'Loading...'
+    TextShape.getMutable(lineContents[0]).text = ''
+    for (let i = 1; i < MAX_LINES; i++) {
+      TextShape.getMutable(lineHeaders[i]).text = ''
+      TextShape.getMutable(lineContents[i]).text = ''
+    }
     return
   }
 
@@ -280,7 +296,14 @@ export async function setLeaderboardData(data: GetStatsResponse | null): Promise
   if (data.player) wallets.push(data.player.wallet)
 
   const profileNames = await fetchProfileNames(wallets)
-  const { headerText, contentText } = formatStats(data, profileNames)
-  TextShape.getMutable(entities.textHeader).text = headerText
-  TextShape.getMutable(entities.textContent).text = contentText
+  const { headerLines, contentLines } = formatStats(data, profileNames)
+  const n = Math.min(headerLines.length, MAX_LINES)
+  for (let i = 0; i < n; i++) {
+    TextShape.getMutable(lineHeaders[i]).text = headerLines[i]
+    TextShape.getMutable(lineContents[i]).text = contentLines[i]
+  }
+  for (let i = n; i < MAX_LINES; i++) {
+    TextShape.getMutable(lineHeaders[i]).text = ''
+    TextShape.getMutable(lineContents[i]).text = ''
+  }
 }
