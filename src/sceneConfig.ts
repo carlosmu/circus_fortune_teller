@@ -1,9 +1,9 @@
 /**
- * Configuración centralizada de la escena.
+ * Central scene configuration.
  * Ajusta aquí tiempos, visibilidad de fortunas, etc.
  */
 
-/** Duración en segundos que se muestra la fortuna (texto 3D y panel UI). */
+/** How long (seconds) the fortune is shown (3D text and UI panel). */
 export const FORTUNE_DISPLAY_DURATION = 5
 
 /** Mostrar la fortuna como texto 3D sobre el mago. */

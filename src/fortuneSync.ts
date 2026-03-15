@@ -8,10 +8,10 @@ import { HOST_POSITION, WIZARD } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import type { FortuneCategory } from './types'
 
-/** MessageBus para sincronizar el estado de la fortuna entre todos los jugadores en la escena */
+/** MessageBus to sync fortune state across all players in the scene */
 export const fortuneMessageBus = new MessageBus()
 
-/** Índice en FORTUNES en lugar del texto completo para no superar el límite del MessageBus. */
+/** Fortune index in FORTUNES instead of full text to stay under MessageBus size limit. */
 export type ShowFortuneMessage = {
   fortuneIndex: number
   category: FortuneCategory
@@ -43,8 +43,7 @@ function playRevealSound() {
 }
 
 /**
- * Registra los listeners para que todos los clientes actualicen su gameData
- * y muestren el texto 3D cuando alguien revela la fortuna (mismo realm).
+ * Registers listeners so all clients update gameData and show 3D text when someone reveals a fortune (same realm).
  */
 export function setupFortuneSync() {
   fortuneMessageBus.on('guest-requested-fortune', (data: GuestRequestedMessage) => {

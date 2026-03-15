@@ -16,27 +16,18 @@ export function setupFortuneUiSystem() {
       return
     }
 
-    // TODO:
-    // - Mostrar panel de UI con la fortuna seleccionada
-    //   Puedes acceder al texto y categoría así:
-    //   const fortune = gameData.currentFortune
-    // - Escuchar clic en "OK" para cerrar antes del timeout
-
     uiTimer += dt
 
     if (uiTimer >= FORTUNE_DISPLAY_DURATION) {
       uiTimer = 0
 
-      // Cerrar la sesión y liberar al guest (local)
+      // Close session and release guest (local)
       gameData.currentGuestId = null
       gameData.currentGuestName = null
       gameData.currentFortune = null
       gameData.gameState = 'LIBRE'
 
-      // Avisar a todos los jugadores para que oculten el panel
       fortuneMessageBus.emit('hide-fortune', {})
-
-      // TODO: Desbloquear movimiento del player guest
     }
   })
 }

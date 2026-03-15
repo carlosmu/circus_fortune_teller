@@ -81,7 +81,7 @@ function uiComponent() {
         alignItems: 'stretch'
       }}
     >
-      {/* Pequeño debug de estado en la esquina superior izquierda */}
+      {/* Debug state (top-left) */}
       <UiEntity
         uiTransform={{
           width: '40%',
@@ -91,14 +91,14 @@ function uiComponent() {
       >
         <Label
           uiTransform={{ width: '100%', height: '100%' }}
-          value={`Estado: ${gameData.gameState}`}
+          value={`State: ${gameData.gameState === 'LIBRE' ? 'Free' : gameData.gameState === 'OCUPADO' ? 'Occupied' : 'Showing fortune'}`}
           textAlign="top-left"
           fontSize={14}
           font="serif"
         />
       </UiEntity>
 
-      {/* Panel "Waiting for the host..." para el guest mientras el host elige */}
+      {/* Waiting for the host panel (guest view) */}
       {showWaitingPanel && (
         <UiEntity
           uiTransform={{
@@ -138,7 +138,7 @@ function uiComponent() {
         </UiEntity>
       )}
 
-      {/* Panel de fortuna centrado, solo cuando corresponde */}
+      {/* Fortune panel (when visible) */}
       {isVisible && (
         <UiEntity
           uiTransform={{
@@ -187,7 +187,7 @@ function uiComponent() {
         </UiEntity>
       )}
 
-      {/* Elección de categoría por el host: debajo del área de la carta */}
+      {/* Host category choice panel */}
       {showHostChoice && (
         <UiEntity
           uiTransform={{

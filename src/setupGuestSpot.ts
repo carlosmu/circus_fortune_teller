@@ -20,8 +20,8 @@ function tableClickCallback() {
   if (gameData.gameState !== 'LIBRE') return
   executeTask(async () => {
     const player = getPlayer()
-    const userId = player?.userId ?? 'desconocido'
-    const name = player?.name ?? 'Visitante'
+    const userId = player?.userId ?? 'unknown'
+    const name = player?.name ?? 'Visitor'
     gameData.currentGuestId = userId
     gameData.currentGuestName = name
     gameData.gameState = 'OCUPADO'

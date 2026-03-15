@@ -8,10 +8,10 @@ import type { FortuneCategory } from './types'
 let hostSystemInitialized = false
 let hostTimer = 0
 let lastAutoCategory: FortuneCategory | null = null
-const HOST_REVEAL_DELAY = 3 // segundos (solo cuando no hay host designado)
+const HOST_REVEAL_DELAY = 3 // seconds (only when no host is set)
 
 /**
- * Elige una fortuna al azar de la categoría y la revela a todos (solo debe llamar el host desde la UI).
+ * Picks a random fortune for the category and reveals it to everyone (host only, from UI).
  */
 export function revealFortuneForCategory(category: FortuneCategory): void {
   const byCategory = FORTUNES.filter((f) => f.category === category)
@@ -45,7 +45,7 @@ export function setupHostSystem() {
       gameData.currentHostId === null || gameData.currentHostId === localUserId
     if (!isHost) return
 
-    // Si hay un host designado, no elegir automáticamente; el host elige categoría en la UI
+    // If a host is set, don't auto-pick; host chooses category in the UI
     if (gameData.currentHostId !== null) return
 
     hostTimer += dt
@@ -53,7 +53,7 @@ export function setupHostSystem() {
     if (hostTimer >= HOST_REVEAL_DELAY) {
       hostTimer = 0
 
-      // Elegir fortuna aleatoria asegurando que la categoría no repita la inmediata anterior
+      // Pick random fortune ensuring category doesn't repeat from previous
       let fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
       let attempts = 0
       while (

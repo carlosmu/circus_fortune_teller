@@ -7,7 +7,7 @@ export type Fortune = {
 
 export type GameState = 'LIBRE' | 'OCUPADO' | 'MOSTRANDO_FORTUNA'
 
-/** Tres categorías elegidas al azar para que el host elija en esta ronda. */
+/** Three random categories for the host to choose from this round. */
 export type HostChoiceCategories = [FortuneCategory, FortuneCategory, FortuneCategory] | null
 
 export type GlobalGameData = {
@@ -16,9 +16,9 @@ export type GlobalGameData = {
   currentHostId: string | null
   gameState: GameState
   currentFortune: Fortune | null
-  /** Opciones de categoría para el host en la ronda actual (3 aleatorias). */
+  /** Category options for the host this round (3 random). */
   currentHostChoiceOptions: HostChoiceCategories
-  /** Alpha del texto "Waiting for the host..." (0.5–1.0, animado en bucle). */
+  /** Alpha for "Waiting for the host..." text (0.5–1.0, animated). */
   waitingPanelAlpha: number
 }
 

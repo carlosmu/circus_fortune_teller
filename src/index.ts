@@ -8,12 +8,14 @@ import { setupGuestSpot } from './setupGuestSpot'
 import { setupWizard } from './setupWizard'
 import { setupUi } from './ui'
 import { setupScene } from './scene'
-import { registerVisit } from './supabase_api'
+import { registerVisit, getStats } from './supabase_api'
+import { setupLeaderboard3D, setLeaderboardData } from './leaderboard3D'
 
 let visitRegistered = false
+let statsFetched = false
 
 export function main() {
-  // Registrar visita cuando el jugador esté disponible (puede no estarlo en el primer frame)
+  // Register visit when player is available (may not be on first frame)
   engine.addSystem(() => {
     if (visitRegistered) return
     const player = getPlayer()
@@ -21,11 +23,11 @@ export function main() {
     if (wallet) {
       visitRegistered = true
       console.log('Player wallet:', wallet)
-      registerVisit(wallet)
+      registerVisit(wallet, player.name)
     }
   })
 
-  // Sincronización de fortuna entre todos los jugadores (MessageBus)
+  // Fortune sync across players (MessageBus)
   setupFortuneSync()
 
   // Inicializar la UI base
@@ -34,7 +36,21 @@ export function main() {
   // Inicializar escena (mesa, wizard, etc.)
   setupScene()
 
-  // Inicializar sistemas del minijuego
+  // Panel 3D del leaderboard (monospace, +2m en X respecto al host)
+  setupLeaderboard3D()
+
+  // Load stats and update leaderboard panel
+  engine.addSystem(() => {
+    if (statsFetched) return
+    const player = getPlayer()
+    const wallet = player?.userId ?? null
+    if (wallet === null) return
+    statsFetched = true
+    getStats(wallet).then((data) => {
+      if (data) setLeaderboardData(data)
+    })
+  })
+
   setupGuestSpot()
   setupWizard()
   setupInteractionSystem()

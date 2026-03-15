@@ -3,15 +3,15 @@ import { Vector3 } from '@dcl/sdk/math'
 
 export const TABLE = engine.addEntity()
 export const WIZARD = engine.addEntity()
-/** Entidad con el GLB host_collider.glb: zona de clic para "Become Host" (el wizard ya no tiene collider). */
+/** Entity with host_collider.glb: click area for "Become Host" (wizard has no collider). */
 export const HOST_COLLIDER = engine.addEntity()
 
-/** Posición del wizard en la escena (origen del GLB = 0,0,0, se coloca por código). */
+/** Wizard position in scene (GLB origin 0,0,0, placed by code). */
 const WIZARD_POSITION = Vector3.create(8, 0, 7.5)
 
-/** Posición donde se teletransporta el jugador al convertirse en host (el mismo punto que el wizard). */
+/** Position the player is teleported to when becoming host (same as wizard). */
 export const HOST_POSITION = WIZARD_POSITION
-/** Punto al que mira la cámara del host (mesa/guest). */
+/** Point the host camera looks at (table/guest). */
 export const HOST_CAMERA_TARGET = Vector3.create(8, 1, 8)
 
 export function setupScene() {
@@ -24,7 +24,7 @@ export function setupScene() {
     src: 'assets/models/table.glb'
   })
 
-  // WIZARD ENTITY (se oculta cuando el jugador local es host y ocupa su lugar)
+  // WIZARD (hidden when local player is host)
   Transform.create(WIZARD, {
     position: WIZARD_POSITION
   })
@@ -34,7 +34,7 @@ export function setupScene() {
   })
   VisibilityComponent.create(WIZARD, { visible: true })
 
-  // HOST COLLIDER: mismo lugar que el wizard, para hacer clic en "Become Host"
+  // HOST COLLIDER: same position as wizard, for "Become Host" click
   Transform.create(HOST_COLLIDER, {
     position: WIZARD_POSITION
   })

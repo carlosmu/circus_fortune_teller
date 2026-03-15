@@ -9,11 +9,11 @@ export function setupInteractionSystem() {
 
   engine.addSystem((dt) => {
     // TODO:
-    // - Detectar interacción del jugador con el spot de guest
+    // - Detect player interaction with guest spot
     // - Si gameData.gameState === 'LIBRE':
     //   - Asignar currentGuestId
     //   - Cambiar a 'OCUPADO'
-    //   - Mover / bloquear al guest en la posición del guestSpot
+    //   - Move / lock guest at guestSpot position
   })
 }
 
