@@ -64,27 +64,43 @@ Deno.serve(async (req: Request) => {
     }
     console.log('get-stats: bestStreak result', bestStreak?.length ?? 0, 'rows')
 
-    // 3. Most crowded days (top 5 by visit count) — aggregate in memory
-    const { data: dailyRows, error: err3 } = await supabase
-      .from('daily_visits')
-      .select('visit_date')
+    // 3. Most crowded days (top 5): recientes desde daily_visits + históricos desde crowded_days_archive
+    const crowdedDaysCutoff = new Date()
+    crowdedDaysCutoff.setUTCDate(crowdedDaysCutoff.getUTCDate() - 365)
+    const crowdedDaysCutoffStr = crowdedDaysCutoff.toISOString().slice(0, 10)
+
+    const [{ data: dailyRows, error: err3 }, { data: archiveRows, error: errArchive }] = await Promise.all([
+      supabase
+        .from('daily_visits')
+        .select('visit_date')
+        .gte('visit_date', crowdedDaysCutoffStr),
+      supabase.from('crowded_days_archive').select('visit_date, visits')
+    ])
 
     if (err3) {
-      console.error('get-stats: crowdedDays query failed', err3)
+      console.error('get-stats: crowdedDays daily_visits failed', err3)
       return new Response(
         JSON.stringify({ status: 'error', message: err3.message }),
         { headers: corsHeaders, status: 500 }
       )
     }
 
-    const countByDate = (dailyRows ?? []).reduce<Record<string, number>>((acc, row) => {
-      const d = row.visit_date as string
+    const countByDateRecent = (dailyRows ?? []).reduce<Record<string, number>>((acc, row) => {
+      const d = String(row.visit_date ?? '')
       acc[d] = (acc[d] ?? 0) + 1
       return acc
     }, {})
 
-    const crowdedDays = Object.entries(countByDate)
-      .map(([visit_date, visits]: [string, number]) => ({ visit_date, visits }))
+    const recentList = Object.entries(countByDateRecent).map(([visit_date, visits]) => ({ visit_date, visits }))
+    const archiveList =
+      errArchive || !archiveRows
+        ? []
+        : archiveRows.map((r: { visit_date: string; visits: number }) => ({
+            visit_date: String(r.visit_date).slice(0, 10),
+            visits: Number(r.visits) ?? 0
+          }))
+
+    const crowdedDays = [...recentList, ...archiveList]
       .sort((a, b) => b.visits - a.visits)
       .slice(0, 5)
 
