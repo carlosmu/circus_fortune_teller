@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
     // 1. Most visited players (top 10 by days_connected)
     const { data: mostVisited, error: err1 } = await supabase
       .from('players')
-      .select('wallet, days_connected')
+      .select('wallet, days_connected, name')
       .order('days_connected', { ascending: false })
       .limit(10)
 
@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
     // 2. Best streak players (top 10 by max_streak)
     const { data: bestStreak, error: err2 } = await supabase
       .from('players')
-      .select('wallet, max_streak')
+      .select('wallet, max_streak, name')
       .order('max_streak', { ascending: false })
       .limit(10)
 
@@ -104,12 +104,13 @@ Deno.serve(async (req: Request) => {
       max_streak: number
       total_logins: number
       rank: number | null
+      name: string | null
     } | null = null
 
     if (wallet) {
       const { data: playerRow, error: err4 } = await supabase
         .from('players')
-        .select('wallet, days_connected, login_streak, max_streak, total_logins')
+        .select('wallet, days_connected, login_streak, max_streak, total_logins, name')
         .eq('wallet', wallet)
         .maybeSingle()
 
@@ -146,7 +147,8 @@ Deno.serve(async (req: Request) => {
           login_streak: Number(playerRow.login_streak) ?? 0,
           max_streak: Number(playerRow.max_streak) ?? 0,
           total_logins: Number(playerRow.total_logins) ?? 0,
-          rank
+          rank,
+          name: (playerRow as { name?: string | null }).name ?? null
         }
         console.log('get-stats: player result', player)
       }

@@ -22,8 +22,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const body = await req.json() as { wallet?: string }
+    const body = await req.json() as { wallet?: string; name?: string }
     const wallet = body?.wallet?.trim()
+    const name = typeof body?.name === 'string' ? body.name.trim() || null : null
 
     if (!wallet) {
       return new Response(
@@ -40,51 +41,50 @@ Deno.serve(async (req: Request) => {
     )
 
     const today = getTodayUTC()
+    const yesterday = getYesterdayUTC()
     const nowIso = new Date().toISOString()
 
-    // Step 1 & 2 — Insert daily visit (no duplicate for same wallet + date)
+    // STEP 1 — Check if today's visit already exists
+    const { data: existingVisit, error: checkError } = await supabase
+      .from('daily_visits')
+      .select('wallet')
+      .eq('wallet', wallet)
+      .eq('visit_date', today)
+      .maybeSingle()
+
+    if (checkError) throw checkError
+
+    const isNewVisit = !existingVisit
+
+    // STEP 2 — Record visit
     const { error: visitError } = await supabase
       .from('daily_visits')
-      .insert({
+      .upsert({
         wallet,
         visit_date: today,
         visit_time: nowIso
       })
 
-    const isNewVisit = !visitError
-    if (visitError) {
-      if (visitError.code === '23505') {
-        // Unique violation: already visited today
-        // isNewVisit stays false
-      } else {
-        console.error('Daily visit insert error:', visitError)
-        throw visitError
-      }
-    } else {
+    if (visitError) throw visitError
+
+    if (isNewVisit) {
       console.log('Daily visit recorded')
     }
 
-    // Step 3 — Load player
+    // STEP 3 — Load player
     const { data: player, error: selectError } = await supabase
       .from('players')
-      .select('wallet, first_login, last_login, days_connected, total_logins, login_streak, max_streak')
+      .select('wallet, first_login, last_login, days_connected, total_logins, login_streak, max_streak, name')
       .eq('wallet', wallet)
       .maybeSingle()
 
     if (selectError) throw selectError
 
-    let updatedPlayer: {
-      wallet: string
-      first_login: string
-      last_login: string
-      days_connected: number
-      total_logins: number
-      login_streak: number
-      max_streak: number
-    }
+    let updatedPlayer: any
 
+    // STEP 4 — New player
     if (!player) {
-      // New player
+
       updatedPlayer = {
         wallet,
         first_login: today,
@@ -92,32 +92,40 @@ Deno.serve(async (req: Request) => {
         days_connected: 1,
         total_logins: 1,
         login_streak: 1,
-        max_streak: 1
+        max_streak: 1,
+        ...(name != null && { name })
       }
+
       const { error: insertError } = await supabase
         .from('players')
         .insert(updatedPlayer)
+
       if (insertError) throw insertError
-      console.log('Updated player stats:', updatedPlayer)
+
+      console.log('New player created:', updatedPlayer)
+
     } else {
-      // Step 4 — Existing player: update stats
+
+      // STEP 5 — Update existing player stats
+
       let days_connected = player.days_connected ?? 0
       let total_logins = (player.total_logins ?? 0) + 1
       let login_streak = player.login_streak ?? 0
       let max_streak = player.max_streak ?? 0
-      const lastLogin = (player.last_login as string) ?? ''
+
+      const lastLogin = player.last_login
 
       if (isNewVisit) {
         days_connected += 1
       }
 
-      const yesterday = getYesterdayUTC()
-
       if (lastLogin === today) {
-        // Already visited today — streak unchanged
-      } else if (lastLogin === yesterday) {
+        // already visited today
+      }
+      else if (lastLogin === yesterday) {
         login_streak += 1
-      } else {
+      }
+      else {
         login_streak = 1
       }
 
@@ -125,30 +133,40 @@ Deno.serve(async (req: Request) => {
 
       updatedPlayer = {
         wallet,
-        first_login: (player.first_login as string) ?? today,
+        first_login: player.first_login ?? today,
+        last_login: today,
+        days_connected,
+        total_logins,
+        login_streak,
+        max_streak,
+        name: name ?? (player as { name?: string | null }).name ?? null
+      }
+
+      const updatePayload: Record<string, unknown> = {
         last_login: today,
         days_connected,
         total_logins,
         login_streak,
         max_streak
       }
+      if (name != null) updatePayload.name = name
 
       const { error: updateError } = await supabase
         .from('players')
-        .update({
-          last_login: today,
-          days_connected,
-          total_logins,
-          login_streak,
-          max_streak
-        })
+        .update(updatePayload)
         .eq('wallet', wallet)
 
       if (updateError) throw updateError
-      console.log('Updated player stats:', { days_connected, login_streak, max_streak, total_logins })
+
+      console.log('Updated player stats:', {
+        days_connected,
+        login_streak,
+        max_streak,
+        total_logins
+      })
     }
 
-    // Step 7 — Response
+    // STEP 6 — Response
     return new Response(
       JSON.stringify({
         status: 'ok',
@@ -157,8 +175,11 @@ Deno.serve(async (req: Request) => {
       }),
       { headers: corsHeaders, status: 200 }
     )
+
   } catch (err) {
-    console.error('Swift-responder error:', err)
+
+    console.error('swift-responder error:', err)
+
     return new Response(
       JSON.stringify({
         status: 'error',
