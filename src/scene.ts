@@ -2,6 +2,8 @@ import { engine, GltfContainer, Transform, VisibilityComponent } from '@dcl/sdk/
 import { Vector3 } from '@dcl/sdk/math'
 
 export const TABLE = engine.addEntity()
+export const FLOOR = engine.addEntity()
+export const TENT = engine.addEntity()
 export const WIZARD = engine.addEntity()
 /** Entity with host_collider.glb: click area for "Become Host" (wizard has no collider). */
 export const HOST_COLLIDER = engine.addEntity()
@@ -39,8 +41,21 @@ export function setupScene() {
     position: WIZARD_POSITION
   })
 
+  
   GltfContainer.create(HOST_COLLIDER, {
     src: 'assets/models/host_collider.glb'
+  })
+  Transform.create(FLOOR, {
+    position: Vector3.create(8, 0, 8)
+  })
+  GltfContainer.create(FLOOR, {
+    src: 'assets/models/floor.glb'
+  })
+  Transform.create(TENT, {
+    position: Vector3.create(8, 0, 8)
+  })
+  GltfContainer.create(TENT, {
+    src: 'assets/models/tent.glb'
   })
 }
 
