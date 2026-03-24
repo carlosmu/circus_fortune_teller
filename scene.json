@@ -54,7 +54,9 @@
     "portableExperiences": "enabled"
   },
   "creator": "",
-  "skyboxConfig": {},
+  "skyboxConfig": {
+    "fixedTime": 85020
+  },
   "source": {
     "origin": "creator-hub",
     "projectId": "b0313a82-a738-4fc3-9ee8-4ee2a2fae239"

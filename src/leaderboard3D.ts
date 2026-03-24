@@ -14,8 +14,6 @@ import type { GetStatsResponse } from './supabase_api'
 
 const PANEL_WIDTH = 2.5
 const PANEL_HEIGHT = 2.5
-const OFFSET_X = 2
-const OFFSET_Y = 2
 const FRAME_THICKNESS = 0.08
 
 const COLOR_FRAME = Color4.create(0.35, 0.22, 0.08, 1)
@@ -191,12 +189,8 @@ function ensureEntities(): {
 
   const parent = engine.addEntity()
   Transform.create(parent, {
-    position: Vector3.create(
-      HOST_POSITION.x + OFFSET_X,
-      HOST_POSITION.y + OFFSET_Y,
-      HOST_POSITION.z
-    ),
-    rotation: Quaternion.fromEulerDegrees(0, -180, 0)
+    position: Vector3.create(4,2,8),
+    rotation: Quaternion.fromEulerDegrees(0, -90, 0)
   })
 
   const frame = engine.addEntity()
