@@ -23,12 +23,14 @@ const HOST_MOVE_THRESHOLD = 0.5
 const HOST_GRACE_MS = 1500
 const HOST_HOVER_BECOME = 'Become Host'
 const HOST_HOVER_WAIT = 'Wait for the next turn'
+const HOST_HOVER_DISABLED_SELF = 'You are already the Host'
+const HOST_HOVER_DISABLED_TAKEN = 'Host already taken'
 const WIZARD_MOVE_OFFSET_X = 2
 const WIZARD_MOVE_OFFSET_Z = -1
 const WIZARD_MOVE_SPEED = 6
 let lastHostPosition: { x: number; y: number; z: number } | null = null
 let hostBecameAtMs: number = 0
-let hostColliderShowingWait = false
+let lastHostColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
 let originalWizardPosition: { x: number; y: number; z: number } | null = null
 let displacedWizardPosition: { x: number; y: number; z: number } | null = null
 let currentWizardAnim: 'idle' | 'waiting' | 'reveal' | null = null
@@ -52,6 +54,10 @@ function hostClickCallback() {
   const player = getPlayer()
   const userId = player?.userId ?? null
   if (!userId) return
+  // Logic-level guard: host cannot click "Become Host" again,
+  // and no one can take host while another host is active.
+  if (gameData.currentHostId === userId) return
+  if (gameData.currentHostId !== null) return
   const hostName = player?.name?.trim() || null
   gameData.currentHostId = userId
   gameData.currentHostName = hostName
@@ -80,17 +86,28 @@ function hostClickCallback() {
   })
 }
 
-function registerHostColliderPointer(showWaitMessage: boolean) {
+function registerHostColliderPointer(
+  mode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken'
+) {
   pointerEventsSystem.removeOnPointerDown(HOST_COLLIDER)
+  const hoverText =
+    mode === 'wait'
+      ? HOST_HOVER_WAIT
+      : mode === 'disabled-self'
+        ? HOST_HOVER_DISABLED_SELF
+        : mode === 'disabled-taken'
+          ? HOST_HOVER_DISABLED_TAKEN
+          : HOST_HOVER_BECOME
+  const enabled = mode === 'become'
   pointerEventsSystem.onPointerDown(
     {
       entity: HOST_COLLIDER,
       opts: {
         button: InputAction.IA_POINTER,
-        hoverText: showWaitMessage ? HOST_HOVER_WAIT : HOST_HOVER_BECOME
+        hoverText
       }
     },
-    showWaitMessage ? () => {} : hostClickCallback
+    enabled ? hostClickCallback : () => {}
   )
 }
 
@@ -114,7 +131,8 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
 }
 
 export function setupWizard() {
-  registerHostColliderPointer(false)
+  registerHostColliderPointer('become')
+  lastHostColliderMode = 'become'
 
   // Capture original wizard position once and compute displaced position from it.
   if (Transform.has(WIZARD)) {
@@ -129,9 +147,20 @@ export function setupWizard() {
 
   engine.addSystem((dt: number) => {
     const showWait = gameData.gameState === 'MOSTRANDO_FORTUNA'
-    if (showWait !== hostColliderShowingWait) {
-      hostColliderShowingWait = showWait
-      registerHostColliderPointer(showWait)
+    const localUserId = getPlayer()?.userId ?? null
+    const localIsHost = localUserId !== null && gameData.currentHostId === localUserId
+    const hostTakenByOther =
+      gameData.currentHostId !== null && gameData.currentHostId !== localUserId
+    const hoverMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' = showWait
+      ? 'wait'
+      : localIsHost
+        ? 'disabled-self'
+        : hostTakenByOther
+          ? 'disabled-taken'
+          : 'become'
+    if (hoverMode !== lastHostColliderMode) {
+      lastHostColliderMode = hoverMode
+      registerHostColliderPointer(hoverMode)
     }
 
     // Wizard animation state machine:
@@ -157,7 +186,6 @@ export function setupWizard() {
       transform.position.z += (target.z - transform.position.z) * t
     }
 
-    const localUserId = getPlayer()?.userId ?? null
     if (gameData.currentHostId !== localUserId || !lastHostPosition) return
     if (Date.now() - hostBecameAtMs < HOST_GRACE_MS) return
     if (!Transform.has(engine.PlayerEntity)) return
