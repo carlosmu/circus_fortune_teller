@@ -14,6 +14,8 @@ export type GlobalGameData = {
   currentGuestId: string | null
   currentGuestName: string | null
   currentHostId: string | null
+  /** Display name of the current host (synced with MessageBus). */
+  currentHostName: string | null
   gameState: GameState
   currentFortune: Fortune | null
   /** Category options for the host this round (3 random). */

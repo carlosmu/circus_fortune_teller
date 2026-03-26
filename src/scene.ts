@@ -59,9 +59,9 @@ export function setupScene() {
   Transform.create(TENT, {
     position: Vector3.create(8, 0, 8)
   })
-  GltfContainer.create(TENT, {
-    src: 'assets/models/tent.glb'
-  })
+  // GltfContainer.create(TENT, {
+  //   src: 'assets/models/tent.glb'
+  // })
   Transform.create(LIGHTS_TENT, {
     position: Vector3.create(8, 0, 8)
   })

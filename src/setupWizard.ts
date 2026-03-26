@@ -36,9 +36,10 @@ function distance(a: { x: number; y: number; z: number }, b: { x: number; y: num
 
 function clearHostAndShowWizard() {
   gameData.currentHostId = null
+  gameData.currentHostName = null
   lastHostPosition = null
   hostBecameAtMs = 0
-  fortuneMessageBus.emit('set-host', { hostId: null })
+  fortuneMessageBus.emit('set-host', { hostId: null, hostName: null })
   if (VisibilityComponent.has(WIZARD)) {
     VisibilityComponent.getMutable(WIZARD).visible = true
   } else if (Transform.has(WIZARD)) {
@@ -50,8 +51,10 @@ function hostClickCallback() {
   const player = getPlayer()
   const userId = player?.userId ?? null
   if (!userId) return
+  const hostName = player?.name?.trim() || null
   gameData.currentHostId = userId
-  fortuneMessageBus.emit('set-host', { hostId: userId })
+  gameData.currentHostName = hostName
+  fortuneMessageBus.emit('set-host', { hostId: userId, hostName })
   if (VisibilityComponent.has(WIZARD)) {
     VisibilityComponent.getMutable(WIZARD).visible = false
   } else {

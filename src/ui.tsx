@@ -6,6 +6,7 @@ import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { SHOW_UI_FORTUNE } from './sceneConfig'
 import { revealFortuneForCategory } from './hostSystem'
+import { HostGuestStatusBar } from './hostGuestStatusUi'
 import type { FortuneCategory } from './types'
 
 let waitingPanelTime = 0
@@ -82,6 +83,8 @@ function uiComponent() {
         alignItems: 'stretch'
       }}
     >
+      <HostGuestStatusBar />
+
       {/* Debug state (top-left) */}
       <UiEntity
         uiTransform={{

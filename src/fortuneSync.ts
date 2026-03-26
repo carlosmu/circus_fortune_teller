@@ -76,12 +76,17 @@ export function setupFortuneSync() {
     gameData.gameState = 'LIBRE'
   })
 
-  fortuneMessageBus.on('set-host', (data: { hostId: string | null }) => {
-    gameData.currentHostId = data.hostId
-    if (VisibilityComponent.has(WIZARD)) {
-      VisibilityComponent.getMutable(WIZARD).visible = data.hostId === null
-    } else {
-      VisibilityComponent.create(WIZARD, { visible: data.hostId === null })
+  fortuneMessageBus.on(
+    'set-host',
+    (data: { hostId: string | null; hostName?: string | null }) => {
+      gameData.currentHostId = data.hostId
+      gameData.currentHostName =
+        data.hostId != null ? (data.hostName ?? gameData.currentHostName) : null
+      if (VisibilityComponent.has(WIZARD)) {
+        VisibilityComponent.getMutable(WIZARD).visible = data.hostId === null
+      } else {
+        VisibilityComponent.create(WIZARD, { visible: data.hostId === null })
+      }
     }
-  })
+  )
 }
