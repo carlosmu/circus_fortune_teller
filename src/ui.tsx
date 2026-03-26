@@ -132,7 +132,7 @@ function uiComponent() {
                 height: '70%',
                 margin: { top: '5%' }
               }}
-              value="Waiting for the host..."
+              value="Your fortune is..."
               textAlign="middle-center"
               fontSize={22}
               font="serif"
