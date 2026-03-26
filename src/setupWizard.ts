@@ -1,7 +1,7 @@
 import {
   engine,
+  Animator,
   Transform,
-  VisibilityComponent,
   pointerEventsSystem,
   InputAction,
   executeTask
@@ -23,9 +23,15 @@ const HOST_MOVE_THRESHOLD = 0.5
 const HOST_GRACE_MS = 1500
 const HOST_HOVER_BECOME = 'Become Host'
 const HOST_HOVER_WAIT = 'Wait for the next turn'
+const WIZARD_MOVE_OFFSET_X = 2
+const WIZARD_MOVE_OFFSET_Z = -1
+const WIZARD_MOVE_SPEED = 6
 let lastHostPosition: { x: number; y: number; z: number } | null = null
 let hostBecameAtMs: number = 0
 let hostColliderShowingWait = false
+let originalWizardPosition: { x: number; y: number; z: number } | null = null
+let displacedWizardPosition: { x: number; y: number; z: number } | null = null
+let currentWizardAnim: 'idle' | 'waiting' | 'reveal' | null = null
 
 function distance(a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }): number {
   const dx = a.x - b.x
@@ -40,11 +46,6 @@ function clearHostAndShowWizard() {
   lastHostPosition = null
   hostBecameAtMs = 0
   fortuneMessageBus.emit('set-host', { hostId: null, hostName: null })
-  if (VisibilityComponent.has(WIZARD)) {
-    VisibilityComponent.getMutable(WIZARD).visible = true
-  } else if (Transform.has(WIZARD)) {
-    VisibilityComponent.create(WIZARD, { visible: true })
-  }
 }
 
 function hostClickCallback() {
@@ -55,11 +56,6 @@ function hostClickCallback() {
   gameData.currentHostId = userId
   gameData.currentHostName = hostName
   fortuneMessageBus.emit('set-host', { hostId: userId, hostName })
-  if (VisibilityComponent.has(WIZARD)) {
-    VisibilityComponent.getMutable(WIZARD).visible = false
-  } else {
-    VisibilityComponent.create(WIZARD, { visible: false })
-  }
   hostBecameAtMs = Date.now()
   lastHostPosition = {
     x: HOST_POSITION.x,
@@ -98,15 +94,69 @@ function registerHostColliderPointer(showWaitMessage: boolean) {
   )
 }
 
+function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
+  if (currentWizardAnim === next) return
+  if (!Animator.has(WIZARD)) return
+
+  const animator = Animator.getMutable(WIZARD)
+  let foundAny = false
+  for (const state of animator.states) {
+    const shouldPlay = state.clip === next
+    state.playing = shouldPlay
+    if (shouldPlay) {
+      state.loop = next !== 'reveal'
+      state.speed = 1
+      foundAny = true
+    }
+  }
+
+  if (foundAny) currentWizardAnim = next
+}
+
 export function setupWizard() {
   registerHostColliderPointer(false)
 
-  engine.addSystem((_dt: number) => {
+  // Capture original wizard position once and compute displaced position from it.
+  if (Transform.has(WIZARD)) {
+    const pos = Transform.get(WIZARD).position
+    originalWizardPosition = { x: pos.x, y: pos.y, z: pos.z }
+    displacedWizardPosition = {
+      x: pos.x + WIZARD_MOVE_OFFSET_X,
+      y: pos.y,
+      z: pos.z + WIZARD_MOVE_OFFSET_Z
+    }
+  }
+
+  engine.addSystem((dt: number) => {
     const showWait = gameData.gameState === 'MOSTRANDO_FORTUNA'
     if (showWait !== hostColliderShowingWait) {
       hostColliderShowingWait = showWait
       registerHostColliderPointer(showWait)
     }
+
+    // Wizard animation state machine:
+    // - idle: original position, no host
+    // - waiting: host taken, waiting / occupied
+    // - reveal: actively revealing player's fortune
+    if (gameData.gameState === 'MOSTRANDO_FORTUNA') {
+      setWizardAnimation('reveal')
+    } else if (gameData.currentHostId !== null) {
+      setWizardAnimation('waiting')
+    } else {
+      setWizardAnimation('idle')
+    }
+
+    // Wizard position interpolation
+    if (Transform.has(WIZARD) && originalWizardPosition && displacedWizardPosition) {
+      const transform = Transform.getMutable(WIZARD)
+      const target =
+        gameData.currentHostId !== null ? displacedWizardPosition : originalWizardPosition
+      const t = Math.min(1, dt * WIZARD_MOVE_SPEED)
+      transform.position.x += (target.x - transform.position.x) * t
+      transform.position.y += (target.y - transform.position.y) * t
+      transform.position.z += (target.z - transform.position.z) * t
+    }
+
     const localUserId = getPlayer()?.userId ?? null
     if (gameData.currentHostId !== localUserId || !lastHostPosition) return
     if (Date.now() - hostBecameAtMs < HOST_GRACE_MS) return

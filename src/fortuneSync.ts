@@ -1,10 +1,10 @@
-import { engine, AudioSource, Transform, VisibilityComponent } from '@dcl/sdk/ecs'
+import { engine, AudioSource, Transform } from '@dcl/sdk/ecs'
 import { MessageBus } from '@dcl/sdk/message-bus'
 import { Vector3 } from '@dcl/sdk/math'
 import { FORTUNES } from './fortunes'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
-import { HOST_POSITION, WIZARD } from './scene'
+import { HOST_POSITION } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import type { FortuneCategory } from './types'
 
@@ -82,11 +82,6 @@ export function setupFortuneSync() {
       gameData.currentHostId = data.hostId
       gameData.currentHostName =
         data.hostId != null ? (data.hostName ?? gameData.currentHostName) : null
-      if (VisibilityComponent.has(WIZARD)) {
-        VisibilityComponent.getMutable(WIZARD).visible = data.hostId === null
-      } else {
-        VisibilityComponent.create(WIZARD, { visible: data.hostId === null })
-      }
     }
   )
 }
