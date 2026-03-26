@@ -70,6 +70,7 @@ function uiComponent() {
   const capitalizedCategory =
     category ? category.charAt(0).toUpperCase() + category.slice(1) : ''
   const guestName = gameData.currentGuestName ?? ''
+  const fortuneText = guestName ? `${guestName}, ${text}` : text
 
   return (
     <UiEntity
@@ -162,23 +163,26 @@ function uiComponent() {
               textureMode: 'stretch',
             }}
           >
+            {/* Categoría (arriba) */}
             <Label
               uiTransform={{
                 width: '80%',
                 height: '30%'
               }}
-              value={`${guestName ? guestName: ''} | ${capitalizedCategory}`}
+              value={capitalizedCategory}
               textAlign="bottom-center"
               fontSize={18}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
+
+            {/* Texto de la fortuna, precedido por el nombre del invitado si existe */}
             <Label
               uiTransform={{
                 width: '60%',
                 height: '50%'
               }}
-              value={`${text}`}
+              value={fortuneText}
               textAlign="top-center"
               fontSize={22}
               font="serif"
