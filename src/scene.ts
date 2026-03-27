@@ -15,8 +15,8 @@ export const SPOTLIGHT_MAIN = engine.addEntity()
 /** Wizard position in scene (GLB origin 0,0,0, placed by code). */
 const WIZARD_POSITION = Vector3.create(8, 0, 5.5)
 
-/** Position the player is teleported to when becoming host (same as wizard). */
-export const HOST_POSITION = WIZARD_POSITION
+/** Fixed position of the host spot (never mutated, unlike WIZARD's Transform). */
+export const HOST_POSITION = Vector3.create(8, 0, 5.5)
 /** Point the host camera looks at (table/guest). */
 export const HOST_CAMERA_TARGET = Vector3.create(8, 1, 8)
 

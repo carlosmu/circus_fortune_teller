@@ -1,6 +1,7 @@
 import { engine, AudioSource, Transform } from '@dcl/sdk/ecs'
 import { MessageBus } from '@dcl/sdk/message-bus'
 import { Vector3 } from '@dcl/sdk/math'
+import { getPlayer } from '@dcl/sdk/players'
 import { FORTUNES } from './fortunes'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
@@ -61,8 +62,11 @@ export function setupFortuneSync() {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'OCUPADO'
-    // Start the guest closeup immediately when pressing "Reveal Fortune".
-    startRevealFortuneCinematic()
+    // Only the requesting guest should see this closeup.
+    const localUserId = getPlayer()?.userId ?? null
+    if (localUserId !== null && localUserId === data.guestId) {
+      startRevealFortuneCinematic()
+    }
   })
 
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {

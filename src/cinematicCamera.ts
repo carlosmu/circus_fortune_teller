@@ -1,6 +1,6 @@
 import { engine, Transform, VirtualCamera, MainCamera } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
-import { WIZARD } from './scene'
+import { WIZARD, HOST_POSITION } from './scene'
 
 type Vec3 = { x: number; y: number; z: number }
 
@@ -45,13 +45,13 @@ export const CINEMATIC_CONFIG = {
   revealBlendOutDuration: 2.8,
   /** Extra smoothing only for reveal closeup phases. */
   revealRotationDamping: 0.08,
-  /** Reveal closeup offsets from wizard position. */
+  /** Reveal closeup offsets from HOST_POSITION. */
   revealCamOffsetX: 0,
-  revealCamOffsetY: 2,
-  revealCamOffsetZ: 2.5,
+  revealCamOffsetY: 1,
+  revealCamOffsetZ: 4.5,
   revealTargetOffsetX: 0,
   revealTargetOffsetY: 2,
-  revealTargetOffsetZ: 0.5
+  revealTargetOffsetZ: 0
 }
 
 export let cinematicBarAlpha = 0
@@ -239,21 +239,17 @@ export function startRevealFortuneCinematic(): void {
     z: revealStartPos.z + revealStartLookDir.z * 4
   }
 
-  if (Transform.has(WIZARD)) {
-    const w = Transform.get(WIZARD).position
-    revealClosePos = {
-      x: w.x + CINEMATIC_CONFIG.revealCamOffsetX,
-      y: w.y + CINEMATIC_CONFIG.revealCamOffsetY,
-      z: w.z + CINEMATIC_CONFIG.revealCamOffsetZ
-    }
-    revealLookTarget = {
-      x: w.x + CINEMATIC_CONFIG.revealTargetOffsetX,
-      y: w.y + CINEMATIC_CONFIG.revealTargetOffsetY,
-      z: w.z + CINEMATIC_CONFIG.revealTargetOffsetZ
-    }
-  } else {
-    revealClosePos = { x: 8, y: 2, z: 8 }
-    revealLookTarget = { x: 8, y: 2, z: 6 }
+  // Always use fixed host spot for reveal closeup, independent from wizard mesh.
+  const hostPos = HOST_POSITION
+  revealClosePos = {
+    x: hostPos.x + CINEMATIC_CONFIG.revealCamOffsetX,
+    y: hostPos.y + CINEMATIC_CONFIG.revealCamOffsetY,
+    z: hostPos.z + CINEMATIC_CONFIG.revealCamOffsetZ
+  }
+  revealLookTarget = {
+    x: hostPos.x + CINEMATIC_CONFIG.revealTargetOffsetX,
+    y: hostPos.y + CINEMATIC_CONFIG.revealTargetOffsetY,
+    z: hostPos.z + CINEMATIC_CONFIG.revealTargetOffsetZ
   }
 
   revealPhase = 'blend-in'
