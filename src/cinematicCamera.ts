@@ -23,10 +23,20 @@ export const CINEMATIC_CONFIG = {
   /** Wizard-front framing. */
   wizardFrontDistance: 5.8,
   wizardLookHeight: 1.8,
+  /** Start frame offset from wizard position (matches requested framing). */
+  wizardStartOffsetX: 0,
+  wizardStartOffsetY: 1,
+  wizardStartOffsetZ: 4.5,
+  /** Start look target offset from wizard position. */
+  wizardTargetOffsetX: 0,
+  wizardTargetOffsetY: 2,
+  wizardTargetOffsetZ: 0.5,
   /** Pre-orbit local offset (small movement only). */
   preOrbitRadiusFactor: 1.1,
   preOrbitHeightOffset: 0.25,
   preOrbitAngleOffset: 0.2,
+  /** How much the short blend approaches orbit start (0..1). */
+  blendToOrbitFactor: 0.35,
   /** Smoothly move look target from wizard to table center. */
   orbitLookBlendDuration: 1.1
 }
@@ -103,11 +113,18 @@ function getOrCreateCamEntity(): ReturnType<typeof engine.addEntity> {
   return e
 }
 
-function getWizardInfo(fallbackPivot: Vec3): { frontAngle: number; lookTarget: Vec3 } {
+function getWizardInfo(fallbackPivot: Vec3): {
+  frontAngle: number
+  lookTarget: Vec3
+  startPos: Vec3
+} {
   if (!Transform.has(WIZARD)) {
+    const startPos = { x: 8, y: 1, z: 10 }
+    const lookTarget = { x: 8, y: 2, z: 6 }
     return {
-      frontAngle: Math.atan2(-2.5, -3.2),
-      lookTarget: { x: fallbackPivot.x, y: 1.2, z: fallbackPivot.z }
+      frontAngle: Math.atan2(startPos.z - fallbackPivot.z, startPos.x - fallbackPivot.x),
+      startPos,
+      lookTarget
     }
   }
 
@@ -121,9 +138,21 @@ function getWizardInfo(fallbackPivot: Vec3): { frontAngle: number; lookTarget: V
     z: wPos.z - fwd.z * CINEMATIC_CONFIG.wizardFrontDistance
   }
 
+  const startPos = {
+    x: wPos.x + CINEMATIC_CONFIG.wizardStartOffsetX,
+    y: wPos.y + CINEMATIC_CONFIG.wizardStartOffsetY,
+    z: wPos.z + CINEMATIC_CONFIG.wizardStartOffsetZ
+  }
+  const lookTarget = {
+    x: wPos.x + CINEMATIC_CONFIG.wizardTargetOffsetX,
+    y: wPos.y + CINEMATIC_CONFIG.wizardTargetOffsetY,
+    z: wPos.z + CINEMATIC_CONFIG.wizardTargetOffsetZ
+  }
+
   return {
-    frontAngle: Math.atan2(frontPos.z - fallbackPivot.z, frontPos.x - fallbackPivot.x),
-    lookTarget: { x: wPos.x, y: wPos.y + CINEMATIC_CONFIG.wizardLookHeight, z: wPos.z }
+    frontAngle: Math.atan2(startPos.z - fallbackPivot.z, startPos.x - fallbackPivot.x),
+    startPos,
+    lookTarget
   }
 }
 
@@ -144,17 +173,15 @@ export function startOrbitCinematic(pivotPos: Vec3, finalPos: Vec3, onComplete: 
   startAngle = wizardInfo.frontAngle
   endAngle = Math.atan2(finalPos.z - pivotPos.z, finalPos.x - pivotPos.x)
 
-  // Instant 1-frame reposition near final orbit path (small/local movement only).
-  blendStartPos = {
-    x: pivot.x + Math.cos(startAngle + CINEMATIC_CONFIG.preOrbitAngleOffset) * (CINEMATIC_CONFIG.radius * CINEMATIC_CONFIG.preOrbitRadiusFactor),
-    y: CINEMATIC_CONFIG.height + CINEMATIC_CONFIG.preOrbitHeightOffset,
-    z: pivot.z + Math.sin(startAngle + CINEMATIC_CONFIG.preOrbitAngleOffset) * (CINEMATIC_CONFIG.radius * CINEMATIC_CONFIG.preOrbitRadiusFactor)
-  }
-  blendEndPos = {
+  // Instant 1-frame reposition to requested wizard framing.
+  blendStartPos = { ...wizardInfo.startPos }
+  const orbitStartPos = {
     x: pivot.x + Math.cos(startAngle) * CINEMATIC_CONFIG.radius,
     y: CINEMATIC_CONFIG.height,
     z: pivot.z + Math.sin(startAngle) * CINEMATIC_CONFIG.radius
   }
+  // Keep a short, controlled transition before entering full orbit.
+  blendEndPos = lerpVec(blendStartPos, orbitStartPos, CINEMATIC_CONFIG.blendToOrbitFactor)
 
   smoothedLookDir = lookDir(blendStartPos, wizardLookTarget)
   if (Transform.has(e)) {
