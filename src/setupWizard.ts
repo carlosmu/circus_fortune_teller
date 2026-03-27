@@ -17,6 +17,10 @@ import {
   HOST_POSITION,
   HOST_CAMERA_TARGET
 } from './scene'
+import { startOrbitCinematic, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
+
+/** Center of the table used as orbit pivot for the cinematic. */
+const TABLE_CENTER = { x: 8, y: 0, z: 8 }
 
 const HOST_MOVE_THRESHOLD = 0.5
 /** Tiempo en ms sin comprobar movimiento tras convertirse en host (dar tiempo al teletransporte). */
@@ -47,6 +51,7 @@ function clearHostAndShowWizard() {
   gameData.currentHostName = null
   lastHostPosition = null
   hostBecameAtMs = 0
+  stopOrbitCinematic()
   fortuneMessageBus.emit('set-host', { hostId: null, hostName: null })
 }
 
@@ -68,6 +73,17 @@ function hostClickCallback() {
     y: HOST_POSITION.y,
     z: HOST_POSITION.z
   }
+
+  // Start orbit cinematic: virtual camera orbits the table while the player is
+  // silently teleported underneath. When the arc finishes the virtual camera
+  // deactivates and the player's view is already at HOST_POSITION.
+  startOrbitCinematic(
+    TABLE_CENTER,
+    { x: HOST_POSITION.x, y: 0, z: HOST_POSITION.z },
+    () => {} // cleanup is handled inside cinematicCamera
+  )
+
+  // Teleport the player silently while the cinematic is playing.
   executeTask(async () => {
     try {
       await movePlayerTo({
@@ -131,6 +147,7 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
 }
 
 export function setupWizard() {
+  setupCinematicCamera()
   registerHostColliderPointer('become')
   lastHostColliderMode = 'become'
 
