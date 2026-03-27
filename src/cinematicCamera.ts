@@ -42,7 +42,7 @@ export const CINEMATIC_CONFIG = {
   /** Reveal-fortune closeup timings. */
   revealBlendInDuration: 2.0,
   revealHoldDuration: 2.0,
-  revealBlendOutDuration: 0.8,
+  revealBlendOutDuration: 1.8,
   /** Reveal closeup offsets from wizard position. */
   revealCamOffsetX: 0,
   revealCamOffsetY: 2,
