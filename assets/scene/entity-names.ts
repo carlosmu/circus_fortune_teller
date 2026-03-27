@@ -5,8 +5,7 @@
  * Object containing all entity names in the scene for autocomplete support.
  */
 export enum EntityNames {
-  Spotlight = "Spotlight",
-  Spotlight_2 = "Spotlight_2",
-  Spotlight_3 = "Spotlight_3",
-  Spotlight_4 = "Spotlight_4",
+  tree_green_glb = "tree_green.glb",
+  tree_pink_glb = "tree_pink.glb",
+  tree_yellow_glb = "tree_yellow.glb",
 } 

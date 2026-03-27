@@ -13,7 +13,7 @@ import type { FortuneCategory } from './types'
 let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
 /** Vertical offset (px) applied to all card.png UI panels. Negative moves up. */
-const CARD_UI_VERTICAL_OFFSET_PX = -100
+const CARD_UI_VERTICAL_OFFSET = '-100px'
 
 const ALL_CATEGORIES: FortuneCategory[] = ['love', 'money', 'health', 'work', 'mystery', 'pets', 'family', 'travel', 'luck']
 
@@ -28,10 +28,24 @@ const CATEGORY_LABELS: Record<FortuneCategory, string> = {
   family: 'Family',
   mystery: 'Mystery'
 }
+const WAITING_FORTUNE_LINES = [
+  'Your fate is...',
+  'Your destiny awaits...',
+  'The cards have spoken...',
+  'What lies ahead is...'
+]
 
 function pickThreeRandomCategories(): [FortuneCategory, FortuneCategory, FortuneCategory] {
   const shuffled = [...ALL_CATEGORIES].sort(() => Math.random() - 0.5)
   return [shuffled[0], shuffled[1], shuffled[2]]
+}
+
+function pickWaitingLine(seed: string): string {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  }
+  return WAITING_FORTUNE_LINES[hash % WAITING_FORTUNE_LINES.length]
 }
 
 export function setupUi() {
@@ -103,6 +117,9 @@ function uiComponent() {
     category ? category.charAt(0).toUpperCase() + category.slice(1) : ''
   const guestName = gameData.currentGuestName ?? ''
   const fortuneText = guestName ? `${guestName}, ${text}` : text
+  const waitingSeed = `${gameData.currentGuestId ?? ''}:${gameData.currentGuestName ?? ''}`
+  const waitingBaseLine = pickWaitingLine(waitingSeed)
+  const waitingFortuneLine = guestName ? `${guestName}, ${waitingBaseLine}` : waitingBaseLine
 
   return (
     <UiEntity
@@ -151,7 +168,7 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET_PX }
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -164,7 +181,7 @@ function uiComponent() {
                 height: '70%',
                 margin: { top: '5%' }
               }}
-              value="Your fortune is..."
+              value={waitingFortuneLine}
               textAlign="middle-center"
               fontSize={22}
               font="serif"
@@ -192,7 +209,7 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET_PX }
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -245,7 +262,7 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET_PX }
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
