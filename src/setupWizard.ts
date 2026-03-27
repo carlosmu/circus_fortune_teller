@@ -32,6 +32,11 @@ const HOST_HOVER_DISABLED_TAKEN = 'Host already taken'
 const WIZARD_MOVE_OFFSET_X = 2
 const WIZARD_MOVE_OFFSET_Z = -1
 const WIZARD_MOVE_SPEED = 6
+const HOST_SESSION_INITIAL_MS = 30000
+const HOST_RANDOM_MIN_X = 3
+const HOST_RANDOM_MAX_X = 13
+const HOST_RANDOM_MIN_Z = 7
+const HOST_RANDOM_MAX_Z = 12
 let lastHostPosition: { x: number; y: number; z: number } | null = null
 let hostBecameAtMs: number = 0
 let lastHostColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
@@ -50,10 +55,54 @@ function distance(a: { x: number; y: number; z: number }, b: { x: number; y: num
 function clearHostAndShowWizard() {
   gameData.currentHostId = null
   gameData.currentHostName = null
+  gameData.hostSessionEndsAtMs = null
+  gameData.hostReadingsDone = 0
+  gameData.hostMaxReadings = 3
+  gameData.hostReleaseAtMs = null
+  gameData.hostTimeRemainingSec = 0
+  gameData.centerBannerText = null
+  gameData.centerBannerUntilMs = 0
   lastHostPosition = null
   hostBecameAtMs = 0
   stopOrbitCinematic()
-  fortuneMessageBus.emit('set-host', { hostId: null, hostName: null })
+  fortuneMessageBus.emit('set-host', {
+    hostId: null,
+    hostName: null,
+    hostSessionEndsAtMs: null,
+    hostReadingsDone: 0,
+    hostMaxReadings: 3,
+    hostReleaseAtMs: null
+  })
+}
+
+function randomInRange(min: number, max: number): number {
+  return min + Math.random() * (max - min)
+}
+
+function moveHostToRandomArea(): void {
+  executeTask(async () => {
+    try {
+      await movePlayerTo({
+        newRelativePosition: {
+          x: randomInRange(HOST_RANDOM_MIN_X, HOST_RANDOM_MAX_X),
+          y: 1,
+          z: randomInRange(HOST_RANDOM_MIN_Z, HOST_RANDOM_MAX_Z)
+        },
+        cameraTarget: {
+          x: HOST_CAMERA_TARGET.x,
+          y: HOST_CAMERA_TARGET.y,
+          z: HOST_CAMERA_TARGET.z
+        }
+      })
+    } catch (_e) {}
+  })
+}
+
+function releaseHostBySessionRules(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId === null || gameData.currentHostId !== localUserId) return
+  clearHostAndShowWizard()
+  moveHostToRandomArea()
 }
 
 function hostClickCallback() {
@@ -67,8 +116,32 @@ function hostClickCallback() {
   const hostName = player?.name?.trim() || null
   gameData.currentHostId = userId
   gameData.currentHostName = hostName
-  fortuneMessageBus.emit('set-host', { hostId: userId, hostName })
-  hostBecameAtMs = Date.now()
+  const now = Date.now()
+  gameData.hostReadingsDone = 0
+  gameData.hostMaxReadings = 3
+  gameData.hostSessionEndsAtMs = now + HOST_SESSION_INITIAL_MS
+  gameData.hostReleaseAtMs = null
+  gameData.hostTimeRemainingSec = 30
+  gameData.centerBannerText = `${hostName ?? 'Someone'} is becoming the host`
+  gameData.centerBannerUntilMs = now + 2200
+  fortuneMessageBus.emit('set-host', {
+    hostId: userId,
+    hostName,
+    hostSessionEndsAtMs: gameData.hostSessionEndsAtMs,
+    hostReadingsDone: gameData.hostReadingsDone,
+    hostMaxReadings: gameData.hostMaxReadings,
+    hostReleaseAtMs: null
+  })
+  fortuneMessageBus.emit('host-session-update', {
+    hostId: userId,
+    hostSessionEndsAtMs: gameData.hostSessionEndsAtMs,
+    hostReadingsDone: gameData.hostReadingsDone,
+    hostMaxReadings: gameData.hostMaxReadings,
+    hostReleaseAtMs: gameData.hostReleaseAtMs,
+    centerBannerText: gameData.centerBannerText,
+    centerBannerUntilMs: gameData.centerBannerUntilMs
+  })
+  hostBecameAtMs = now
   lastHostPosition = {
     x: HOST_POSITION.x,
     y: HOST_POSITION.y,
@@ -220,6 +293,35 @@ export function setupWizard() {
       transform.position.x += (target.x - transform.position.x) * t
       transform.position.y += (target.y - transform.position.y) * t
       transform.position.z += (target.z - transform.position.z) * t
+    }
+
+    // Host session timer and forced release rules (timestamp-based).
+    if (gameData.currentHostId !== null && gameData.hostSessionEndsAtMs !== null) {
+      const now = Date.now()
+      const remainingSecTarget = Math.max(0, (gameData.hostSessionEndsAtMs - now) / 1000)
+      if (remainingSecTarget > gameData.hostTimeRemainingSec) {
+        // Smooth increase when bonus time is added.
+        gameData.hostTimeRemainingSec = Math.min(
+          remainingSecTarget,
+          gameData.hostTimeRemainingSec + dt * 20
+        )
+      } else {
+        gameData.hostTimeRemainingSec = remainingSecTarget
+      }
+
+      const localUserIdForTimer = getPlayer()?.userId ?? null
+      const localIsHostForTimer =
+        localUserIdForTimer !== null && gameData.currentHostId === localUserIdForTimer
+      if (localIsHostForTimer) {
+        if (gameData.hostReleaseAtMs !== null && now >= gameData.hostReleaseAtMs) {
+          releaseHostBySessionRules()
+          return
+        }
+        if (now >= gameData.hostSessionEndsAtMs) {
+          releaseHostBySessionRules()
+          return
+        }
+      }
     }
 
     if (gameData.currentHostId !== localUserId || !lastHostPosition) return

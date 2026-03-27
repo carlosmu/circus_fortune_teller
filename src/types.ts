@@ -16,6 +16,20 @@ export type GlobalGameData = {
   currentHostId: string | null
   /** Display name of the current host (synced with MessageBus). */
   currentHostName: string | null
+  /** Absolute timestamp (ms) when host session ends. */
+  hostSessionEndsAtMs: number | null
+  /** Number of completed readings in the current host session. */
+  hostReadingsDone: number
+  /** Maximum readings allowed per host session. */
+  hostMaxReadings: number
+  /** Release timestamp after final reading (ms), if scheduled. */
+  hostReleaseAtMs: number | null
+  /** Smoothed remaining time for UI display (seconds). */
+  hostTimeRemainingSec: number
+  /** Center banner text (e.g. host announcements). */
+  centerBannerText: string | null
+  /** Absolute timestamp (ms) when center banner should disappear. */
+  centerBannerUntilMs: number
   gameState: GameState
   currentFortune: Fortune | null
   /** Category options for the host this round (3 random). */

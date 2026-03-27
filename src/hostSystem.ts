@@ -9,17 +9,54 @@ let hostSystemInitialized = false
 let hostTimer = 0
 let lastAutoCategory: FortuneCategory | null = null
 const HOST_REVEAL_DELAY = 3 // seconds (only when no host is set)
+const HOST_READING_BONUS_MS = 15000
+const HOST_MAX_SESSION_MS = 60000
+const HOST_RELEASE_DELAY_AFTER_LAST_READING_MS = 3000
 
 /**
  * Picks a random fortune for the category and reveals it to everyone (host only, from UI).
  */
 export function revealFortuneForCategory(category: FortuneCategory): void {
+  if (gameData.currentHostId !== null && gameData.hostReadingsDone >= gameData.hostMaxReadings) {
+    console.log('[HostSession] Readings locked: max reached')
+    return
+  }
+
   const byCategory = FORTUNES.filter((f) => f.category === category)
   if (byCategory.length === 0) return
   const fortune = byCategory[Math.floor(Math.random() * byCategory.length)]
 
   gameData.currentFortune = fortune
   gameData.gameState = 'MOSTRANDO_FORTUNA'
+
+  if (gameData.currentHostId !== null) {
+    gameData.hostReadingsDone += 1
+    const now = Date.now()
+
+    if (gameData.hostReadingsDone <= 2) {
+      const currentEnd = gameData.hostSessionEndsAtMs ?? now
+      const extendedEnd = currentEnd + HOST_READING_BONUS_MS
+      const maxEnd = now + HOST_MAX_SESSION_MS
+      gameData.hostSessionEndsAtMs = Math.min(extendedEnd, maxEnd)
+      if (gameData.hostReadingsDone === 2) {
+        const hostName = gameData.currentHostName?.trim() || 'Host'
+        gameData.centerBannerText = `${hostName}, 1 reading left`
+        gameData.centerBannerUntilMs = now + 2000
+      }
+    } else if (gameData.hostReadingsDone >= 3) {
+      gameData.hostReleaseAtMs = now + HOST_RELEASE_DELAY_AFTER_LAST_READING_MS
+    }
+
+    fortuneMessageBus.emit('host-session-update', {
+      hostId: gameData.currentHostId,
+      hostSessionEndsAtMs: gameData.hostSessionEndsAtMs,
+      hostReadingsDone: gameData.hostReadingsDone,
+      hostMaxReadings: gameData.hostMaxReadings,
+      hostReleaseAtMs: gameData.hostReleaseAtMs,
+      centerBannerText: gameData.centerBannerText,
+      centerBannerUntilMs: gameData.centerBannerUntilMs
+    })
+  }
 
   const fortuneIndex = FORTUNES.indexOf(fortune)
   fortuneMessageBus.emit('show-fortune', {

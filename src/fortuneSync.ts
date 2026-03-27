@@ -25,6 +25,16 @@ export type GuestRequestedMessage = {
   guestName: string
 }
 
+export type HostSessionUpdateMessage = {
+  hostId: string | null
+  hostSessionEndsAtMs: number | null
+  hostReadingsDone: number
+  hostMaxReadings: number
+  hostReleaseAtMs: number | null
+  centerBannerText?: string | null
+  centerBannerUntilMs?: number
+}
+
 const REVEAL_SOUND_FILENAME = 'Into_the_Depths.mp3'
 const REVEAL_SOUND_PATH = 'assets/audio/' + encodeURIComponent(REVEAL_SOUND_FILENAME)
 
@@ -84,10 +94,41 @@ export function setupFortuneSync() {
 
   fortuneMessageBus.on(
     'set-host',
-    (data: { hostId: string | null; hostName?: string | null }) => {
+    (data: {
+      hostId: string | null
+      hostName?: string | null
+      hostSessionEndsAtMs?: number | null
+      hostReadingsDone?: number
+      hostMaxReadings?: number
+      hostReleaseAtMs?: number | null
+    }) => {
       gameData.currentHostId = data.hostId
       gameData.currentHostName =
         data.hostId != null ? (data.hostName ?? gameData.currentHostName) : null
+      if (data.hostId == null) {
+        gameData.hostSessionEndsAtMs = null
+        gameData.hostReadingsDone = 0
+        gameData.hostMaxReadings = 3
+        gameData.hostReleaseAtMs = null
+        gameData.hostTimeRemainingSec = 0
+      } else {
+        gameData.hostSessionEndsAtMs = data.hostSessionEndsAtMs ?? gameData.hostSessionEndsAtMs
+        gameData.hostReadingsDone = data.hostReadingsDone ?? gameData.hostReadingsDone
+        gameData.hostMaxReadings = data.hostMaxReadings ?? gameData.hostMaxReadings
+        gameData.hostReleaseAtMs = data.hostReleaseAtMs ?? null
+      }
     }
   )
+
+  fortuneMessageBus.on('host-session-update', (data: HostSessionUpdateMessage) => {
+    if (gameData.currentHostId !== data.hostId) return
+    gameData.hostSessionEndsAtMs = data.hostSessionEndsAtMs
+    gameData.hostReadingsDone = data.hostReadingsDone
+    gameData.hostMaxReadings = data.hostMaxReadings
+    gameData.hostReleaseAtMs = data.hostReleaseAtMs
+    if (typeof data.centerBannerUntilMs === 'number') {
+      gameData.centerBannerUntilMs = data.centerBannerUntilMs
+      gameData.centerBannerText = data.centerBannerText ?? null
+    }
+  })
 }

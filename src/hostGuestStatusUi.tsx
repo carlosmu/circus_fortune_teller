@@ -13,6 +13,15 @@ export function HostGuestStatusBar() {
   const guestPlayerName = gameData.currentGuestName
   const hostLabel = hostPlayerName ?? 'Free'
   const guestLabel = guestPlayerName ?? 'Free'
+  const hasActiveHost = gameData.currentHostId !== null
+  const timeSec = Math.max(0, Math.ceil(gameData.hostTimeRemainingSec))
+  const filledCards = hasActiveHost
+    ? Math.min(3, Math.max(1, gameData.hostReadingsDone + 1))
+    : 0
+  const cards = `${'🃏'.repeat(filledCards)}${'⬜'.repeat(3 - filledCards)}`
+  const hostStatusLine = hasActiveHost
+    ? `Host: ${hostLabel} | ⏱️ ${timeSec}s | Readings ${cards}`
+    : `Host: ${hostLabel}`
 
   return (
     <UiEntity
@@ -26,7 +35,7 @@ export function HostGuestStatusBar() {
     >
       <UiEntity
         uiTransform={{
-          width: 260,
+          width: 560,
           height: 60,
           flexDirection: 'column',
           justifyContent: 'center',
@@ -36,18 +45,18 @@ export function HostGuestStatusBar() {
         uiBackground={{ color: BG }}
       >
         <Label
-          uiTransform={{ width: 240, height: 22 }}
-          value={`Host: ${hostLabel}`}
+          uiTransform={{ width: 540, height: 22 }}
+          value={hostStatusLine}
           textAlign="middle-center"
-          fontSize={20}
+          fontSize={16}
           font="sans-serif"
           color={TEXT}
         />
         <Label
-          uiTransform={{ width: 240, height: 22 }}
+          uiTransform={{ width: 540, height: 22 }}
           value={`Guest: ${guestLabel}`}
           textAlign="middle-center"
-          fontSize={20}
+          fontSize={16}
           font="sans-serif"
           color={TEXT}
         />
