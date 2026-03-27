@@ -38,7 +38,18 @@ export const CINEMATIC_CONFIG = {
   /** How much the short blend approaches orbit start (0..1). */
   blendToOrbitFactor: 0.35,
   /** Smoothly move look target from wizard to table center. */
-  orbitLookBlendDuration: 1.1
+  orbitLookBlendDuration: 1.1,
+  /** Reveal-fortune closeup timings. */
+  revealBlendInDuration: 0.8,
+  revealHoldDuration: 2.0,
+  revealBlendOutDuration: 0.8,
+  /** Reveal closeup offsets from wizard position. */
+  revealCamOffsetX: 0,
+  revealCamOffsetY: 2,
+  revealCamOffsetZ: 2.5,
+  revealTargetOffsetX: 0,
+  revealTargetOffsetY: 2,
+  revealTargetOffsetZ: 0.5
 }
 
 export let cinematicBarAlpha = 0
@@ -62,6 +73,15 @@ let startAngle = 0
 let endAngle = 0
 let completeCb: (() => void) | null = null
 let smoothedLookDir: Vec3 = { x: 0, y: 0, z: 1 }
+let cinematicMode: 'none' | 'orbit' | 'reveal' = 'none'
+
+let revealPhase: 'blend-in' | 'hold' | 'blend-out' = 'blend-in'
+let revealElapsed = 0
+let revealStartPos: Vec3 = { x: 8, y: 1, z: 10 }
+let revealClosePos: Vec3 = { x: 8, y: 2, z: 8 }
+let revealLookTarget: Vec3 = { x: 8, y: 2, z: 6 }
+let revealReturnLookTarget: Vec3 = { x: 8, y: 1, z: 7 }
+let revealStartLookDir: Vec3 = { x: 0, y: 0, z: 1 }
 
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
@@ -164,6 +184,7 @@ export function startOrbitCinematic(pivotPos: Vec3, finalPos: Vec3, onComplete: 
   isBlending = true
   isOrbiting = false
   isSettling = false
+  cinematicMode = 'orbit'
   blendElapsed = 0
   orbitElapsed = 0
   settleElapsed = 0
@@ -197,11 +218,66 @@ export function startOrbitCinematic(pivotPos: Vec3, finalPos: Vec3, onComplete: 
   }
 }
 
+export function startRevealFortuneCinematic(): void {
+  const e = getOrCreateCamEntity()
+  if (!Transform.has(engine.CameraEntity)) return
+
+  const currentCam = Transform.get(engine.CameraEntity)
+  revealStartPos = {
+    x: currentCam.position.x,
+    y: currentCam.position.y,
+    z: currentCam.position.z
+  }
+  const currentFwd = Vector3.rotate(Vector3.Forward(), currentCam.rotation)
+  revealStartLookDir = normalize({ x: currentFwd.x, y: currentFwd.y, z: currentFwd.z })
+  revealReturnLookTarget = {
+    x: revealStartPos.x + revealStartLookDir.x * 4,
+    y: revealStartPos.y + revealStartLookDir.y * 4,
+    z: revealStartPos.z + revealStartLookDir.z * 4
+  }
+
+  if (Transform.has(WIZARD)) {
+    const w = Transform.get(WIZARD).position
+    revealClosePos = {
+      x: w.x + CINEMATIC_CONFIG.revealCamOffsetX,
+      y: w.y + CINEMATIC_CONFIG.revealCamOffsetY,
+      z: w.z + CINEMATIC_CONFIG.revealCamOffsetZ
+    }
+    revealLookTarget = {
+      x: w.x + CINEMATIC_CONFIG.revealTargetOffsetX,
+      y: w.y + CINEMATIC_CONFIG.revealTargetOffsetY,
+      z: w.z + CINEMATIC_CONFIG.revealTargetOffsetZ
+    }
+  } else {
+    revealClosePos = { x: 8, y: 2, z: 8 }
+    revealLookTarget = { x: 8, y: 2, z: 6 }
+  }
+
+  revealPhase = 'blend-in'
+  revealElapsed = 0
+  cinematicMode = 'reveal'
+  cinematicActive = true
+  isBlending = false
+  isOrbiting = false
+  isSettling = false
+  completeCb = null
+  smoothedLookDir = revealStartLookDir
+
+  const tr = Transform.getMutable(e)
+  tr.position = Vector3.create(revealStartPos.x, revealStartPos.y, revealStartPos.z)
+  tr.rotation = currentCam.rotation
+
+  if (MainCamera.has(engine.CameraEntity)) {
+    MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = e
+  }
+}
+
 export function stopOrbitCinematic(): void {
   if (!cinematicActive) return
   isBlending = false
   isOrbiting = false
   isSettling = false
+  cinematicMode = 'none'
   cinematicActive = false
   completeCb = null
   if (MainCamera.has(engine.CameraEntity)) {
@@ -220,6 +296,66 @@ export function setupCinematicCamera(): void {
     if (!cinematicActive || camEntity === null) return
 
     const tableLookTarget: Vec3 = { x: pivot.x, y: 1, z: pivot.z }
+
+    if (cinematicMode === 'reveal') {
+      const tr = Transform.getMutable(camEntity)
+      if (revealPhase === 'blend-in') {
+        revealElapsed += dt
+        const t = smootherstep(clamp01(revealElapsed / CINEMATIC_CONFIG.revealBlendInDuration))
+        const pos = lerpVec(revealStartPos, revealClosePos, t)
+        const targetDir = lookDir(pos, revealLookTarget)
+        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.rotationDamping))
+        tr.position.x = pos.x
+        tr.position.y = pos.y
+        tr.position.z = pos.z
+        tr.rotation = Quaternion.lookRotation(
+          Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
+        )
+        if (t >= 1) {
+          revealPhase = 'hold'
+          revealElapsed = 0
+        }
+        return
+      }
+
+      if (revealPhase === 'hold') {
+        revealElapsed += dt
+        const targetDir = lookDir(revealClosePos, revealLookTarget)
+        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.rotationDamping))
+        tr.position.x = revealClosePos.x
+        tr.position.y = revealClosePos.y
+        tr.position.z = revealClosePos.z
+        tr.rotation = Quaternion.lookRotation(
+          Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
+        )
+        if (revealElapsed >= CINEMATIC_CONFIG.revealHoldDuration) {
+          revealPhase = 'blend-out'
+          revealElapsed = 0
+        }
+        return
+      }
+
+      revealElapsed += dt
+      const t = smootherstep(clamp01(revealElapsed / CINEMATIC_CONFIG.revealBlendOutDuration))
+      const pos = lerpVec(revealClosePos, revealStartPos, t)
+      const outLook = lerpVec(revealLookTarget, revealReturnLookTarget, t)
+      const targetDir = lookDir(pos, outLook)
+      smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.rotationDamping))
+      tr.position.x = pos.x
+      tr.position.y = pos.y
+      tr.position.z = pos.z
+      tr.rotation = Quaternion.lookRotation(
+        Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
+      )
+      if (t >= 1) {
+        cinematicMode = 'none'
+        cinematicActive = false
+        if (MainCamera.has(engine.CameraEntity)) {
+          MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = undefined
+        }
+      }
+      return
+    }
 
     if (isBlending) {
       blendElapsed += dt

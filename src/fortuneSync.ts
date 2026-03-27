@@ -6,6 +6,7 @@ import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
 import { HOST_POSITION } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
+import { startRevealFortuneCinematic } from './cinematicCamera'
 import type { FortuneCategory } from './types'
 
 /** MessageBus to sync fortune state across all players in the scene */
@@ -53,6 +54,9 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {
+    console.log(
+      `[FortuneSync] show-fortune received guestId=${data.guestId ?? 'null'} category=${data.category}`
+    )
     const fortune =
       data.fortuneIndex >= 0 && data.fortuneIndex < FORTUNES.length
         ? FORTUNES[data.fortuneIndex]
@@ -62,6 +66,10 @@ export function setupFortuneSync() {
       gameData.currentGuestId = data.guestId
       gameData.currentGuestName = data.guestName
       gameData.gameState = 'MOSTRANDO_FORTUNA'
+      if (data.guestId !== null) {
+        console.log('[FortuneSync] Triggering reveal cinematic camera')
+        startRevealFortuneCinematic()
+      }
       playRevealSound()
       if (SHOW_3D_FORTUNE) {
         showFortune3DText({ text: fortune.text, category: fortune.category })

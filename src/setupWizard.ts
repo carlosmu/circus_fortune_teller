@@ -38,6 +38,7 @@ let lastHostColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken'
 let originalWizardPosition: { x: number; y: number; z: number } | null = null
 let displacedWizardPosition: { x: number; y: number; z: number } | null = null
 let currentWizardAnim: 'idle' | 'waiting' | 'reveal' | null = null
+let debugLastState: 'idle' | 'waiting' | 'reveal' | null = null
 
 function distance(a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }): number {
   const dx = a.x - b.x
@@ -132,9 +133,16 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
   if (!Animator.has(WIZARD)) return
 
   const animator = Animator.getMutable(WIZARD)
+  const targetAliases: Record<'idle' | 'waiting' | 'reveal', string[]> = {
+    idle: ['idle', 'default', 'stand'],
+    waiting: ['waiting', 'wait', 'occupy', 'ocupado'],
+    reveal: ['reveal', 'fortune', 'foretell', 'cast', 'show']
+  }
+  const aliases = targetAliases[next]
   let foundAny = false
   for (const state of animator.states) {
-    const shouldPlay = state.clip === next
+    const clipName = state.clip.toLowerCase()
+    const shouldPlay = aliases.some((alias) => clipName === alias || clipName.includes(alias))
     state.playing = shouldPlay
     if (shouldPlay) {
       state.loop = next !== 'reveal'
@@ -143,7 +151,14 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
     }
   }
 
-  if (foundAny) currentWizardAnim = next
+  if (foundAny) {
+    currentWizardAnim = next
+    console.log(`[WizardAnim] Switching to "${next}"`)
+  } else {
+    // Useful to diagnose clip name mismatches from GLB animation exports.
+    const available = animator.states.map((s) => s.clip).join(', ')
+    console.log(`[WizardAnim] Could not find clip for "${next}". Available: ${available}`)
+  }
 }
 
 export function setupWizard() {
@@ -184,13 +199,17 @@ export function setupWizard() {
     // - idle: original position, no host
     // - waiting: host taken, waiting / occupied
     // - reveal: actively revealing player's fortune
-    if (gameData.gameState === 'MOSTRANDO_FORTUNA') {
-      setWizardAnimation('reveal')
-    } else if (gameData.currentHostId !== null) {
-      setWizardAnimation('waiting')
-    } else {
-      setWizardAnimation('idle')
+    const desiredState: 'idle' | 'waiting' | 'reveal' =
+      gameData.gameState === 'MOSTRANDO_FORTUNA'
+        ? 'reveal'
+        : gameData.currentHostId !== null
+          ? 'waiting'
+          : 'idle'
+    if (desiredState !== debugLastState) {
+      debugLastState = desiredState
+      console.log(`[WizardAnim] Desired state -> ${desiredState} (gameState=${gameData.gameState})`)
     }
+    setWizardAnimation(desiredState)
 
     // Wizard position interpolation
     if (Transform.has(WIZARD) && originalWizardPosition && displacedWizardPosition) {
