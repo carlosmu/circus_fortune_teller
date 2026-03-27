@@ -42,8 +42,8 @@ export const CINEMATIC_CONFIG = {
   orbitLookBlendDuration: 1.1,
   /** Reveal-fortune closeup timings. */
   revealBlendInDuration: 2.0,
-  /** Minimum seconds to stay in hold before allowing blend-out (even if fortune arrives instantly). */
-  revealHoldMinDuration: 0.5,
+  /** Seconds to hold on host after fortune is revealed before blending out. */
+  revealPostRevealDelay: 2.5,
   revealBlendOutDuration: 2.8,
   /** Extra smoothing only for reveal closeup phases. */
   revealRotationDamping: 0.08,
@@ -320,7 +320,6 @@ export function setupCinematicCamera(): void {
       }
 
       if (revealPhase === 'hold') {
-        revealElapsed += dt
         const targetDir = lookDir(revealClosePos, revealLookTarget)
         smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
         tr.position.x = revealClosePos.x
@@ -329,10 +328,16 @@ export function setupCinematicCamera(): void {
         tr.rotation = Quaternion.lookRotation(
           Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
         )
-        // Wait until fortune is revealed (or minimum hold time as safety floor).
         const fortuneRevealed = gameData.gameState === 'MOSTRANDO_FORTUNA'
-        if (fortuneRevealed && revealElapsed >= CINEMATIC_CONFIG.revealHoldMinDuration) {
-          revealPhase = 'blend-out'
+        if (fortuneRevealed) {
+          // Start counting post-reveal delay from the moment fortune was revealed.
+          revealElapsed += dt
+          if (revealElapsed >= CINEMATIC_CONFIG.revealPostRevealDelay) {
+            revealPhase = 'blend-out'
+            revealElapsed = 0
+          }
+        } else {
+          // Fortune not yet revealed — reset counter so delay is always measured from revelation.
           revealElapsed = 0
         }
         return
