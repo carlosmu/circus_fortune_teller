@@ -51,6 +51,8 @@ export function setupFortuneSync() {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'OCUPADO'
+    // Start the guest closeup immediately when pressing "Reveal Fortune".
+    startRevealFortuneCinematic()
   })
 
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {
@@ -66,10 +68,6 @@ export function setupFortuneSync() {
       gameData.currentGuestId = data.guestId
       gameData.currentGuestName = data.guestName
       gameData.gameState = 'MOSTRANDO_FORTUNA'
-      if (data.guestId !== null) {
-        console.log('[FortuneSync] Triggering reveal cinematic camera')
-        startRevealFortuneCinematic()
-      }
       playRevealSound()
       if (SHOW_3D_FORTUNE) {
         showFortune3DText({ text: fortune.text, category: fortune.category })

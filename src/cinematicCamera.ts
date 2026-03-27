@@ -40,7 +40,7 @@ export const CINEMATIC_CONFIG = {
   /** Smoothly move look target from wizard to table center. */
   orbitLookBlendDuration: 1.1,
   /** Reveal-fortune closeup timings. */
-  revealBlendInDuration: 0.8,
+  revealBlendInDuration: 2.0,
   revealHoldDuration: 2.0,
   revealBlendOutDuration: 0.8,
   /** Reveal closeup offsets from wizard position. */
@@ -219,6 +219,7 @@ export function startOrbitCinematic(pivotPos: Vec3, finalPos: Vec3, onComplete: 
 }
 
 export function startRevealFortuneCinematic(): void {
+  if (cinematicMode === 'reveal') return
   const e = getOrCreateCamEntity()
   if (!Transform.has(engine.CameraEntity)) return
 
