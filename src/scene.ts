@@ -1,5 +1,5 @@
-import { engine, GltfContainer, Transform, VisibilityComponent, LightSource } from '@dcl/sdk/ecs'
-import { Vector3, Color3, Quaternion } from '@dcl/sdk/math'
+import { engine, GltfContainer, Transform, VisibilityComponent, AudioSource } from '@dcl/sdk/ecs'
+import { Vector3 } from '@dcl/sdk/math'
 
 export const TABLE = engine.addEntity()
 export const FLOOR = engine.addEntity()
@@ -9,8 +9,7 @@ export const WIZARD = engine.addEntity()
 /** Entity with host_collider.glb: click area for "Become Host" (wizard has no collider). */
 export const HOST_COLLIDER = engine.addEntity()
 
-/** Spotlight dinámico (ilumina la escena con sombras). Duplica el patrón para más luces. */
-export const SPOTLIGHT_MAIN = engine.addEntity()
+const BACKGROUND_MUSIC = engine.addEntity()
 
 /** Wizard position in scene (GLB origin 0,0,0, placed by code). */
 const WIZARD_POSITION = Vector3.create(8, 0, 5.5)
@@ -69,18 +68,14 @@ export function setupScene() {
     src: 'assets/models/lights_tent.glb'
   })
 
-  // Spotlight: posición (8, 4, 8), cono apuntando hacia abajo (hacia mesa/suelo)
-  Transform.create(SPOTLIGHT_MAIN, {
-    position: Vector3.create(8, 1, 6),
-    rotation: Quaternion.fromEulerDegrees(-115, 0, 0)
+  // Background music: global loop
+  Transform.create(BACKGROUND_MUSIC, { position: Vector3.create(8, 0, 8) })
+  AudioSource.create(BACKGROUND_MUSIC, {
+    audioClipUrl: 'assets/audio/building_music.mp3',
+    playing: true,
+    loop: true,
+    volume: 1
   })
-  LightSource.create(SPOTLIGHT_MAIN, {
-    type: LightSource.Type.Spot({ innerAngle: 28, outerAngle: 50 }),
-    color: Color3.create(1, 0.95, 0.85),
-    intensity: 2000,
-    range: 20,
-    active: true,
-    shadow: true
-  })
+
 }
 

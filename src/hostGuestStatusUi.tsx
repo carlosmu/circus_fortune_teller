@@ -18,9 +18,7 @@ export function HostGuestStatusBar() {
   const guestLabel = guestPlayerName ?? 'Free'
   const hasActiveHost = gameData.currentHostId !== null
   const timeSec = Math.max(0, Math.ceil(gameData.hostTimeRemainingSec))
-  const filledCards = hasActiveHost
-    ? Math.min(3, Math.max(1, gameData.hostReadingsDone + 1))
-    : 0
+  const filledCards = hasActiveHost ? Math.min(3, gameData.hostReadingsDone) : 0
   const cards = `${FILLED_READING_SLOT.repeat(filledCards)}${EMPTY_READING_SLOT.repeat(3 - filledCards)}`
   const hostStatusLine = hasActiveHost
     ? `Host: ${hostLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: [${cards}]`

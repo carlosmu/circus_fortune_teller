@@ -97,16 +97,16 @@
               "y": 0,
               "z": 1.75
             },
+            "scale": {
+              "x": 0.75,
+              "y": 0.75,
+              "z": 0.75
+            },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
-            },
-            "scale": {
-              "x": 0.75,
-              "y": 0.75,
-              "z": 0.75
             },
             "parent": 0
           }
@@ -149,6 +149,27 @@
               "y": 0,
               "z": 0,
               "w": 1
+            },
+            "parent": 0
+          }
+        },
+        "515": {
+          "json": {
+            "position": {
+              "x": 3.25,
+              "y": 0,
+              "z": 7.25
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
             },
             "parent": 0
           }
@@ -214,6 +235,11 @@
           "json": {
             "value": "tree_green.glb"
           }
+        },
+        "515": {
+          "json": {
+            "value": "Music"
+          }
         }
       }
     },
@@ -259,7 +285,7 @@
         "serializationType": "map"
       },
       "data": {
-        "512": {
+        "515": {
           "json": {
             "gizmo": 1
           }
@@ -314,7 +340,8 @@
                 "children": [
                   512,
                   513,
-                  514
+                  514,
+                  515
                 ]
               },
               {
@@ -335,6 +362,10 @@
               },
               {
                 "entity": 514,
+                "children": []
+              },
+              {
+                "entity": 515,
                 "children": []
               }
             ]
@@ -366,6 +397,9 @@
           "json": {}
         },
         "514": {
+          "json": {}
+        },
+        "515": {
           "json": {}
         }
       }
@@ -1043,6 +1077,79 @@
       }
     },
     {
+      "name": "asset-packs::Actions",
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "serializationType": "int32"
+          },
+          "value": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "serializationType": "utf8-string"
+                },
+                "type": {
+                  "type": "string",
+                  "serializationType": "utf8-string"
+                },
+                "jsonPayload": {
+                  "type": "string",
+                  "serializationType": "utf8-string"
+                },
+                "allowedInBasicView": {
+                  "type": "boolean",
+                  "serializationType": "optional",
+                  "optionalJsonSchema": {
+                    "type": "boolean",
+                    "serializationType": "boolean"
+                  }
+                },
+                "basicViewId": {
+                  "type": "string",
+                  "serializationType": "optional",
+                  "optionalJsonSchema": {
+                    "type": "string",
+                    "serializationType": "utf8-string"
+                  }
+                },
+                "default": {
+                  "type": "boolean",
+                  "serializationType": "optional",
+                  "optionalJsonSchema": {
+                    "type": "boolean",
+                    "serializationType": "boolean"
+                  }
+                }
+              },
+              "serializationType": "map"
+            },
+            "serializationType": "array"
+          }
+        },
+        "serializationType": "map"
+      },
+      "data": {
+        "515": {
+          "json": {
+            "id": 5,
+            "value": [
+              {
+                "name": "Sound",
+                "type": "play_sound",
+                "jsonPayload": "{\"global\":true,\"loop\":true,\"src\":\"assets/audio/building_music.mp3\"}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "name": "asset-packs::Counter",
       "jsonSchema": {
         "type": "object",
@@ -1062,7 +1169,7 @@
         "0": {
           "json": {
             "id": 0,
-            "value": 4
+            "value": 5
           }
         }
       }

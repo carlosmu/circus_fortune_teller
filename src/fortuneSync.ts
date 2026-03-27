@@ -39,7 +39,15 @@ export type HostSessionUpdateMessage = {
 const REVEAL_SOUND_FILENAME = 'Into_the_Depths.mp3'
 const REVEAL_SOUND_PATH = 'assets/audio/' + encodeURIComponent(REVEAL_SOUND_FILENAME)
 
+const SOUND_CLEANUP_DELAY = 8
+
+let pendingSoundCleanup: { entity: ReturnType<typeof engine.addEntity>; elapsed: number } | null = null
+
 function playRevealSound() {
+  if (pendingSoundCleanup) {
+    engine.removeEntity(pendingSoundCleanup.entity)
+    pendingSoundCleanup = null
+  }
   const audioEntity = engine.addEntity()
   Transform.create(audioEntity, {
     position: Vector3.create(HOST_POSITION.x, HOST_POSITION.y + 1, HOST_POSITION.z)
@@ -49,15 +57,23 @@ function playRevealSound() {
     playing: true,
     volume: 1
   })
-  setTimeout(() => {
-    engine.removeEntity(audioEntity)
-  }, 8000)
+  pendingSoundCleanup = { entity: audioEntity, elapsed: 0 }
+}
+
+function soundCleanupSystem(dt: number) {
+  if (!pendingSoundCleanup) return
+  pendingSoundCleanup.elapsed += dt
+  if (pendingSoundCleanup.elapsed >= SOUND_CLEANUP_DELAY) {
+    engine.removeEntity(pendingSoundCleanup.entity)
+    pendingSoundCleanup = null
+  }
 }
 
 /**
  * Registers listeners so all clients update gameData and show 3D text when someone reveals a fortune (same realm).
  */
 export function setupFortuneSync() {
+  engine.addSystem(soundCleanupSystem)
   fortuneMessageBus.on('guest-requested-fortune', (data: GuestRequestedMessage) => {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
