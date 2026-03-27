@@ -7,6 +7,7 @@ import { gameData } from './gameState'
 import { SHOW_UI_FORTUNE } from './sceneConfig'
 import { revealFortuneForCategory } from './hostSystem'
 import { HostGuestStatusBar } from './hostGuestStatusUi'
+import { cinematicBarAlpha } from './cinematicCamera'
 import type { FortuneCategory } from './types'
 
 let waitingPanelTime = 0
@@ -43,6 +44,34 @@ export function setupUi() {
       gameData.waitingPanelAlpha = 1
     }
   })
+}
+
+function CinematicLetterbox({ alpha }: { alpha: number }) {
+  const barColor = Color4.create(0, 0, 0, alpha)
+  return (
+    <UiEntity
+      uiTransform={{
+        width: '100%',
+        height: '100%',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'stretch',
+        positionType: 'absolute',
+        position: { top: 0, left: 0 }
+      }}
+    >
+      {/* Top bar */}
+      <UiEntity
+        uiTransform={{ width: '100%', height: '10%' }}
+        uiBackground={{ color: barColor }}
+      />
+      {/* Bottom bar */}
+      <UiEntity
+        uiTransform={{ width: '100%', height: '10%' }}
+        uiBackground={{ color: barColor }}
+      />
+    </UiEntity>
+  )
 }
 
 function uiComponent() {
@@ -258,6 +287,11 @@ function uiComponent() {
             </UiEntity>
           </UiEntity>
         </UiEntity>
+      )}
+
+      {/* Cinematic letterbox bars */}
+      {cinematicBarAlpha > 0 && (
+        <CinematicLetterbox alpha={cinematicBarAlpha} />
       )}
     </UiEntity>
   )

@@ -5,8 +5,10 @@ import { Vector3, Quaternion } from '@dcl/sdk/math'
 
 /** Tweak these values to adjust the cinematic feel. */
 export const CINEMATIC_CONFIG = {
-  /** Total duration of the orbit animation in seconds. */
-  duration: 3.0,
+  /** Total duration of the orbit arc in seconds. */
+  duration: 4.0,
+  /** Extra seconds the camera holds at the final position before releasing. */
+  settleDuration: 0.1,
   /** Distance from the pivot point (table center) at which the camera orbits. */
   radius: 3.5,
   /** Camera height above ground during the orbit. */
@@ -17,41 +19,71 @@ export const CINEMATIC_CONFIG = {
    * sweeping this many radians backwards to reach it.
    */
   sweepRadians: Math.PI,
-} as const
+  /** Rotation damping factor (0–1). Lower = smoother but laggier. 1 = instant. */
+  rotationDamping: 0.08,
+  /** Letterbox bar fade-in duration in seconds. */
+  barsFadeIn: 0.6,
+  /** Letterbox bar fade-out duration in seconds. */
+  barsFadeOut: 0.5,
+}
+
+// ─── Exported reactive state (read by UI) ─────────────────────────────────────
+
+/** Current alpha for the letterbox bars (0 = hidden, 1 = fully opaque). */
+export let cinematicBarAlpha = 0
+
+/** Whether a cinematic is currently running (orbit + settle). */
+export let cinematicActive = false
 
 // ─── Internal state ───────────────────────────────────────────────────────────
 
 type Vec3 = { x: number; y: number; z: number }
 
 let camEntity: ReturnType<typeof engine.addEntity> | null = null
-let isActive = false
+let isOrbiting = false
+let isSettling = false
 let elapsed = 0
+let settleElapsed = 0
 let startAngle = 0
 let endAngle = 0
 let pivot: Vec3 = { x: 8, y: 0, z: 8 }
 let completeCb: (() => void) | null = null
 
+let dampedYaw = 0
+let dampedPitch = 0
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Smoothstep easing: gradual start and gradual end (ease-in-out). */
-function smoothstep(t: number): number {
-  const c = Math.max(0, Math.min(1, t))
-  return c * c * (3 - 2 * c)
+/**
+ * Quintic ease-out: extremely gentle deceleration towards the end.
+ * `f(t) = 1 − (1−t)^5`
+ */
+function easeOutQuint(t: number): number {
+  const c = 1 - Math.max(0, Math.min(1, t))
+  return 1 - c * c * c * c * c
 }
 
 /**
- * Computes a quaternion that orients an object at `from` to look toward `to`.
- * Uses yaw + pitch decomposition via `Quaternion.fromEulerDegrees`, which is
- * reliably available in all SDK7 versions.
+ * Computes yaw/pitch (in degrees) from `from` looking toward `to`.
  */
-function lookAt(from: Vec3, to: Vec3): ReturnType<typeof Quaternion.fromEulerDegrees> {
+function lookAtAngles(from: Vec3, to: Vec3): { yaw: number; pitch: number } {
   const dx = to.x - from.x
   const dz = to.z - from.z
   const dy = to.y - from.y
   const horizDist = Math.sqrt(dx * dx + dz * dz)
   const yaw = Math.atan2(dx, dz) * (180 / Math.PI)
   const pitch = -Math.atan2(dy, horizDist) * (180 / Math.PI)
-  return Quaternion.fromEulerDegrees(pitch, yaw, 0)
+  return { yaw, pitch }
+}
+
+/**
+ * Returns the shortest angular difference in degrees, normalised to [-180, 180].
+ */
+function angleDiffDeg(from: number, to: number): number {
+  let d = (to - from) % 360
+  if (d > 180) d -= 360
+  if (d < -180) d += 360
+  return d
 }
 
 /** Returns the virtual camera entity, creating it if needed. */
@@ -74,16 +106,11 @@ function getOrCreateCamEntity(): ReturnType<typeof engine.addEntity> {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Starts the orbit cinematic.
- *
- * The camera sweeps `CINEMATIC_CONFIG.sweepRadians` around `pivotPos`,
- * ending at the angle that corresponds to `finalPos`. The player can be
- * silently teleported while the cinematic is running.
+ * Starts the orbit cinematic with letterbox bars.
  *
  * @param pivotPos   - Center of the orbit (e.g. table center at ground level).
  * @param finalPos   - World position where the camera ends (e.g. HOST_POSITION).
- * @param onComplete - Called when the animation finishes and the virtual camera
- *                     is deactivated.
+ * @param onComplete - Called when the full animation (orbit + settle) finishes.
  */
 export function startOrbitCinematic(
   pivotPos: Vec3,
@@ -93,29 +120,29 @@ export function startOrbitCinematic(
   const e = getOrCreateCamEntity()
   pivot = { ...pivotPos }
 
-  // The orbit ends at the angle that places the camera over `finalPos`.
   endAngle = Math.atan2(finalPos.z - pivotPos.z, finalPos.x - pivotPos.x)
-  // Start the sweep `sweepRadians` ahead (clockwise), so we always reach the
-  // host angle after a full cinematic arc.
   startAngle = endAngle + CINEMATIC_CONFIG.sweepRadians
 
   elapsed = 0
-  isActive = true
+  settleElapsed = 0
+  isOrbiting = true
+  isSettling = false
+  cinematicActive = true
   completeCb = onComplete
 
-  // Position the virtual camera at the orbit start before activating it to
-  // minimise the initial transition jump.
   const sx = pivotPos.x + Math.cos(startAngle) * CINEMATIC_CONFIG.radius
   const sz = pivotPos.z + Math.sin(startAngle) * CINEMATIC_CONFIG.radius
   const lookTarget: Vec3 = { x: pivotPos.x, y: 1, z: pivotPos.z }
+  const initAngles = lookAtAngles({ x: sx, y: CINEMATIC_CONFIG.height, z: sz }, lookTarget)
+  dampedYaw = initAngles.yaw
+  dampedPitch = initAngles.pitch
 
   if (Transform.has(e)) {
     const tr = Transform.getMutable(e)
     tr.position = Vector3.create(sx, CINEMATIC_CONFIG.height, sz)
-    tr.rotation = lookAt({ x: sx, y: CINEMATIC_CONFIG.height, z: sz }, lookTarget)
+    tr.rotation = Quaternion.fromEulerDegrees(dampedPitch, dampedYaw, 0)
   }
 
-  // Activate the virtual camera – this takes control of the local player's view.
   if (MainCamera.has(engine.CameraEntity)) {
     MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = e
   }
@@ -126,8 +153,10 @@ export function startOrbitCinematic(
  * Safe to call even when no cinematic is running.
  */
 export function stopOrbitCinematic(): void {
-  if (!isActive) return
-  isActive = false
+  if (!cinematicActive) return
+  isOrbiting = false
+  isSettling = false
+  cinematicActive = false
   completeCb = null
   if (MainCamera.has(engine.CameraEntity)) {
     MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = undefined
@@ -140,36 +169,80 @@ export function stopOrbitCinematic(): void {
  */
 export function setupCinematicCamera(): void {
   engine.addSystem((dt: number) => {
-    if (!isActive || camEntity === null) return
-
-    elapsed += dt
-    const raw = Math.min(elapsed / CINEMATIC_CONFIG.duration, 1)
-    const t = smoothstep(raw)
-
-    // Interpolate angle along the arc.
-    const angle = startAngle + (endAngle - startAngle) * t
-    const x = pivot.x + Math.cos(angle) * CINEMATIC_CONFIG.radius
-    const z = pivot.z + Math.sin(angle) * CINEMATIC_CONFIG.radius
-    const lookTarget: Vec3 = { x: pivot.x, y: 1, z: pivot.z }
-
-    if (Transform.has(camEntity)) {
-      const tr = Transform.getMutable(camEntity)
-      tr.position.x = x
-      tr.position.y = CINEMATIC_CONFIG.height
-      tr.position.z = z
-      tr.rotation = lookAt({ x, y: CINEMATIC_CONFIG.height, z }, lookTarget)
+    // ── Letterbox bar alpha ───────────────────────────────────────────────
+    if (cinematicActive) {
+      cinematicBarAlpha = Math.min(1, cinematicBarAlpha + dt / CINEMATIC_CONFIG.barsFadeIn)
+    } else if (cinematicBarAlpha > 0) {
+      cinematicBarAlpha = Math.max(0, cinematicBarAlpha - dt / CINEMATIC_CONFIG.barsFadeOut)
     }
 
-    if (raw >= 1) {
-      isActive = false
-      // Deactivate virtual camera before invoking the callback so the player
-      // camera takes over at HOST_POSITION (where the player was teleported).
-      if (MainCamera.has(engine.CameraEntity)) {
-        MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = undefined
+    if (!cinematicActive || camEntity === null) return
+
+    const lookTarget: Vec3 = { x: pivot.x, y: 1, z: pivot.z }
+
+    // ── Phase 1: Orbit ────────────────────────────────────────────────────
+    if (isOrbiting) {
+      elapsed += dt
+      const raw = Math.min(elapsed / CINEMATIC_CONFIG.duration, 1)
+      const t = easeOutQuint(raw)
+
+      const angle = startAngle + (endAngle - startAngle) * t
+      const x = pivot.x + Math.cos(angle) * CINEMATIC_CONFIG.radius
+      const z = pivot.z + Math.sin(angle) * CINEMATIC_CONFIG.radius
+
+      const targetAngles = lookAtAngles({ x, y: CINEMATIC_CONFIG.height, z }, lookTarget)
+      const damping = CINEMATIC_CONFIG.rotationDamping
+      dampedYaw += angleDiffDeg(dampedYaw, targetAngles.yaw) * damping
+      dampedPitch += (targetAngles.pitch - dampedPitch) * damping
+
+      if (Transform.has(camEntity)) {
+        const tr = Transform.getMutable(camEntity)
+        tr.position.x = x
+        tr.position.y = CINEMATIC_CONFIG.height
+        tr.position.z = z
+        tr.rotation = Quaternion.fromEulerDegrees(dampedPitch, dampedYaw, 0)
       }
-      const cb = completeCb
-      completeCb = null
-      if (cb) cb()
+
+      if (raw >= 1) {
+        isOrbiting = false
+        isSettling = true
+        settleElapsed = 0
+      }
+      return
+    }
+
+    // ── Phase 2: Settle (hold at final position, let damping catch up) ──
+    if (isSettling) {
+      settleElapsed += dt
+      const finalX = pivot.x + Math.cos(endAngle) * CINEMATIC_CONFIG.radius
+      const finalZ = pivot.z + Math.sin(endAngle) * CINEMATIC_CONFIG.radius
+
+      const targetAngles = lookAtAngles(
+        { x: finalX, y: CINEMATIC_CONFIG.height, z: finalZ },
+        lookTarget
+      )
+      const damping = CINEMATIC_CONFIG.rotationDamping
+      dampedYaw += angleDiffDeg(dampedYaw, targetAngles.yaw) * damping
+      dampedPitch += (targetAngles.pitch - dampedPitch) * damping
+
+      if (Transform.has(camEntity)) {
+        const tr = Transform.getMutable(camEntity)
+        tr.position.x = finalX
+        tr.position.y = CINEMATIC_CONFIG.height
+        tr.position.z = finalZ
+        tr.rotation = Quaternion.fromEulerDegrees(dampedPitch, dampedYaw, 0)
+      }
+
+      if (settleElapsed >= CINEMATIC_CONFIG.settleDuration) {
+        isSettling = false
+        cinematicActive = false
+        if (MainCamera.has(engine.CameraEntity)) {
+          MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = undefined
+        }
+        const cb = completeCb
+        completeCb = null
+        if (cb) cb()
+      }
     }
   })
 }
