@@ -4,6 +4,9 @@ import { gameData } from './gameState'
 
 const BG = Color4.create(0.05, 0.05, 0.08, 0.82)
 const TEXT = Color4.White()
+const TIMER_LABEL = 'Time:'
+const FILLED_READING_SLOT = '♥'
+const EMPTY_READING_SLOT = '-'
 
 /**
  * Barra fija arriba al centro: Host y Guest (reactivo: lee gameData cada frame de UI).
@@ -18,9 +21,9 @@ export function HostGuestStatusBar() {
   const filledCards = hasActiveHost
     ? Math.min(3, Math.max(1, gameData.hostReadingsDone + 1))
     : 0
-  const cards = `${'🃏'.repeat(filledCards)}${'⬜'.repeat(3 - filledCards)}`
+  const cards = `${FILLED_READING_SLOT.repeat(filledCards)}${EMPTY_READING_SLOT.repeat(3 - filledCards)}`
   const hostStatusLine = hasActiveHost
-    ? `Host: ${hostLabel} | ⏱️ ${timeSec}s | Readings ${cards}`
+    ? `Host: ${hostLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: [${cards}]`
     : `Host: ${hostLabel}`
 
   return (
