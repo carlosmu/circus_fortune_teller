@@ -15,7 +15,7 @@ const BACKGROUND_MUSIC = engine.addEntity()
 const WIZARD_POSITION = Vector3.create(8, 0, 5.5)
 
 /** Fixed position of the host spot (never mutated, unlike WIZARD's Transform). */
-export const HOST_POSITION = Vector3.create(8, 0, 5.5)
+export const HOST_POSITION = Vector3.create(8, 0, 5)
 /** Point the host camera looks at (table/guest). */
 export const HOST_CAMERA_TARGET = Vector3.create(8, 1, 8)
 
