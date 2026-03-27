@@ -14,6 +14,10 @@ let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
 /** Vertical offset (px) applied to all card.png UI panels. Negative moves up. */
 const CARD_UI_VERTICAL_OFFSET = '-100px'
+const HOST_BECOMING_BANNER_DURATION = 2.2
+let hostBannerTimer = 0
+let hostBannerText = ''
+let lastObservedHostId: string | null = null
 
 const ALL_CATEGORIES: FortuneCategory[] = ['love', 'money', 'health', 'work', 'mystery', 'pets', 'family', 'travel', 'luck']
 
@@ -58,6 +62,23 @@ export function setupUi() {
     } else {
       waitingPanelTime = 0
       gameData.waitingPanelAlpha = 1
+    }
+
+    // Centered "X is becoming the host" banner for new host claims.
+    if (gameData.currentHostId !== lastObservedHostId) {
+      if (gameData.currentHostId !== null) {
+        const hostName = gameData.currentHostName?.trim() || 'Someone'
+        hostBannerText = `${hostName} is becoming the host`
+        hostBannerTimer = HOST_BECOMING_BANNER_DURATION
+      } else {
+        hostBannerTimer = 0
+        hostBannerText = ''
+      }
+      lastObservedHostId = gameData.currentHostId
+    }
+
+    if (hostBannerTimer > 0) {
+      hostBannerTimer = Math.max(0, hostBannerTimer - dt)
     }
   })
 }
@@ -307,6 +328,39 @@ function uiComponent() {
                 </UiEntity>
               ))}
             </UiEntity>
+          </UiEntity>
+        </UiEntity>
+      )}
+
+      {/* Big centered host-claim banner */}
+      {hostBannerTimer > 0 && hostBannerText.length > 0 && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '80%',
+              height: '16%',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+            uiBackground={{ color: Color4.create(0, 0, 0, 0.5) }}
+          >
+            <Label
+              uiTransform={{ width: '92%', height: '80%' }}
+              value={hostBannerText}
+              textAlign="middle-center"
+              fontSize={30}
+              font="sans-serif"
+              color={Color4.White()}
+            />
           </UiEntity>
         </UiEntity>
       )}

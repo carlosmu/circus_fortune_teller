@@ -42,7 +42,9 @@ export const CINEMATIC_CONFIG = {
   /** Reveal-fortune closeup timings. */
   revealBlendInDuration: 2.0,
   revealHoldDuration: 2.0,
-  revealBlendOutDuration: 1.8,
+  revealBlendOutDuration: 2.8,
+  /** Extra smoothing only for reveal closeup phases. */
+  revealRotationDamping: 0.08,
   /** Reveal closeup offsets from wizard position. */
   revealCamOffsetX: 0,
   revealCamOffsetY: 2,
@@ -305,7 +307,7 @@ export function setupCinematicCamera(): void {
         const t = smootherstep(clamp01(revealElapsed / CINEMATIC_CONFIG.revealBlendInDuration))
         const pos = lerpVec(revealStartPos, revealClosePos, t)
         const targetDir = lookDir(pos, revealLookTarget)
-        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.rotationDamping))
+        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
         tr.position.x = pos.x
         tr.position.y = pos.y
         tr.position.z = pos.z
@@ -322,7 +324,7 @@ export function setupCinematicCamera(): void {
       if (revealPhase === 'hold') {
         revealElapsed += dt
         const targetDir = lookDir(revealClosePos, revealLookTarget)
-        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.rotationDamping))
+        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
         tr.position.x = revealClosePos.x
         tr.position.y = revealClosePos.y
         tr.position.z = revealClosePos.z
@@ -341,7 +343,7 @@ export function setupCinematicCamera(): void {
       const pos = lerpVec(revealClosePos, revealStartPos, t)
       const outLook = lerpVec(revealLookTarget, revealReturnLookTarget, t)
       const targetDir = lookDir(pos, outLook)
-      smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.rotationDamping))
+      smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
       tr.position.x = pos.x
       tr.position.y = pos.y
       tr.position.z = pos.z
