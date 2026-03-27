@@ -12,6 +12,8 @@ import type { FortuneCategory } from './types'
 
 let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
+/** Vertical offset (px) applied to all card.png UI panels. Negative moves up. */
+const CARD_UI_VERTICAL_OFFSET_PX = -100
 
 const ALL_CATEGORIES: FortuneCategory[] = ['love', 'money', 'health', 'work', 'mystery', 'pets', 'family', 'travel', 'luck']
 
@@ -148,7 +150,8 @@ function uiComponent() {
               height: '50%',
               flexDirection: 'column',
               justifyContent: 'flex-start',
-              alignItems: 'center'
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET_PX }
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -188,7 +191,8 @@ function uiComponent() {
               height: '50%',
               flexDirection: 'column',
               justifyContent: 'center',
-              alignItems: 'center'
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET_PX }
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -240,7 +244,8 @@ function uiComponent() {
               height: '60%',
               flexDirection: 'column',
               justifyContent: 'center',
-              alignItems: 'center'
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET_PX }
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
