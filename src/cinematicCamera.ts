@@ -1,6 +1,7 @@
 import { engine, Transform, VirtualCamera, MainCamera } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
 import { WIZARD, HOST_POSITION } from './scene'
+import { gameData } from './gameState'
 
 type Vec3 = { x: number; y: number; z: number }
 
@@ -41,7 +42,8 @@ export const CINEMATIC_CONFIG = {
   orbitLookBlendDuration: 1.1,
   /** Reveal-fortune closeup timings. */
   revealBlendInDuration: 2.0,
-  revealHoldDuration: 2.0,
+  /** Minimum seconds to stay in hold before allowing blend-out (even if fortune arrives instantly). */
+  revealHoldMinDuration: 0.5,
   revealBlendOutDuration: 2.8,
   /** Extra smoothing only for reveal closeup phases. */
   revealRotationDamping: 0.08,
@@ -327,7 +329,9 @@ export function setupCinematicCamera(): void {
         tr.rotation = Quaternion.lookRotation(
           Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
         )
-        if (revealElapsed >= CINEMATIC_CONFIG.revealHoldDuration) {
+        // Wait until fortune is revealed (or minimum hold time as safety floor).
+        const fortuneRevealed = gameData.gameState === 'MOSTRANDO_FORTUNA'
+        if (fortuneRevealed && revealElapsed >= CINEMATIC_CONFIG.revealHoldMinDuration) {
           revealPhase = 'blend-out'
           revealElapsed = 0
         }
