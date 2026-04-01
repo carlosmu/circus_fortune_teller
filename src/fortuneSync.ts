@@ -120,6 +120,8 @@ export function setupFortuneSync() {
       fortuneTellerReadingsDone?: number
       fortuneTellerMaxReadings?: number
       fortuneTellerReleaseAtMs?: number | null
+      centerBannerText?: string | null
+      centerBannerUntilMs?: number
     }) => {
       gameData.currentFortuneTellerId = data.fortuneTellerId
       gameData.currentFortuneTellerName =
@@ -135,6 +137,10 @@ export function setupFortuneSync() {
         gameData.fortuneTellerReadingsDone = data.fortuneTellerReadingsDone ?? gameData.fortuneTellerReadingsDone
         gameData.fortuneTellerMaxReadings = data.fortuneTellerMaxReadings ?? gameData.fortuneTellerMaxReadings
         gameData.fortuneTellerReleaseAtMs = data.fortuneTellerReleaseAtMs ?? null
+      }
+      if (typeof data.centerBannerUntilMs === 'number') {
+        gameData.centerBannerText = data.centerBannerText ?? null
+        gameData.centerBannerUntilMs = data.centerBannerUntilMs
       }
     }
   )

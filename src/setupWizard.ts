@@ -53,6 +53,7 @@ function distance(a: { x: number; y: number; z: number }, b: { x: number; y: num
 }
 
 function clearFortuneTellerAndShowWizard() {
+  const previousName = gameData.currentFortuneTellerName?.trim() || 'Someone'
   gameData.currentFortuneTellerId = null
   gameData.currentFortuneTellerName = null
   gameData.fortuneTellerSessionEndsAtMs = null
@@ -60,8 +61,8 @@ function clearFortuneTellerAndShowWizard() {
   gameData.fortuneTellerMaxReadings = 3
   gameData.fortuneTellerReleaseAtMs = null
   gameData.fortuneTellerTimeRemainingSec = 0
-  gameData.centerBannerText = null
-  gameData.centerBannerUntilMs = 0
+  gameData.centerBannerText = `${previousName} is no longer the Fortune Teller`
+  gameData.centerBannerUntilMs = Date.now() + 2200
   lastFortuneTellerPosition = null
   fortuneTellerBecameAtMs = 0
   stopOrbitCinematic()
@@ -71,7 +72,9 @@ function clearFortuneTellerAndShowWizard() {
     fortuneTellerSessionEndsAtMs: null,
     fortuneTellerReadingsDone: 0,
     fortuneTellerMaxReadings: 3,
-    fortuneTellerReleaseAtMs: null
+    fortuneTellerReleaseAtMs: null,
+    centerBannerText: gameData.centerBannerText,
+    centerBannerUntilMs: gameData.centerBannerUntilMs
   })
 }
 

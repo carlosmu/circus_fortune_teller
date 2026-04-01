@@ -178,7 +178,7 @@
           "json": {
             "position": {
               "x": 8,
-              "y": 0.5,
+              "y": 1.25,
               "z": 6.25
             },
             "rotation": {
@@ -312,17 +312,17 @@
             "active": true,
             "color": {
               "r": 1,
-              "g": 1,
-              "b": 1
+              "g": 0.6470588445663452,
+              "b": 0
             },
-            "intensity": 16000,
+            "intensity": 8897,
             "range": -1,
             "shadow": true,
             "type": {
               "$case": "spot",
               "spot": {
-                "innerAngle": 30,
-                "outerAngle": 40
+                "innerAngle": 49,
+                "outerAngle": 168
               }
             }
           }
@@ -344,7 +344,7 @@
       "data": {
         "516": {
           "json": {
-            "gizmo": 2
+            "gizmo": 1
           }
         }
       }

@@ -36,7 +36,7 @@ export function setupScene() {
   })
 
   GltfContainer.create(WIZARD, {
-    src: 'assets/models/wizard.glb'
+    src: 'assets/models/fortune_teller.glb'
   })
   VisibilityComponent.create(WIZARD, { visible: true })
 
