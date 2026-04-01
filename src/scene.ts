@@ -12,7 +12,7 @@ export const HOST_COLLIDER = engine.addEntity()
 const BACKGROUND_MUSIC = engine.addEntity()
 
 /** Wizard position in scene (GLB origin 0,0,0, placed by code). */
-const WIZARD_POSITION = Vector3.create(8, 0, 5.5)
+const WIZARD_POSITION = Vector3.create(8, 0, 5)
 
 /** Fixed position of the host spot (never mutated, unlike WIZARD's Transform). */
 export const HOST_POSITION = Vector3.create(8, 0, 5)
