@@ -13,33 +13,33 @@ import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
 import {
   WIZARD,
-  HOST_COLLIDER,
-  HOST_POSITION,
-  HOST_CAMERA_TARGET
+  FORTUNE_TELLER_COLLIDER,
+  FORTUNE_TELLER_POSITION,
+  FORTUNE_TELLER_CAMERA_TARGET
 } from './scene'
 import { startOrbitCinematic, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 
 /** Center of the table used as orbit pivot for the cinematic. */
 const TABLE_CENTER = { x: 8, y: 0, z: 8 }
 
-const HOST_MOVE_THRESHOLD = 0.5
-/** Tiempo en ms sin comprobar movimiento tras convertirse en host (dar tiempo al teletransporte). */
-const HOST_GRACE_MS = 1500
-const HOST_HOVER_BECOME = 'Become Host'
-const HOST_HOVER_WAIT = 'Wait for the next turn'
-const HOST_HOVER_DISABLED_SELF = 'You are already the Host'
-const HOST_HOVER_DISABLED_TAKEN = 'Host already taken'
+const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
+/** Tiempo en ms sin comprobar movimiento tras convertirse en fortune teller (dar tiempo al teletransporte). */
+const FORTUNE_TELLER_GRACE_MS = 1500
+const FORTUNE_TELLER_HOVER_BECOME = 'Become Fortune Teller'
+const FORTUNE_TELLER_HOVER_WAIT = 'Wait for the next turn'
+const FORTUNE_TELLER_HOVER_DISABLED_SELF = 'You are already the Fortune Teller'
+const FORTUNE_TELLER_HOVER_DISABLED_TAKEN = 'Fortune Teller already taken'
 const WIZARD_MOVE_OFFSET_X = 2
 const WIZARD_MOVE_OFFSET_Z = -1
 const WIZARD_MOVE_SPEED = 6
-const HOST_SESSION_INITIAL_MS = 30000
-const HOST_RANDOM_MIN_X = 3
-const HOST_RANDOM_MAX_X = 13
-const HOST_RANDOM_MIN_Z = 7
-const HOST_RANDOM_MAX_Z = 12
-let lastHostPosition: { x: number; y: number; z: number } | null = null
-let hostBecameAtMs: number = 0
-let lastHostColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
+const FORTUNE_TELLER_SESSION_INITIAL_MS = 30000
+const FORTUNE_TELLER_RANDOM_MIN_X = 3
+const FORTUNE_TELLER_RANDOM_MAX_X = 13
+const FORTUNE_TELLER_RANDOM_MIN_Z = 7
+const FORTUNE_TELLER_RANDOM_MAX_Z = 12
+let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
+let fortuneTellerBecameAtMs: number = 0
+let lastFortuneTellerColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
 let originalWizardPosition: { x: number; y: number; z: number } | null = null
 let displacedWizardPosition: { x: number; y: number; z: number } | null = null
 let currentWizardAnim: 'idle' | 'waiting' | 'reveal' | null = null
@@ -52,26 +52,26 @@ function distance(a: { x: number; y: number; z: number }, b: { x: number; y: num
   return Math.sqrt(dx * dx + dy * dy + dz * dz)
 }
 
-function clearHostAndShowWizard() {
-  gameData.currentHostId = null
-  gameData.currentHostName = null
-  gameData.hostSessionEndsAtMs = null
-  gameData.hostReadingsDone = 0
-  gameData.hostMaxReadings = 3
-  gameData.hostReleaseAtMs = null
-  gameData.hostTimeRemainingSec = 0
+function clearFortuneTellerAndShowWizard() {
+  gameData.currentFortuneTellerId = null
+  gameData.currentFortuneTellerName = null
+  gameData.fortuneTellerSessionEndsAtMs = null
+  gameData.fortuneTellerReadingsDone = 0
+  gameData.fortuneTellerMaxReadings = 3
+  gameData.fortuneTellerReleaseAtMs = null
+  gameData.fortuneTellerTimeRemainingSec = 0
   gameData.centerBannerText = null
   gameData.centerBannerUntilMs = 0
-  lastHostPosition = null
-  hostBecameAtMs = 0
+  lastFortuneTellerPosition = null
+  fortuneTellerBecameAtMs = 0
   stopOrbitCinematic()
-  fortuneMessageBus.emit('set-host', {
-    hostId: null,
-    hostName: null,
-    hostSessionEndsAtMs: null,
-    hostReadingsDone: 0,
-    hostMaxReadings: 3,
-    hostReleaseAtMs: null
+  fortuneMessageBus.emit('set-fortune-teller', {
+    fortuneTellerId: null,
+    fortuneTellerName: null,
+    fortuneTellerSessionEndsAtMs: null,
+    fortuneTellerReadingsDone: 0,
+    fortuneTellerMaxReadings: 3,
+    fortuneTellerReleaseAtMs: null
   })
 }
 
@@ -79,125 +79,119 @@ function randomInRange(min: number, max: number): number {
   return min + Math.random() * (max - min)
 }
 
-function moveHostToRandomArea(): void {
+function moveFortuneTellerToRandomArea(): void {
   executeTask(async () => {
     try {
       await movePlayerTo({
         newRelativePosition: {
-          x: randomInRange(HOST_RANDOM_MIN_X, HOST_RANDOM_MAX_X),
+          x: randomInRange(FORTUNE_TELLER_RANDOM_MIN_X, FORTUNE_TELLER_RANDOM_MAX_X),
           y: 1,
-          z: randomInRange(HOST_RANDOM_MIN_Z, HOST_RANDOM_MAX_Z)
+          z: randomInRange(FORTUNE_TELLER_RANDOM_MIN_Z, FORTUNE_TELLER_RANDOM_MAX_Z)
         },
         cameraTarget: {
-          x: HOST_CAMERA_TARGET.x,
-          y: HOST_CAMERA_TARGET.y,
-          z: HOST_CAMERA_TARGET.z
+          x: FORTUNE_TELLER_CAMERA_TARGET.x,
+          y: FORTUNE_TELLER_CAMERA_TARGET.y,
+          z: FORTUNE_TELLER_CAMERA_TARGET.z
         }
       })
     } catch (_e) {}
   })
 }
 
-function releaseHostBySessionRules(): void {
+function releaseFortuneTellerBySessionRules(): void {
   const localUserId = getPlayer()?.userId ?? null
-  if (localUserId === null || gameData.currentHostId !== localUserId) return
-  clearHostAndShowWizard()
-  moveHostToRandomArea()
+  if (localUserId === null || gameData.currentFortuneTellerId !== localUserId) return
+  clearFortuneTellerAndShowWizard()
+  moveFortuneTellerToRandomArea()
 }
 
-function hostClickCallback() {
+function fortuneTellerClickCallback() {
   const player = getPlayer()
   const userId = player?.userId ?? null
   if (!userId) return
-  // Logic-level guard: host cannot click "Become Host" again,
-  // and no one can take host while another host is active.
-  if (gameData.currentHostId === userId) return
-  if (gameData.currentHostId !== null) return
-  const hostName = player?.name?.trim() || null
-  gameData.currentHostId = userId
-  gameData.currentHostName = hostName
+  if (gameData.currentFortuneTellerId === userId) return
+  if (gameData.currentFortuneTellerId !== null) return
+  const ftName = player?.name?.trim() || null
+  gameData.currentFortuneTellerId = userId
+  gameData.currentFortuneTellerName = ftName
   const now = Date.now()
-  gameData.hostReadingsDone = 0
-  gameData.hostMaxReadings = 3
-  gameData.hostSessionEndsAtMs = now + HOST_SESSION_INITIAL_MS
-  gameData.hostReleaseAtMs = null
-  gameData.hostTimeRemainingSec = 30
-  gameData.centerBannerText = `${hostName ?? 'Someone'} is becoming the host`
+  gameData.fortuneTellerReadingsDone = 0
+  gameData.fortuneTellerMaxReadings = 3
+  gameData.fortuneTellerSessionEndsAtMs = now + FORTUNE_TELLER_SESSION_INITIAL_MS
+  gameData.fortuneTellerReleaseAtMs = null
+  gameData.fortuneTellerTimeRemainingSec = 30
+  gameData.centerBannerText = `${ftName ?? 'Someone'} is becoming the Fortune Teller`
   gameData.centerBannerUntilMs = now + 2200
-  fortuneMessageBus.emit('set-host', {
-    hostId: userId,
-    hostName,
-    hostSessionEndsAtMs: gameData.hostSessionEndsAtMs,
-    hostReadingsDone: gameData.hostReadingsDone,
-    hostMaxReadings: gameData.hostMaxReadings,
-    hostReleaseAtMs: null
+  fortuneMessageBus.emit('set-fortune-teller', {
+    fortuneTellerId: userId,
+    fortuneTellerName: ftName,
+    fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
+    fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
+    fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
+    fortuneTellerReleaseAtMs: null
   })
-  fortuneMessageBus.emit('host-session-update', {
-    hostId: userId,
-    hostSessionEndsAtMs: gameData.hostSessionEndsAtMs,
-    hostReadingsDone: gameData.hostReadingsDone,
-    hostMaxReadings: gameData.hostMaxReadings,
-    hostReleaseAtMs: gameData.hostReleaseAtMs,
+  fortuneMessageBus.emit('fortune-teller-session-update', {
+    fortuneTellerId: userId,
+    fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
+    fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
+    fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
+    fortuneTellerReleaseAtMs: gameData.fortuneTellerReleaseAtMs,
     centerBannerText: gameData.centerBannerText,
     centerBannerUntilMs: gameData.centerBannerUntilMs
   })
-  hostBecameAtMs = now
-  lastHostPosition = {
-    x: HOST_POSITION.x,
-    y: HOST_POSITION.y,
-    z: HOST_POSITION.z
+  fortuneTellerBecameAtMs = now
+  lastFortuneTellerPosition = {
+    x: FORTUNE_TELLER_POSITION.x,
+    y: FORTUNE_TELLER_POSITION.y,
+    z: FORTUNE_TELLER_POSITION.z
   }
 
-  // Start orbit cinematic: virtual camera orbits the table while the player is
-  // silently teleported underneath. When the arc finishes the virtual camera
-  // deactivates and the player's view is already at HOST_POSITION.
   startOrbitCinematic(
     TABLE_CENTER,
-    { x: HOST_POSITION.x, y: 0, z: HOST_POSITION.z },
-    () => {} // cleanup is handled inside cinematicCamera
+    { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z },
+    () => {}
   )
 
-  // Teleport the player silently while the cinematic is playing.
   executeTask(async () => {
     try {
       await movePlayerTo({
         newRelativePosition: {
-          x: HOST_POSITION.x,
-          y: HOST_POSITION.y,
-          z: HOST_POSITION.z
+          x: FORTUNE_TELLER_POSITION.x,
+          y: FORTUNE_TELLER_POSITION.y,
+          z: FORTUNE_TELLER_POSITION.z
         },
         cameraTarget: {
-          x: HOST_CAMERA_TARGET.x,
-          y: HOST_CAMERA_TARGET.y,
-          z: HOST_CAMERA_TARGET.z
+          x: FORTUNE_TELLER_CAMERA_TARGET.x,
+          y: FORTUNE_TELLER_CAMERA_TARGET.y,
+          z: FORTUNE_TELLER_CAMERA_TARGET.z
         }
       })
     } catch (_e) {}
   })
 }
 
-function registerHostColliderPointer(
+function registerFortuneTellerColliderPointer(
   mode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken'
 ) {
-  pointerEventsSystem.removeOnPointerDown(HOST_COLLIDER)
+  pointerEventsSystem.removeOnPointerDown(FORTUNE_TELLER_COLLIDER)
   const hoverText =
     mode === 'wait'
-      ? HOST_HOVER_WAIT
+      ? FORTUNE_TELLER_HOVER_WAIT
       : mode === 'disabled-self'
-        ? HOST_HOVER_DISABLED_SELF
+        ? FORTUNE_TELLER_HOVER_DISABLED_SELF
         : mode === 'disabled-taken'
-          ? HOST_HOVER_DISABLED_TAKEN
-          : HOST_HOVER_BECOME
+          ? FORTUNE_TELLER_HOVER_DISABLED_TAKEN
+          : FORTUNE_TELLER_HOVER_BECOME
   const enabled = mode === 'become'
   pointerEventsSystem.onPointerDown(
     {
-      entity: HOST_COLLIDER,
+      entity: FORTUNE_TELLER_COLLIDER,
       opts: {
         button: InputAction.IA_POINTER,
         hoverText
       }
     },
-    enabled ? hostClickCallback : () => {}
+    enabled ? fortuneTellerClickCallback : () => {}
   )
 }
 
@@ -228,7 +222,6 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
     currentWizardAnim = next
     console.log(`[WizardAnim] Switching to "${next}"`)
   } else {
-    // Useful to diagnose clip name mismatches from GLB animation exports.
     const available = animator.states.map((s) => s.clip).join(', ')
     console.log(`[WizardAnim] Could not find clip for "${next}". Available: ${available}`)
   }
@@ -236,10 +229,9 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
 
 export function setupWizard() {
   setupCinematicCamera()
-  registerHostColliderPointer('become')
-  lastHostColliderMode = 'become'
+  registerFortuneTellerColliderPointer('become')
+  lastFortuneTellerColliderMode = 'become'
 
-  // Capture original wizard position once and compute displaced position from it.
   if (Transform.has(WIZARD)) {
     const pos = Transform.get(WIZARD).position
     originalWizardPosition = { x: pos.x, y: pos.y, z: pos.z }
@@ -253,29 +245,25 @@ export function setupWizard() {
   engine.addSystem((dt: number) => {
     const showWait = gameData.gameState === 'MOSTRANDO_FORTUNA'
     const localUserId = getPlayer()?.userId ?? null
-    const localIsHost = localUserId !== null && gameData.currentHostId === localUserId
-    const hostTakenByOther =
-      gameData.currentHostId !== null && gameData.currentHostId !== localUserId
+    const localIsFortuneTeller = localUserId !== null && gameData.currentFortuneTellerId === localUserId
+    const ftTakenByOther =
+      gameData.currentFortuneTellerId !== null && gameData.currentFortuneTellerId !== localUserId
     const hoverMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' = showWait
       ? 'wait'
-      : localIsHost
+      : localIsFortuneTeller
         ? 'disabled-self'
-        : hostTakenByOther
+        : ftTakenByOther
           ? 'disabled-taken'
           : 'become'
-    if (hoverMode !== lastHostColliderMode) {
-      lastHostColliderMode = hoverMode
-      registerHostColliderPointer(hoverMode)
+    if (hoverMode !== lastFortuneTellerColliderMode) {
+      lastFortuneTellerColliderMode = hoverMode
+      registerFortuneTellerColliderPointer(hoverMode)
     }
 
-    // Wizard animation state machine:
-    // - idle: original position, no host
-    // - waiting: host taken, waiting / occupied
-    // - reveal: actively revealing player's fortune
     const desiredState: 'idle' | 'waiting' | 'reveal' =
       gameData.gameState === 'MOSTRANDO_FORTUNA'
         ? 'reveal'
-        : gameData.currentHostId !== null
+        : gameData.currentFortuneTellerId !== null
           ? 'waiting'
           : 'idle'
     if (desiredState !== debugLastState) {
@@ -284,54 +272,52 @@ export function setupWizard() {
     }
     setWizardAnimation(desiredState)
 
-    // Wizard position interpolation
     if (Transform.has(WIZARD) && originalWizardPosition && displacedWizardPosition) {
       const transform = Transform.getMutable(WIZARD)
       const target =
-        gameData.currentHostId !== null ? displacedWizardPosition : originalWizardPosition
+        gameData.currentFortuneTellerId !== null ? displacedWizardPosition : originalWizardPosition
       const t = Math.min(1, dt * WIZARD_MOVE_SPEED)
       transform.position.x += (target.x - transform.position.x) * t
       transform.position.y += (target.y - transform.position.y) * t
       transform.position.z += (target.z - transform.position.z) * t
     }
 
-    // Host session timer and forced release rules (timestamp-based).
-    if (gameData.currentHostId !== null && gameData.hostSessionEndsAtMs !== null) {
+    // Fortune teller session timer and forced release rules (timestamp-based).
+    if (gameData.currentFortuneTellerId !== null && gameData.fortuneTellerSessionEndsAtMs !== null) {
       const now = Date.now()
-      const remainingSecTarget = Math.max(0, (gameData.hostSessionEndsAtMs - now) / 1000)
-      if (remainingSecTarget > gameData.hostTimeRemainingSec) {
-        // Smooth increase when bonus time is added.
-        gameData.hostTimeRemainingSec = Math.min(
+      const remainingSecTarget = Math.max(0, (gameData.fortuneTellerSessionEndsAtMs - now) / 1000)
+      if (remainingSecTarget > gameData.fortuneTellerTimeRemainingSec) {
+        gameData.fortuneTellerTimeRemainingSec = Math.min(
           remainingSecTarget,
-          gameData.hostTimeRemainingSec + dt * 20
+          gameData.fortuneTellerTimeRemainingSec + dt * 20
         )
       } else {
-        gameData.hostTimeRemainingSec = remainingSecTarget
+        gameData.fortuneTellerTimeRemainingSec = remainingSecTarget
       }
 
       const localUserIdForTimer = getPlayer()?.userId ?? null
-      const localIsHostForTimer =
-        localUserIdForTimer !== null && gameData.currentHostId === localUserIdForTimer
-      if (localIsHostForTimer) {
-        if (gameData.hostReleaseAtMs !== null && now >= gameData.hostReleaseAtMs) {
-          releaseHostBySessionRules()
+      const localIsFortuneTellerForTimer =
+        localUserIdForTimer !== null && gameData.currentFortuneTellerId === localUserIdForTimer
+      if (localIsFortuneTellerForTimer) {
+        if (gameData.fortuneTellerReleaseAtMs !== null && now >= gameData.fortuneTellerReleaseAtMs) {
+          releaseFortuneTellerBySessionRules()
           return
         }
-        if (now >= gameData.hostSessionEndsAtMs) {
-          releaseHostBySessionRules()
+        if (now >= gameData.fortuneTellerSessionEndsAtMs) {
+          releaseFortuneTellerBySessionRules()
           return
         }
       }
     }
 
-    if (gameData.currentHostId !== localUserId || !lastHostPosition) return
-    if (Date.now() - hostBecameAtMs < HOST_GRACE_MS) return
+    if (gameData.currentFortuneTellerId !== localUserId || !lastFortuneTellerPosition) return
+    if (Date.now() - fortuneTellerBecameAtMs < FORTUNE_TELLER_GRACE_MS) return
     if (!Transform.has(engine.PlayerEntity)) return
 
     const pos = Transform.get(engine.PlayerEntity).position
     const current = { x: pos.x, y: pos.y, z: pos.z }
-    if (distance(current, lastHostPosition) > HOST_MOVE_THRESHOLD) {
-      clearHostAndShowWizard()
+    if (distance(current, lastFortuneTellerPosition) > FORTUNE_TELLER_MOVE_THRESHOLD) {
+      clearFortuneTellerAndShowWizard()
     }
   })
 }

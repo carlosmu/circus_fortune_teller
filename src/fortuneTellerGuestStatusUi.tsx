@@ -9,20 +9,20 @@ const FILLED_READING_SLOT = '♥'
 const EMPTY_READING_SLOT = '-'
 
 /**
- * Barra fija arriba al centro: Host y Guest (reactivo: lee gameData cada frame de UI).
+ * Barra fija arriba al centro: Fortune Teller y Guest (reactivo: lee gameData cada frame de UI).
  */
-export function HostGuestStatusBar() {
-  const hostPlayerName = gameData.currentHostName
+export function FortuneTellerGuestStatusBar() {
+  const ftPlayerName = gameData.currentFortuneTellerName
   const guestPlayerName = gameData.currentGuestName
-  const hostLabel = hostPlayerName ?? 'Free'
+  const ftLabel = ftPlayerName ?? 'Free'
   const guestLabel = guestPlayerName ?? 'Free'
-  const hasActiveHost = gameData.currentHostId !== null
-  const timeSec = Math.max(0, Math.ceil(gameData.hostTimeRemainingSec))
-  const filledCards = hasActiveHost ? Math.min(3, gameData.hostReadingsDone) : 0
+  const hasActiveFortuneTeller = gameData.currentFortuneTellerId !== null
+  const timeSec = Math.max(0, Math.ceil(gameData.fortuneTellerTimeRemainingSec))
+  const filledCards = hasActiveFortuneTeller ? Math.min(3, gameData.fortuneTellerReadingsDone) : 0
   const cards = `${FILLED_READING_SLOT.repeat(filledCards)}${EMPTY_READING_SLOT.repeat(3 - filledCards)}`
-  const hostStatusLine = hasActiveHost
-    ? `Host: ${hostLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: [${cards}]`
-    : `Host: ${hostLabel}`
+  const ftStatusLine = hasActiveFortuneTeller
+    ? `Fortune Teller: ${ftLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: [${cards}]`
+    : `Fortune Teller: ${ftLabel}`
 
   return (
     <UiEntity
@@ -36,7 +36,7 @@ export function HostGuestStatusBar() {
     >
       <UiEntity
         uiTransform={{
-          width: 560,
+          width: 620,
           height: 60,
           flexDirection: 'column',
           justifyContent: 'center',
@@ -46,15 +46,15 @@ export function HostGuestStatusBar() {
         uiBackground={{ color: BG }}
       >
         <Label
-          uiTransform={{ width: 540, height: 22 }}
-          value={hostStatusLine}
+          uiTransform={{ width: 600, height: 22 }}
+          value={ftStatusLine}
           textAlign="middle-center"
           fontSize={16}
           font="sans-serif"
           color={TEXT}
         />
         <Label
-          uiTransform={{ width: 540, height: 22 }}
+          uiTransform={{ width: 600, height: 22 }}
           value={`Guest: ${guestLabel}`}
           textAlign="middle-center"
           fontSize={16}

@@ -7,34 +7,34 @@ export type Fortune = {
 
 export type GameState = 'LIBRE' | 'OCUPADO' | 'MOSTRANDO_FORTUNA'
 
-/** Three random categories for the host to choose from this round. */
-export type HostChoiceCategories = [FortuneCategory, FortuneCategory, FortuneCategory] | null
+/** Three random categories for the fortune teller to choose from this round. */
+export type FortuneTellerChoiceCategories = [FortuneCategory, FortuneCategory, FortuneCategory] | null
 
 export type GlobalGameData = {
   currentGuestId: string | null
   currentGuestName: string | null
-  currentHostId: string | null
-  /** Display name of the current host (synced with MessageBus). */
-  currentHostName: string | null
-  /** Absolute timestamp (ms) when host session ends. */
-  hostSessionEndsAtMs: number | null
-  /** Number of completed readings in the current host session. */
-  hostReadingsDone: number
-  /** Maximum readings allowed per host session. */
-  hostMaxReadings: number
+  currentFortuneTellerId: string | null
+  /** Display name of the current fortune teller (synced with MessageBus). */
+  currentFortuneTellerName: string | null
+  /** Absolute timestamp (ms) when fortune teller session ends. */
+  fortuneTellerSessionEndsAtMs: number | null
+  /** Number of completed readings in the current fortune teller session. */
+  fortuneTellerReadingsDone: number
+  /** Maximum readings allowed per fortune teller session. */
+  fortuneTellerMaxReadings: number
   /** Release timestamp after final reading (ms), if scheduled. */
-  hostReleaseAtMs: number | null
+  fortuneTellerReleaseAtMs: number | null
   /** Smoothed remaining time for UI display (seconds). */
-  hostTimeRemainingSec: number
-  /** Center banner text (e.g. host announcements). */
+  fortuneTellerTimeRemainingSec: number
+  /** Center banner text (e.g. fortune teller announcements). */
   centerBannerText: string | null
   /** Absolute timestamp (ms) when center banner should disappear. */
   centerBannerUntilMs: number
   gameState: GameState
   currentFortune: Fortune | null
-  /** Category options for the host this round (3 random). */
-  currentHostChoiceOptions: HostChoiceCategories
-  /** Alpha for "Waiting for the host..." text (0.5–1.0, animated). */
+  /** Category options for the fortune teller this round (3 random). */
+  currentFortuneTellerChoiceOptions: FortuneTellerChoiceCategories
+  /** Alpha for "Waiting for the fortune teller..." text (0.5–1.0, animated). */
   waitingPanelAlpha: number
 }
 

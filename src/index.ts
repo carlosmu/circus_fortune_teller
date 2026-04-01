@@ -1,7 +1,7 @@
 import { engine } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import { setupInteractionSystem } from './interactionSystem'
-import { setupHostSystem } from './hostSystem'
+import { setupFortuneTellerSystem } from './fortuneTellerSystem'
 import { setupFortuneUiSystem } from './fortuneUiSystem'
 import { setupFortuneSync } from './fortuneSync'
 import { setupGuestSpot } from './setupGuestSpot'
@@ -36,7 +36,7 @@ export function main() {
   // Inicializar escena (mesa, wizard, etc.)
   setupScene()
 
-  // Panel 3D del leaderboard (monospace, +2m en X respecto al host)
+  // Panel 3D del leaderboard (monospace, +2m en X respecto al fortune teller)
   setupLeaderboard3D()
 
   // Load stats and update leaderboard panel
@@ -54,7 +54,7 @@ export function main() {
   setupGuestSpot()
   setupWizard()
   setupInteractionSystem()
-  setupHostSystem()
+  setupFortuneTellerSystem()
   setupFortuneUiSystem()
 }
 

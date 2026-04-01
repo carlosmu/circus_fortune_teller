@@ -9,7 +9,7 @@ import {
   TextAlignMode
 } from '@dcl/sdk/ecs'
 import { Vector3, Color4, Quaternion } from '@dcl/sdk/math'
-import { HOST_POSITION } from './scene'
+import { FORTUNE_TELLER_POSITION } from './scene'
 import type { GetStatsResponse } from './supabase_api'
 
 const PANEL_WIDTH = 2.5

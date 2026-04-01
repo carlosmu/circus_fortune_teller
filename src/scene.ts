@@ -6,18 +6,18 @@ export const FLOOR = engine.addEntity()
 export const TENT = engine.addEntity()
 export const LIGHTS_TENT = engine.addEntity()
 export const WIZARD = engine.addEntity()
-/** Entity with host_collider.glb: click area for "Become Host" (wizard has no collider). */
-export const HOST_COLLIDER = engine.addEntity()
+/** Entity with fortune_teller_collider.glb: click area for "Become Fortune Teller". */
+export const FORTUNE_TELLER_COLLIDER = engine.addEntity()
 
 const BACKGROUND_MUSIC = engine.addEntity()
 
 /** Wizard position in scene (GLB origin 0,0,0, placed by code). */
 const WIZARD_POSITION = Vector3.create(8, 0, 5)
 
-/** Fixed position of the host spot (never mutated, unlike WIZARD's Transform). */
-export const HOST_POSITION = Vector3.create(8, 0, 5)
-/** Point the host camera looks at (table/guest). */
-export const HOST_CAMERA_TARGET = Vector3.create(8, 1, 8)
+/** Fixed position of the fortune teller spot (never mutated, unlike WIZARD's Transform). */
+export const FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 5)
+/** Point the fortune teller camera looks at (table/guest). */
+export const FORTUNE_TELLER_CAMERA_TARGET = Vector3.create(8, 1, 8)
 
 export function setupScene() {
   // TABLE ENTITY
@@ -29,7 +29,7 @@ export function setupScene() {
     src: 'assets/models/table.glb'
   })
 
-  // WIZARD (hidden when local player is host)
+  // WIZARD (hidden when local player is fortune teller)
   Transform.create(WIZARD, {
     position: WIZARD_POSITION,
     scale: Vector3.create(1.2, 1.2, 1.2)
@@ -40,13 +40,13 @@ export function setupScene() {
   })
   VisibilityComponent.create(WIZARD, { visible: true })
 
-  // HOST COLLIDER: same position as wizard, for "Become Host" click
-  Transform.create(HOST_COLLIDER, {
+  // FORTUNE TELLER COLLIDER: same position as wizard, for "Become Fortune Teller" click
+  Transform.create(FORTUNE_TELLER_COLLIDER, {
     position: WIZARD_POSITION
   })
 
   
-  GltfContainer.create(HOST_COLLIDER, {
+  GltfContainer.create(FORTUNE_TELLER_COLLIDER, {
     src: 'assets/models/host_collider.glb'
   })
   Transform.create(FLOOR, {
@@ -78,4 +78,3 @@ export function setupScene() {
   })
 
 }
-

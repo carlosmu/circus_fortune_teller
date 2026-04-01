@@ -6,6 +6,7 @@
  */
 export enum EntityNames {
   Music = "Music",
+  Spotlight = "Spotlight",
   tree_green_glb = "tree_green.glb",
   tree_pink_glb = "tree_pink.glb",
   tree_yellow_glb = "tree_yellow.glb",

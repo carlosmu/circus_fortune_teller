@@ -5,8 +5,8 @@ import { Color4 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { SHOW_UI_FORTUNE } from './sceneConfig'
-import { revealFortuneForCategory } from './hostSystem'
-import { HostGuestStatusBar } from './hostGuestStatusUi'
+import { revealFortuneForCategory } from './fortuneTellerSystem'
+import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
 import { cinematicBarAlpha } from './cinematicCamera'
 import type { FortuneCategory } from './types'
 
@@ -97,20 +97,20 @@ function uiComponent() {
     SHOW_UI_FORTUNE && gameData.gameState === 'MOSTRANDO_FORTUNA' && !!fortune
 
   const player = getPlayer()
-  const isHost =
-    !!player && gameData.currentHostId !== null && gameData.currentHostId === player.userId
-  const showHostChoice = gameData.gameState === 'OCUPADO' && isHost
+  const isFortuneTeller =
+    !!player && gameData.currentFortuneTellerId !== null && gameData.currentFortuneTellerId === player.userId
+  const showFortuneTellerChoice = gameData.gameState === 'OCUPADO' && isFortuneTeller
   const showWaitingPanel =
-    SHOW_UI_FORTUNE && gameData.gameState === 'OCUPADO' && !isHost
+    SHOW_UI_FORTUNE && gameData.gameState === 'OCUPADO' && !isFortuneTeller
   const waitingAlpha = gameData.waitingPanelAlpha
 
   if (gameData.gameState !== 'OCUPADO') {
-    gameData.currentHostChoiceOptions = null
-  } else if (showHostChoice && gameData.currentHostChoiceOptions === null) {
-    gameData.currentHostChoiceOptions = pickThreeRandomCategories()
+    gameData.currentFortuneTellerChoiceOptions = null
+  } else if (showFortuneTellerChoice && gameData.currentFortuneTellerChoiceOptions === null) {
+    gameData.currentFortuneTellerChoiceOptions = pickThreeRandomCategories()
   }
 
-  const hostOptions = gameData.currentHostChoiceOptions
+  const fortuneTellerOptions = gameData.currentFortuneTellerChoiceOptions
 
   const text = fortune?.text ?? ''
   const category = fortune?.category ?? ''
@@ -135,7 +135,7 @@ function uiComponent() {
         alignItems: 'stretch'
       }}
     >
-      <HostGuestStatusBar />
+      <FortuneTellerGuestStatusBar />
 
       {/* Debug state (top-left) */}
       <UiEntity
@@ -154,7 +154,7 @@ function uiComponent() {
         />
       </UiEntity>
 
-      {/* Waiting for the host panel (guest view) */}
+      {/* Waiting for the fortune teller panel (guest view) */}
       {showWaitingPanel && (
         <UiEntity
           uiTransform={{
@@ -248,8 +248,8 @@ function uiComponent() {
         </UiEntity>
       )}
 
-      {/* Host category choice panel */}
-      {showHostChoice && (
+      {/* Fortune Teller category choice panel */}
+      {showFortuneTellerChoice && (
         <UiEntity
           uiTransform={{
             width: '100%',
@@ -291,7 +291,7 @@ function uiComponent() {
                 margin: { top: 8 }
               }}
             >
-              {hostOptions?.map((category, index) => (
+              {fortuneTellerOptions?.map((category, index) => (
                 <UiEntity
                   key={category}
                   uiTransform={{
@@ -315,7 +315,7 @@ function uiComponent() {
         </UiEntity>
       )}
 
-      {/* Big centered banner (host announcements) */}
+      {/* Big centered banner (fortune teller announcements) */}
       {showCenterBanner && (
         <UiEntity
           uiTransform={{

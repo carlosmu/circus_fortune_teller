@@ -1,6 +1,6 @@
 import { engine, Transform, VirtualCamera, MainCamera } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
-import { WIZARD, HOST_POSITION } from './scene'
+import { WIZARD, FORTUNE_TELLER_POSITION } from './scene'
 import { gameData } from './gameState'
 
 type Vec3 = { x: number; y: number; z: number }
@@ -42,12 +42,12 @@ export const CINEMATIC_CONFIG = {
   orbitLookBlendDuration: 1.1,
   /** Reveal-fortune closeup timings. */
   revealBlendInDuration: 2.0,
-  /** Seconds to hold on host after fortune is revealed before blending out. */
+  /** Seconds to hold on fortune teller after fortune is revealed before blending out. */
   revealPostRevealDelay: 2.5,
   revealBlendOutDuration: 2.8,
   /** Extra smoothing only for reveal closeup phases. */
   revealRotationDamping: 0.08,
-  /** Reveal closeup offsets from HOST_POSITION. */
+  /** Reveal closeup offsets from FORTUNE_TELLER_POSITION. */
   revealCamOffsetX: 0,
   revealCamOffsetY: 1,
   revealCamOffsetZ: 4.5,
@@ -241,17 +241,17 @@ export function startRevealFortuneCinematic(): void {
     z: revealStartPos.z + revealStartLookDir.z * 4
   }
 
-  // Always use fixed host spot for reveal closeup, independent from wizard mesh.
-  const hostPos = HOST_POSITION
+  // Always use fixed fortune teller spot for reveal closeup, independent from wizard mesh.
+  const ftPos = FORTUNE_TELLER_POSITION
   revealClosePos = {
-    x: hostPos.x + CINEMATIC_CONFIG.revealCamOffsetX,
-    y: hostPos.y + CINEMATIC_CONFIG.revealCamOffsetY,
-    z: hostPos.z + CINEMATIC_CONFIG.revealCamOffsetZ
+    x: ftPos.x + CINEMATIC_CONFIG.revealCamOffsetX,
+    y: ftPos.y + CINEMATIC_CONFIG.revealCamOffsetY,
+    z: ftPos.z + CINEMATIC_CONFIG.revealCamOffsetZ
   }
   revealLookTarget = {
-    x: hostPos.x + CINEMATIC_CONFIG.revealTargetOffsetX,
-    y: hostPos.y + CINEMATIC_CONFIG.revealTargetOffsetY,
-    z: hostPos.z + CINEMATIC_CONFIG.revealTargetOffsetZ
+    x: ftPos.x + CINEMATIC_CONFIG.revealTargetOffsetX,
+    y: ftPos.y + CINEMATIC_CONFIG.revealTargetOffsetY,
+    z: ftPos.z + CINEMATIC_CONFIG.revealTargetOffsetZ
   }
 
   revealPhase = 'blend-in'

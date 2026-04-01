@@ -5,7 +5,7 @@ import { getPlayer } from '@dcl/sdk/players'
 import { FORTUNES } from './fortunes'
 import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
-import { HOST_POSITION } from './scene'
+import { FORTUNE_TELLER_POSITION } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import { startRevealFortuneCinematic } from './cinematicCamera'
 import type { FortuneCategory } from './types'
@@ -26,12 +26,12 @@ export type GuestRequestedMessage = {
   guestName: string
 }
 
-export type HostSessionUpdateMessage = {
-  hostId: string | null
-  hostSessionEndsAtMs: number | null
-  hostReadingsDone: number
-  hostMaxReadings: number
-  hostReleaseAtMs: number | null
+export type FortuneTellerSessionUpdateMessage = {
+  fortuneTellerId: string | null
+  fortuneTellerSessionEndsAtMs: number | null
+  fortuneTellerReadingsDone: number
+  fortuneTellerMaxReadings: number
+  fortuneTellerReleaseAtMs: number | null
   centerBannerText?: string | null
   centerBannerUntilMs?: number
 }
@@ -50,7 +50,7 @@ function playRevealSound() {
   }
   const audioEntity = engine.addEntity()
   Transform.create(audioEntity, {
-    position: Vector3.create(HOST_POSITION.x, HOST_POSITION.y + 1, HOST_POSITION.z)
+    position: Vector3.create(FORTUNE_TELLER_POSITION.x, FORTUNE_TELLER_POSITION.y + 1, FORTUNE_TELLER_POSITION.z)
   })
   AudioSource.create(audioEntity, {
     audioClipUrl: REVEAL_SOUND_PATH,
@@ -78,7 +78,6 @@ export function setupFortuneSync() {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'OCUPADO'
-    // Only the requesting guest should see this closeup.
     const localUserId = getPlayer()?.userId ?? null
     if (localUserId !== null && localUserId === data.guestId) {
       startRevealFortuneCinematic()
@@ -113,39 +112,39 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on(
-    'set-host',
+    'set-fortune-teller',
     (data: {
-      hostId: string | null
-      hostName?: string | null
-      hostSessionEndsAtMs?: number | null
-      hostReadingsDone?: number
-      hostMaxReadings?: number
-      hostReleaseAtMs?: number | null
+      fortuneTellerId: string | null
+      fortuneTellerName?: string | null
+      fortuneTellerSessionEndsAtMs?: number | null
+      fortuneTellerReadingsDone?: number
+      fortuneTellerMaxReadings?: number
+      fortuneTellerReleaseAtMs?: number | null
     }) => {
-      gameData.currentHostId = data.hostId
-      gameData.currentHostName =
-        data.hostId != null ? (data.hostName ?? gameData.currentHostName) : null
-      if (data.hostId == null) {
-        gameData.hostSessionEndsAtMs = null
-        gameData.hostReadingsDone = 0
-        gameData.hostMaxReadings = 3
-        gameData.hostReleaseAtMs = null
-        gameData.hostTimeRemainingSec = 0
+      gameData.currentFortuneTellerId = data.fortuneTellerId
+      gameData.currentFortuneTellerName =
+        data.fortuneTellerId != null ? (data.fortuneTellerName ?? gameData.currentFortuneTellerName) : null
+      if (data.fortuneTellerId == null) {
+        gameData.fortuneTellerSessionEndsAtMs = null
+        gameData.fortuneTellerReadingsDone = 0
+        gameData.fortuneTellerMaxReadings = 3
+        gameData.fortuneTellerReleaseAtMs = null
+        gameData.fortuneTellerTimeRemainingSec = 0
       } else {
-        gameData.hostSessionEndsAtMs = data.hostSessionEndsAtMs ?? gameData.hostSessionEndsAtMs
-        gameData.hostReadingsDone = data.hostReadingsDone ?? gameData.hostReadingsDone
-        gameData.hostMaxReadings = data.hostMaxReadings ?? gameData.hostMaxReadings
-        gameData.hostReleaseAtMs = data.hostReleaseAtMs ?? null
+        gameData.fortuneTellerSessionEndsAtMs = data.fortuneTellerSessionEndsAtMs ?? gameData.fortuneTellerSessionEndsAtMs
+        gameData.fortuneTellerReadingsDone = data.fortuneTellerReadingsDone ?? gameData.fortuneTellerReadingsDone
+        gameData.fortuneTellerMaxReadings = data.fortuneTellerMaxReadings ?? gameData.fortuneTellerMaxReadings
+        gameData.fortuneTellerReleaseAtMs = data.fortuneTellerReleaseAtMs ?? null
       }
     }
   )
 
-  fortuneMessageBus.on('host-session-update', (data: HostSessionUpdateMessage) => {
-    if (gameData.currentHostId !== data.hostId) return
-    gameData.hostSessionEndsAtMs = data.hostSessionEndsAtMs
-    gameData.hostReadingsDone = data.hostReadingsDone
-    gameData.hostMaxReadings = data.hostMaxReadings
-    gameData.hostReleaseAtMs = data.hostReleaseAtMs
+  fortuneMessageBus.on('fortune-teller-session-update', (data: FortuneTellerSessionUpdateMessage) => {
+    if (gameData.currentFortuneTellerId !== data.fortuneTellerId) return
+    gameData.fortuneTellerSessionEndsAtMs = data.fortuneTellerSessionEndsAtMs
+    gameData.fortuneTellerReadingsDone = data.fortuneTellerReadingsDone
+    gameData.fortuneTellerMaxReadings = data.fortuneTellerMaxReadings
+    gameData.fortuneTellerReleaseAtMs = data.fortuneTellerReleaseAtMs
     if (typeof data.centerBannerUntilMs === 'number') {
       gameData.centerBannerUntilMs = data.centerBannerUntilMs
       gameData.centerBannerText = data.centerBannerText ?? null
