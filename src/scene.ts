@@ -48,6 +48,13 @@ export function setupScene() {
   GltfContainer.create(WIZARD, {
     src: 'assets/models/fortune_teller.glb'
   })
+  /** Debe declararse explícitamente: sin esto `Animator.has(WIZARD)` suele ser false y el código no puede cambiar de clip. */
+  Animator.create(WIZARD, {
+    states: [
+      { clip: 'sit_idle', playing: true, loop: true, speed: 1 },
+      { clip: 'stand_idle', playing: false, loop: true, speed: 1 }
+    ]
+  })
   VisibilityComponent.create(WIZARD, { visible: true })
 
   // FORTUNE TELLER COLLIDER (host_collider.glb): desactivado temporalmente — ver TODO arriba

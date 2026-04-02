@@ -68,8 +68,14 @@ let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
 let fortuneTellerBecameAtMs: number = 0
 let originalWizardPosition: { x: number; y: number; z: number } | null = null
 let displacedWizardPosition: { x: number; y: number; z: number } | null = null
-let currentWizardAnim: 'idle' | 'waiting' | 'reveal' | null = null
-let debugLastState: 'idle' | 'waiting' | 'reveal' | null = null
+/** Clips del GLB `fortune_teller.glb` (más animaciones después). */
+const WIZARD_CLIP_SIT_IDLE = 'sit_idle'
+const WIZARD_CLIP_STAND_IDLE = 'stand_idle'
+
+type WizardIdleClip = typeof WIZARD_CLIP_SIT_IDLE | typeof WIZARD_CLIP_STAND_IDLE
+
+let currentWizardIdleClip: WizardIdleClip | null = null
+let debugLastWizardIdleClip: WizardIdleClip | null = null
 
 function distance(a: { x: number; y: number; z: number }, b: { x: number; y: number; z: number }): number {
   const dx = a.x - b.x
@@ -343,35 +349,50 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
   stripSitSpotFortuneTellerProximityUi(entity)
 }
 
-function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
-  if (currentWizardAnim === next) return
+/** Normaliza nombre de clip (p. ej. `Armature|sit_idle` → `sit_idle`). */
+function wizardClipBaseName(clip: string): string {
+  const c = clip.trim().toLowerCase()
+  const i = c.lastIndexOf('|')
+  return i >= 0 ? c.slice(i + 1) : c
+}
+
+/**
+ * Dos estados por ahora: sentado en su sitio vs desplazado porque hay Fortune Teller jugador.
+ * Ambos en loop; más clips después.
+ */
+function clipMatchesWizardIdle(clip: string, active: WizardIdleClip): boolean {
+  const base = wizardClipBaseName(clip)
+  const want = active.toLowerCase()
+  if (base === want) return true
+  if (active === WIZARD_CLIP_SIT_IDLE) {
+    return base.includes('sit') && base.includes('idle') && !base.includes('stand')
+  }
+  return base.includes('stand') && base.includes('idle')
+}
+
+function applyWizardIdleAnimation(active: WizardIdleClip): void {
   if (!Animator.has(WIZARD)) return
 
   const animator = Animator.getMutable(WIZARD)
-  const targetAliases: Record<'idle' | 'waiting' | 'reveal', string[]> = {
-    idle: ['idle', 'default', 'stand'],
-    waiting: ['waiting', 'wait', 'occupy', 'ocupado'],
-    reveal: ['reveal', 'fortune', 'foretell', 'cast', 'show']
-  }
-  const aliases = targetAliases[next]
   let foundAny = false
   for (const state of animator.states) {
-    const clipName = state.clip.toLowerCase()
-    const shouldPlay = aliases.some((alias) => clipName === alias || clipName.includes(alias))
-    state.playing = shouldPlay
-    if (shouldPlay) {
-      state.loop = next !== 'reveal'
+    const match = clipMatchesWizardIdle(state.clip, active)
+    state.playing = match
+    if (match) {
+      state.loop = true
       state.speed = 1
       foundAny = true
     }
   }
 
   if (foundAny) {
-    currentWizardAnim = next
-    console.log(`[WizardAnim] Switching to "${next}"`)
-  } else {
+    if (currentWizardIdleClip !== active) {
+      currentWizardIdleClip = active
+      console.log(`[WizardAnim] ${active} (loop)`)
+    }
+  } else if (animator.states.length > 0) {
     const available = animator.states.map((s) => s.clip).join(', ')
-    console.log(`[WizardAnim] Could not find clip for "${next}". Available: ${available}`)
+    console.log(`[WizardAnim] No clip for "${active}". Available: ${available}`)
   }
 }
 
@@ -451,17 +472,15 @@ export function setupWizard() {
       }
     }
 
-    const desiredState: 'idle' | 'waiting' | 'reveal' =
-      gameData.gameState === 'MOSTRANDO_FORTUNA'
-        ? 'reveal'
-        : gameData.currentFortuneTellerId !== null
-          ? 'waiting'
-          : 'idle'
-    if (desiredState !== debugLastState) {
-      debugLastState = desiredState
-      console.log(`[WizardAnim] Desired state -> ${desiredState} (gameState=${gameData.gameState})`)
+    const desiredIdleClip: WizardIdleClip =
+      gameData.currentFortuneTellerId !== null ? WIZARD_CLIP_STAND_IDLE : WIZARD_CLIP_SIT_IDLE
+    if (desiredIdleClip !== debugLastWizardIdleClip) {
+      debugLastWizardIdleClip = desiredIdleClip
+      console.log(
+        `[WizardAnim] desired -> ${desiredIdleClip} (ftId=${gameData.currentFortuneTellerId ?? 'null'}, gameState=${gameData.gameState})`
+      )
     }
-    setWizardAnimation(desiredState)
+    applyWizardIdleAnimation(desiredIdleClip)
 
     if (Transform.has(WIZARD) && originalWizardPosition && displacedWizardPosition) {
       const transform = Transform.getMutable(WIZARD)
