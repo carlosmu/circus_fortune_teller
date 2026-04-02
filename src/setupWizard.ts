@@ -3,6 +3,7 @@ import {
   Animator,
   Transform,
   VisibilityComponent,
+  PointerEvents,
   pointerEventsSystem,
   InputAction,
   executeTask
@@ -31,7 +32,8 @@ const FORTUNE_TELLER_MOVE_THRESHOLD_CHAIR = 2.5
 const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
 /** Tiempo en ms sin comprobar movimiento tras convertirse en fortune teller (dar tiempo al teletransporte). */
 const FORTUNE_TELLER_GRACE_MS = 1500
-const FORTUNE_TELLER_HOVER_BECOME = 'Become The Fortune Teller'
+/** Texto al apuntar con el cursor al Sit Spot del Fortune Teller (clic para tomar el rol). */
+const FORTUNE_TELLER_SIT_SPOT_HOVER = 'Become The Fortune Teller'
 const WIZARD_MOVE_OFFSET_X = 2
 const WIZARD_MOVE_OFFSET_Z = -1
 const WIZARD_MOVE_SPEED = 6
@@ -52,6 +54,7 @@ const TRIGGER_FT_MAX_Z = TRIGGER_FT_CENTER_Z + TRIGGER_FT_HALF_Z
 
 let playerWasInFortuneTellerTrigger = false
 let fortuneTellerSitSpotRegistered = false
+let sitSpotFtStripFramesLeft = 0
 /** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
 let fortuneTellerJoinedViaSitSpot = false
 /** Mientras movePlayerTo/emote del Sit Spot no terminaron, no aplicar la regla de alejamiento. */
@@ -252,6 +255,30 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   }
 }
 
+/** InteractionType.PROXIMITY: el cliente suele mostrar “E” / interacción por tecla; solo queremos clic. */
+const POINTER_INTERACTION_PROXIMITY = 1
+
+/**
+ * Quita interacciones PROXIMITY (prompt “E”) y silencia el hint legacy “Sit Here” del asset;
+ * no toca la entrada del script con “Become The Fortune Teller”.
+ */
+function stripSitSpotFortuneTellerProximityUi(entity: ReturnType<typeof engine.addEntity>): void {
+  if (!PointerEvents.has(entity)) return
+  const m = PointerEvents.getMutable(entity)
+  m.pointerEvents = m.pointerEvents.filter(
+    (e) => (e.interactionType ?? 0) !== POINTER_INTERACTION_PROXIMITY
+  )
+  for (const entry of m.pointerEvents) {
+    const info = entry.eventInfo
+    if (!info) continue
+    const ht = info.hoverText?.trim() ?? ''
+    if (ht === 'Sit Here') {
+      info.showFeedback = false
+      info.showHighlight = false
+    }
+  }
+}
+
 /** Clic (cursor) en el Sit Spot del composite → mismo flujo que el collider del wizard. */
 function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.addEntity>): void {
   const onInteract = () => {
@@ -262,7 +289,7 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
       entity,
       opts: {
         button: InputAction.IA_POINTER,
-        hoverText: FORTUNE_TELLER_HOVER_BECOME,
+        hoverText: FORTUNE_TELLER_SIT_SPOT_HOVER,
         maxDistance: 8,
         showFeedback: true,
         showHighlight: true
@@ -270,6 +297,7 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
     },
     onInteract
   )
+  stripSitSpotFortuneTellerProximityUi(entity)
 }
 
 function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
@@ -370,6 +398,13 @@ export function setupWizard() {
       if (sitSpot !== null) {
         fortuneTellerSitSpotRegistered = true
         registerFortuneTellerSitSpotHandlers(sitSpot)
+        sitSpotFtStripFramesLeft = 15
+      }
+    } else if (sitSpotFtStripFramesLeft > 0) {
+      sitSpotFtStripFramesLeft -= 1
+      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
+      if (sitSpot !== null) {
+        stripSitSpotFortuneTellerProximityUi(sitSpot)
       }
     }
 
