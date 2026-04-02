@@ -26,6 +26,9 @@ export function setupFortuneUiSystem() {
       gameData.currentGuestName = null
       gameData.currentFortune = null
       gameData.gameState = 'LIBRE'
+      gameData.revelationPhase = 'idle'
+      gameData.pendingGuestCategory = null
+      gameData.revelationRoundSalt = 0
 
       fortuneMessageBus.emit('hide-fortune', {})
     }

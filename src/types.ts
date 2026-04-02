@@ -1,14 +1,25 @@
 export type FortuneCategory = 'love' | 'money' | 'health' | 'work' | 'mystery' | 'pets' | 'family' | 'travel' | 'luck'
 
+export type FortuneKind = 'advertencia' | 'consejo' | 'prediccion'
+
 export type Fortune = {
   text: string
   category: FortuneCategory
+  type: FortuneKind
 }
 
 export type GameState = 'LIBRE' | 'OCUPADO' | 'MOSTRANDO_FORTUNA'
 
 /** Three random categories for the fortune teller to choose from this round. */
 export type FortuneTellerChoiceCategories = [FortuneCategory, FortuneCategory, FortuneCategory] | null
+
+/** Multi-step revelation while the table is occupied. */
+export type RevelationPhase =
+  | 'idle'
+  | 'ft_asks_topic'
+  | 'guest_chooses_category'
+  | 'ft_chooses_kind'
+  | 'auto_resolving'
 
 export type GlobalGameData = {
   currentGuestId: string | null
@@ -32,8 +43,11 @@ export type GlobalGameData = {
   centerBannerUntilMs: number
   gameState: GameState
   currentFortune: Fortune | null
-  /** Category options for the fortune teller this round (3 random). */
-  currentFortuneTellerChoiceOptions: FortuneTellerChoiceCategories
+  revelationPhase: RevelationPhase
+  /** Salt from the guest request so all clients derive the same card options and auto picks. */
+  revelationRoundSalt: number
+  /** Category chosen by the guest before the fortune teller picks warning / advice / prediction. */
+  pendingGuestCategory: FortuneCategory | null
   /** Alpha for "Waiting for the fortune teller..." text (0.5–1.0, animated). */
   waitingPanelAlpha: number
 }

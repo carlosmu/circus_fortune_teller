@@ -8,7 +8,13 @@ import {
   VisibilityComponent
 } from '@dcl/sdk/ecs'
 import { Vector3, Color4 } from '@dcl/sdk/math'
-import type { Fortune } from './types'
+import type { Fortune, FortuneKind } from './types'
+
+const KIND_LINE: Record<FortuneKind, string> = {
+  advertencia: 'Warning',
+  consejo: 'Advice',
+  prediccion: 'Prediction'
+}
 import { WIZARD } from './scene'
 import { gameData } from './gameState'
 import { FORTUNE_DISPLAY_DURATION, SHOW_3D_FORTUNE } from './sceneConfig'
@@ -86,9 +92,10 @@ export function showFortune3DText(fortune: Fortune): void {
 
   const guestName = gameData.currentGuestName ?? ''
   const categoryLabel = capitalizeCategory(fortune.category)
+  const kindLine = KIND_LINE[fortune.type]
   const label = guestName
-    ? `${guestName}: \n${categoryLabel}: \n${fortune.text}`
-    : `${categoryLabel}: \n${fortune.text}`
+    ? `${guestName}: \n${categoryLabel} · ${kindLine}: \n${fortune.text}`
+    : `${categoryLabel} · ${kindLine}: \n${fortune.text}`
   TextShape.getMutable(entities.text).text = label
 
   VisibilityComponent.createOrReplace(entities.parent, { visible: true })

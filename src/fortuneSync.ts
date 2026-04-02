@@ -8,7 +8,7 @@ import { showFortune3DText } from './fortune3DText'
 import { FORTUNE_TELLER_POSITION } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import { startRevealFortuneCinematic } from './cinematicCamera'
-import type { FortuneCategory } from './types'
+import type { FortuneCategory, RevelationPhase } from './types'
 
 /** MessageBus to sync fortune state across all players in the scene */
 export const fortuneMessageBus = new MessageBus()
@@ -24,6 +24,13 @@ export type ShowFortuneMessage = {
 export type GuestRequestedMessage = {
   guestId: string
   guestName: string
+  /** Shared by all clients so card options and auto picks match. */
+  roundSalt: number
+}
+
+export type RevelationPhaseUpdateMessage = {
+  phase: RevelationPhase
+  pendingGuestCategory?: FortuneCategory | null
 }
 
 export type FortuneTellerSessionUpdateMessage = {
@@ -78,9 +85,20 @@ export function setupFortuneSync() {
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'OCUPADO'
+    gameData.revelationRoundSalt = data.roundSalt
+    gameData.pendingGuestCategory = null
+    gameData.revelationPhase =
+      gameData.currentFortuneTellerId !== null ? 'ft_asks_topic' : 'auto_resolving'
     const localUserId = getPlayer()?.userId ?? null
     if (localUserId !== null && localUserId === data.guestId) {
       startRevealFortuneCinematic()
+    }
+  })
+
+  fortuneMessageBus.on('revelation-phase-update', (data: RevelationPhaseUpdateMessage) => {
+    gameData.revelationPhase = data.phase
+    if (data.pendingGuestCategory !== undefined) {
+      gameData.pendingGuestCategory = data.pendingGuestCategory
     }
   })
 
@@ -93,13 +111,15 @@ export function setupFortuneSync() {
         ? FORTUNES[data.fortuneIndex]
         : null
     if (fortune) {
-      gameData.currentFortune = { text: fortune.text, category: fortune.category }
+      gameData.currentFortune = { text: fortune.text, category: fortune.category, type: fortune.type }
       gameData.currentGuestId = data.guestId
       gameData.currentGuestName = data.guestName
       gameData.gameState = 'MOSTRANDO_FORTUNA'
+      gameData.revelationPhase = 'idle'
+      gameData.pendingGuestCategory = null
       playRevealSound()
       if (SHOW_3D_FORTUNE) {
-        showFortune3DText({ text: fortune.text, category: fortune.category })
+        showFortune3DText({ text: fortune.text, category: fortune.category, type: fortune.type })
       }
     }
   })
@@ -109,6 +129,9 @@ export function setupFortuneSync() {
     gameData.currentGuestName = null
     gameData.currentFortune = null
     gameData.gameState = 'LIBRE'
+    gameData.revelationPhase = 'idle'
+    gameData.pendingGuestCategory = null
+    gameData.revelationRoundSalt = 0
   })
 
   fortuneMessageBus.on(
@@ -127,11 +150,26 @@ export function setupFortuneSync() {
       gameData.currentFortuneTellerName =
         data.fortuneTellerId != null ? (data.fortuneTellerName ?? gameData.currentFortuneTellerName) : null
       if (data.fortuneTellerId == null) {
+        const revelPhase = gameData.revelationPhase
         gameData.fortuneTellerSessionEndsAtMs = null
         gameData.fortuneTellerReadingsDone = 0
         gameData.fortuneTellerMaxReadings = 3
         gameData.fortuneTellerReleaseAtMs = null
         gameData.fortuneTellerTimeRemainingSec = 0
+
+        if (
+          gameData.gameState === 'OCUPADO' &&
+          gameData.currentGuestId !== null &&
+          (revelPhase === 'ft_asks_topic' ||
+            revelPhase === 'guest_chooses_category' ||
+            revelPhase === 'ft_chooses_kind')
+        ) {
+          if (revelPhase !== 'ft_chooses_kind') {
+            gameData.pendingGuestCategory = null
+          }
+          gameData.revelationPhase = 'auto_resolving'
+          fortuneMessageBus.emit('revelation-fallback-auto', {})
+        }
       } else {
         gameData.fortuneTellerSessionEndsAtMs = data.fortuneTellerSessionEndsAtMs ?? gameData.fortuneTellerSessionEndsAtMs
         gameData.fortuneTellerReadingsDone = data.fortuneTellerReadingsDone ?? gameData.fortuneTellerReadingsDone

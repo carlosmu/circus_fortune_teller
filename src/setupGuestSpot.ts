@@ -9,6 +9,7 @@ import { Vector3 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
+import { scheduleAutoRevelationIfNeeded } from './fortuneTellerSystem'
 import { TABLE } from './scene'
 
 export const GUEST_SPOT = engine.addEntity()
@@ -25,13 +26,13 @@ function tableClickCallback() {
     const player = getPlayer()
     const userId = player?.userId ?? 'unknown'
     const name = player?.name ?? 'Visitor'
-    gameData.currentGuestId = userId
-    gameData.currentGuestName = name
-    gameData.gameState = 'OCUPADO'
+    const roundSalt = Date.now()
     fortuneMessageBus.emit('guest-requested-fortune', {
       guestId: userId,
-      guestName: name
+      guestName: name,
+      roundSalt
     })
+    scheduleAutoRevelationIfNeeded()
   })
 }
 

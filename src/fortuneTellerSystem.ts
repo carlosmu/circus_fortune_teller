@@ -1,33 +1,62 @@
-import { engine } from '@dcl/sdk/ecs'
+import { executeTask } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { FORTUNES } from './fortunes'
 import { fortuneMessageBus } from './fortuneSync'
-import type { FortuneCategory } from './types'
+import {
+  pickGuestCategoryFromOptionsSeeded,
+  pickKindSeeded,
+  pickThreeGuestCategoriesSeeded
+} from './revelationRng'
+import type { FortuneCategory, FortuneKind } from './types'
 
 let fortuneTellerSystemInitialized = false
-let fortuneTellerTimer = 0
-let lastAutoCategory: FortuneCategory | null = null
-const FORTUNE_TELLER_REVEAL_DELAY = 3
 const FORTUNE_TELLER_READING_BONUS_MS = 30000
 const FORTUNE_TELLER_MAX_SESSION_MS = 120000
 const FORTUNE_TELLER_RELEASE_DELAY_AFTER_LAST_READING_MS = 6000
+const AUTO_REVELATION_STEP_MS = 1800
+
+function delayMs(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 /**
- * Picks a random fortune for the category and reveals it to everyone (fortune teller only, from UI).
+ * Reveals a fortune for category + kind (random among matches, or deterministic for auto mode).
  */
-export function revealFortuneForCategory(category: FortuneCategory): void {
-  if (gameData.currentFortuneTellerId !== null && gameData.fortuneTellerReadingsDone >= gameData.fortuneTellerMaxReadings) {
+export function revealFortuneFromChoices(
+  category: FortuneCategory,
+  kind: FortuneKind,
+  opts?: { deterministic?: boolean }
+): void {
+  if (
+    gameData.currentFortuneTellerId !== null &&
+    gameData.fortuneTellerReadingsDone >= gameData.fortuneTellerMaxReadings
+  ) {
     console.log('[FortuneTellerSession] Readings locked: max reached')
     return
   }
 
-  const byCategory = FORTUNES.filter((f) => f.category === category)
-  if (byCategory.length === 0) return
-  const fortune = byCategory[Math.floor(Math.random() * byCategory.length)]
+  const pool = FORTUNES.filter((f) => f.category === category && f.type === kind)
+  if (pool.length === 0) return
+
+  let fortune = pool[0]
+  if (opts?.deterministic) {
+    const guestId = gameData.currentGuestId ?? ''
+    const salt = gameData.revelationRoundSalt
+    let h = 2166136261
+    const seedStr = `${guestId}:${salt}:fortuneIdx`
+    for (let i = 0; i < seedStr.length; i++) {
+      h ^= seedStr.charCodeAt(i)
+      h = Math.imul(h, 16777619)
+    }
+    fortune = pool[(h >>> 0) % pool.length]
+  } else {
+    fortune = pool[Math.floor(Math.random() * pool.length)]
+  }
 
   gameData.currentFortune = fortune
   gameData.gameState = 'MOSTRANDO_FORTUNA'
+  gameData.revelationPhase = 'idle'
 
   if (gameData.currentFortuneTellerId !== null) {
     gameData.fortuneTellerReadingsDone += 1
@@ -67,51 +96,92 @@ export function revealFortuneForCategory(category: FortuneCategory): void {
   })
 }
 
+export function fortuneTellerInviteGuestToChooseTopic(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId !== gameData.currentFortuneTellerId) return
+  if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'ft_asks_topic') return
+
+  fortuneMessageBus.emit('revelation-phase-update', {
+    phase: 'guest_chooses_category',
+    pendingGuestCategory: null
+  })
+}
+
+export function guestSubmitChosenCategory(category: FortuneCategory): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId !== gameData.currentGuestId) return
+  if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'guest_chooses_category') return
+
+  const guestId = gameData.currentGuestId ?? ''
+  const options = pickThreeGuestCategoriesSeeded(guestId, gameData.revelationRoundSalt)
+  if (!options.includes(category)) return
+
+  fortuneMessageBus.emit('revelation-phase-update', {
+    phase: 'ft_chooses_kind',
+    pendingGuestCategory: category
+  })
+}
+
+export function fortuneTellerSubmitKind(kind: FortuneKind): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId !== gameData.currentFortuneTellerId) return
+  if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'ft_chooses_kind') return
+
+  const cat = gameData.pendingGuestCategory
+  if (cat === null) return
+
+  revealFortuneFromChoices(cat, kind)
+}
+
+/**
+ * Runs on the guest client when there is no human fortune teller: timed steps then deterministic reveal.
+ */
+export function scheduleAutoRevelationIfNeeded(): void {
+  executeTask(async () => {
+    await delayMs(0)
+    const localUserId = getPlayer()?.userId ?? null
+    if (localUserId === null || localUserId !== gameData.currentGuestId) return
+    if (gameData.currentFortuneTellerId !== null) return
+    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
+
+    const guestId = gameData.currentGuestId ?? ''
+    const salt = gameData.revelationRoundSalt
+    const categoryAlreadyPicked = gameData.pendingGuestCategory
+
+    if (categoryAlreadyPicked !== null) {
+      await delayMs(AUTO_REVELATION_STEP_MS)
+      if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
+      if (gameData.pendingGuestCategory !== categoryAlreadyPicked) return
+      const kind = pickKindSeeded(guestId, salt)
+      await delayMs(AUTO_REVELATION_STEP_MS)
+      if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
+      revealFortuneFromChoices(categoryAlreadyPicked, kind, { deterministic: true })
+      return
+    }
+
+    await delayMs(AUTO_REVELATION_STEP_MS)
+    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
+
+    const options = pickThreeGuestCategoriesSeeded(guestId, salt)
+    const category = pickGuestCategoryFromOptionsSeeded(guestId, salt, options)
+
+    await delayMs(AUTO_REVELATION_STEP_MS)
+    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
+
+    const kind = pickKindSeeded(guestId, salt)
+
+    await delayMs(AUTO_REVELATION_STEP_MS)
+    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
+
+    revealFortuneFromChoices(category, kind, { deterministic: true })
+  })
+}
+
 export function setupFortuneTellerSystem() {
   if (fortuneTellerSystemInitialized) return
   fortuneTellerSystemInitialized = true
 
-  engine.addSystem((dt) => {
-    if (gameData.gameState !== 'OCUPADO') {
-      fortuneTellerTimer = 0
-      return
-    }
-
-    const localUserId = getPlayer()?.userId ?? null
-    const isFortuneTeller =
-      gameData.currentFortuneTellerId === null || gameData.currentFortuneTellerId === localUserId
-    if (!isFortuneTeller) return
-
-    // If a fortune teller is set, don't auto-pick; fortune teller chooses category in the UI
-    if (gameData.currentFortuneTellerId !== null) return
-
-    fortuneTellerTimer += dt
-
-    if (fortuneTellerTimer >= FORTUNE_TELLER_REVEAL_DELAY) {
-      fortuneTellerTimer = 0
-
-      let fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
-      let attempts = 0
-      while (
-        lastAutoCategory !== null &&
-        fortune.category === lastAutoCategory &&
-        attempts < 10
-      ) {
-        fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
-        attempts++
-      }
-      lastAutoCategory = fortune.category
-
-      gameData.currentFortune = fortune
-      gameData.gameState = 'MOSTRANDO_FORTUNA'
-
-      const fortuneIndex = FORTUNES.indexOf(fortune)
-      fortuneMessageBus.emit('show-fortune', {
-        fortuneIndex: fortuneIndex >= 0 ? fortuneIndex : 0,
-        category: fortune.category,
-        guestId: gameData.currentGuestId,
-        guestName: gameData.currentGuestName ?? null
-      })
-    }
+  fortuneMessageBus.on('revelation-fallback-auto', () => {
+    scheduleAutoRevelationIfNeeded()
   })
 }

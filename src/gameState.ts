@@ -14,6 +14,8 @@ export const gameData: GlobalGameData = {
   centerBannerUntilMs: 0,
   gameState: 'LIBRE',
   currentFortune: null,
-  currentFortuneTellerChoiceOptions: null,
+  revelationPhase: 'idle',
+  revelationRoundSalt: 0,
+  pendingGuestCategory: null,
   waitingPanelAlpha: 1
 }
