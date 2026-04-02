@@ -20,6 +20,7 @@ import {
   BECOME_FORTUNE_TELLER_PROMPT
 } from './scene'
 import { startOrbitCinematic, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
+import { EntityNames } from '../assets/scene/entity-names'
 
 /** Center of the table used as orbit pivot for the cinematic. */
 const TABLE_CENTER = { x: 8, y: 0, z: 8 }
@@ -49,7 +50,16 @@ const TRIGGER_FT_MAX_X = TRIGGER_FT_CENTER_X + TRIGGER_FT_HALF_X
 const TRIGGER_FT_MIN_Z = TRIGGER_FT_CENTER_Z - TRIGGER_FT_HALF_Z
 const TRIGGER_FT_MAX_Z = TRIGGER_FT_CENTER_Z + TRIGGER_FT_HALF_Z
 
+/** Centro XZ del Sit Spot: Fortune_Teller (composite 521); radio holgado para avatar sentado. */
+const SIT_SPOT_FT_XZ = { x: 7.84, z: 4.58 }
+const SIT_SPOT_FT_RADIUS = 2.2
+/** Tras entrar al trigger, ventana para reclamar FT al sentarse con E (sin tocar PointerEvents de proximidad). */
+const SIT_FT_ARM_MS = 25000
+
 let playerWasInFortuneTellerTrigger = false
+let sitFtClaimArmUntilMs = 0
+let wasNearSitForFtClaim = false
+let fortuneTellerSitSpotRegistered = false
 let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
 let fortuneTellerBecameAtMs: number = 0
 let lastFortuneTellerColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
@@ -187,6 +197,32 @@ function fortuneTellerClickCallback() {
   })
 }
 
+/**
+ * Clic en el Sit Spot (cursor) → mismo flujo que el collider del wizard.
+ * No registramos onProximityDown: en el SDK pisa el handler de `Down` y altera PointerEvents,
+ * rompiendo la E del composite. La E la sigue manejando el Creator; el Fortune Teller tras
+ * sentarse se cubre con detección XZ + brazo temporal al entrar al trigger (ver system).
+ */
+function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.addEntity>): void {
+  const onInteract = () => {
+    hideBecomeFortuneTellerPrompt()
+    fortuneTellerClickCallback()
+  }
+  pointerEventsSystem.onPointerDown(
+    {
+      entity,
+      opts: {
+        button: InputAction.IA_POINTER,
+        hoverText: FORTUNE_TELLER_HOVER_BECOME,
+        maxDistance: 8,
+        showFeedback: true,
+        showHighlight: true
+      }
+    },
+    onInteract
+  )
+}
+
 function registerFortuneTellerColliderPointer(
   mode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken'
 ) {
@@ -301,9 +337,35 @@ export function setupWizard() {
       if (insideTrigger && !playerWasInFortuneTellerTrigger) {
         playerWasInFortuneTellerTrigger = true
         showBecomeFortuneTellerPrompt()
+        sitFtClaimArmUntilMs = Date.now() + SIT_FT_ARM_MS
       } else if (!insideTrigger && playerWasInFortuneTellerTrigger) {
         playerWasInFortuneTellerTrigger = false
         hideBecomeFortuneTellerPrompt()
+        sitFtClaimArmUntilMs = 0
+        wasNearSitForFtClaim = false
+      }
+
+      // Sentarse con E: el composite mueve al avatar; sin tocar proximidad del SDK, detectamos XZ cerca de la silla
+      // solo si antes entraste al trigger (evita activar al cruzar la zona de casualidad).
+      const dx = playerPos.x - SIT_SPOT_FT_XZ.x
+      const dz = playerPos.z - SIT_SPOT_FT_XZ.z
+      const horizToSit = Math.sqrt(dx * dx + dz * dz)
+      const nearSitSpot = horizToSit <= SIT_SPOT_FT_RADIUS
+      const armActive = Date.now() < sitFtClaimArmUntilMs
+      if (nearSitSpot && !wasNearSitForFtClaim && armActive && gameData.currentFortuneTellerId === null) {
+        wasNearSitForFtClaim = true
+        hideBecomeFortuneTellerPrompt()
+        fortuneTellerClickCallback()
+      } else if (!nearSitSpot) {
+        wasNearSitForFtClaim = false
+      }
+    }
+
+    if (!fortuneTellerSitSpotRegistered) {
+      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
+      if (sitSpot !== null) {
+        fortuneTellerSitSpotRegistered = true
+        registerFortuneTellerSitSpotHandlers(sitSpot)
       }
     }
 
