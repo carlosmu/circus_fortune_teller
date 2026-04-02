@@ -19,7 +19,6 @@ export type RevelationPhase =
   | 'ft_asks_topic'
   | 'guest_chooses_category'
   | 'ft_chooses_kind'
-  | 'auto_resolving'
 
 export type GlobalGameData = {
   currentGuestId: string | null

@@ -58,22 +58,29 @@ function pickWaitingLine(seed: string): string {
 function revelationWaitingCaption(
   phase: RevelationPhase,
   isGuest: boolean,
-  isFortuneTeller: boolean
+  isFortuneTeller: boolean,
+  hasHumanFortuneTeller: boolean
 ): string {
   switch (phase) {
     case 'ft_asks_topic':
-      if (isGuest) return 'The Fortune Teller will invite you to choose a theme...'
-      if (isFortuneTeller) return ''
-      return 'Waiting for the Fortune Teller...'
+      if (hasHumanFortuneTeller) {
+        if (isGuest) return 'The Fortune Teller will invite you to choose a theme...'
+        if (isFortuneTeller) return ''
+        return 'Waiting for the Fortune Teller...'
+      }
+      if (isGuest) return 'The oracle is asking what you wish to know — a moment...'
+      return 'The oracle is turning toward the guest...'
     case 'guest_chooses_category':
       if (isGuest) return ''
       return 'Waiting for the guest to choose a theme...'
     case 'ft_chooses_kind':
-      if (isGuest) return 'The Fortune Teller is choosing how to phrase your fortune...'
-      if (isFortuneTeller) return ''
-      return 'Waiting for the Fortune Teller...'
-    case 'auto_resolving':
-      return 'The spirits are consulting the cards...'
+      if (hasHumanFortuneTeller) {
+        if (isGuest) return 'The Fortune Teller is choosing how to phrase your fortune...'
+        if (isFortuneTeller) return ''
+        return 'Waiting for the Fortune Teller...'
+      }
+      if (isGuest) return 'The oracle is choosing warning, advice, or prediction...'
+      return 'The oracle is shaping the guest\'s fortune...'
     default:
       return pickWaitingLine(`${gameData.currentGuestId ?? ''}:${gameData.currentGuestName ?? ''}`)
   }
@@ -122,6 +129,7 @@ function uiComponent() {
   const isFortuneTeller =
     !!player && gameData.currentFortuneTellerId !== null && gameData.currentFortuneTellerId === player.userId
   const isGuest = !!player && gameData.currentGuestId !== null && gameData.currentGuestId === player.userId
+  const hasHumanFortuneTeller = gameData.currentFortuneTellerId !== null
 
   const phase = gameData.revelationPhase
   const showFtInvite =
@@ -155,7 +163,7 @@ function uiComponent() {
     SHOW_UI_FORTUNE && gameData.gameState === 'OCUPADO' && !activeOwnsInteraction
 
   const waitingAlpha = gameData.waitingPanelAlpha
-  const waitingCaption = revelationWaitingCaption(phase, isGuest, isFortuneTeller)
+  const waitingCaption = revelationWaitingCaption(phase, isGuest, isFortuneTeller, hasHumanFortuneTeller)
   const guestName = gameData.currentGuestName ?? ''
   const waitingFortuneLine =
     waitingCaption || (guestName ? `${guestName}, ${pickWaitingLine(`${gameData.currentGuestId ?? ''}`)}` : pickWaitingLine(`${gameData.currentGuestId ?? ''}`))

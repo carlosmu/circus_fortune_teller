@@ -2,22 +2,71 @@ import { executeTask } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { FORTUNES } from './fortunes'
-import { fortuneMessageBus } from './fortuneSync'
-import {
-  pickGuestCategoryFromOptionsSeeded,
-  pickKindSeeded,
-  pickThreeGuestCategoriesSeeded
-} from './revelationRng'
+import { fortuneMessageBus, type RevelationPhaseUpdateMessage } from './fortuneSync'
+import { pickKindSeeded, pickThreeGuestCategoriesSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind } from './types'
 
 let fortuneTellerSystemInitialized = false
 const FORTUNE_TELLER_READING_BONUS_MS = 30000
 const FORTUNE_TELLER_MAX_SESSION_MS = 120000
 const FORTUNE_TELLER_RELEASE_DELAY_AFTER_LAST_READING_MS = 6000
-const AUTO_REVELATION_STEP_MS = 1800
+/** Pause before the virtual host opens theme choice (same order as a human FT). */
+const VIRTUAL_HOST_ASK_TOPIC_MS = 2600
+/** Pause before the virtual host picks warning / advice / prediction. */
+const VIRTUAL_HOST_CHOOSES_KIND_MS = 2600
 
 function delayMs(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function virtualHostInviteStillValid(): boolean {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId === null || localUserId !== gameData.currentGuestId) return false
+  if (gameData.currentFortuneTellerId !== null) return false
+  return gameData.gameState === 'OCUPADO' && gameData.revelationPhase === 'ft_asks_topic'
+}
+
+function virtualHostKindPickStillValid(): boolean {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId === null || localUserId !== gameData.currentGuestId) return false
+  if (gameData.currentFortuneTellerId !== null) return false
+  if (gameData.pendingGuestCategory === null) return false
+  return gameData.gameState === 'OCUPADO' && gameData.revelationPhase === 'ft_chooses_kind'
+}
+
+/**
+ * After the guest asks for a fortune with no human FT: wait, then sync "guest may choose theme"
+ * (same step as when the FT clicks Continue).
+ */
+export function scheduleVirtualHostDelayThenOpenGuestCategories(): void {
+  executeTask(async () => {
+    await delayMs(0)
+    if (!virtualHostInviteStillValid()) return
+    await delayMs(VIRTUAL_HOST_ASK_TOPIC_MS)
+    if (!virtualHostInviteStillValid()) return
+    fortuneMessageBus.emit('revelation-phase-update', {
+      phase: 'guest_chooses_category',
+      pendingGuestCategory: null
+    })
+  })
+}
+
+/**
+ * After the guest chose a theme and there is no human FT: wait, then pick kind + reveal (deterministic).
+ */
+export function scheduleVirtualHostPickKindAndReveal(): void {
+  executeTask(async () => {
+    await delayMs(0)
+    if (!virtualHostKindPickStillValid()) return
+    const category = gameData.pendingGuestCategory
+    if (category === null) return
+    await delayMs(VIRTUAL_HOST_CHOOSES_KIND_MS)
+    if (!virtualHostKindPickStillValid()) return
+    if (gameData.pendingGuestCategory !== category) return
+    const guestId = gameData.currentGuestId ?? ''
+    const kind = pickKindSeeded(guestId, gameData.revelationRoundSalt)
+    revealFortuneFromChoices(category, kind, { deterministic: true })
+  })
 }
 
 /**
@@ -133,55 +182,24 @@ export function fortuneTellerSubmitKind(kind: FortuneKind): void {
   revealFortuneFromChoices(cat, kind)
 }
 
-/**
- * Runs on the guest client when there is no human fortune teller: timed steps then deterministic reveal.
- */
-export function scheduleAutoRevelationIfNeeded(): void {
-  executeTask(async () => {
-    await delayMs(0)
-    const localUserId = getPlayer()?.userId ?? null
-    if (localUserId === null || localUserId !== gameData.currentGuestId) return
-    if (gameData.currentFortuneTellerId !== null) return
-    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
-
-    const guestId = gameData.currentGuestId ?? ''
-    const salt = gameData.revelationRoundSalt
-    const categoryAlreadyPicked = gameData.pendingGuestCategory
-
-    if (categoryAlreadyPicked !== null) {
-      await delayMs(AUTO_REVELATION_STEP_MS)
-      if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
-      if (gameData.pendingGuestCategory !== categoryAlreadyPicked) return
-      const kind = pickKindSeeded(guestId, salt)
-      await delayMs(AUTO_REVELATION_STEP_MS)
-      if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
-      revealFortuneFromChoices(categoryAlreadyPicked, kind, { deterministic: true })
-      return
-    }
-
-    await delayMs(AUTO_REVELATION_STEP_MS)
-    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
-
-    const options = pickThreeGuestCategoriesSeeded(guestId, salt)
-    const category = pickGuestCategoryFromOptionsSeeded(guestId, salt, options)
-
-    await delayMs(AUTO_REVELATION_STEP_MS)
-    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
-
-    const kind = pickKindSeeded(guestId, salt)
-
-    await delayMs(AUTO_REVELATION_STEP_MS)
-    if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'auto_resolving') return
-
-    revealFortuneFromChoices(category, kind, { deterministic: true })
-  })
-}
-
 export function setupFortuneTellerSystem() {
   if (fortuneTellerSystemInitialized) return
   fortuneTellerSystemInitialized = true
 
+  fortuneMessageBus.on('revelation-phase-update', (data: RevelationPhaseUpdateMessage) => {
+    if (data.phase !== 'ft_chooses_kind') return
+    if (gameData.currentFortuneTellerId !== null) return
+    scheduleVirtualHostPickKindAndReveal()
+  })
+
   fortuneMessageBus.on('revelation-fallback-auto', () => {
-    scheduleAutoRevelationIfNeeded()
+    if (gameData.revelationPhase === 'ft_asks_topic') {
+      scheduleVirtualHostDelayThenOpenGuestCategories()
+    } else if (
+      gameData.revelationPhase === 'ft_chooses_kind' &&
+      gameData.pendingGuestCategory !== null
+    ) {
+      scheduleVirtualHostPickKindAndReveal()
+    }
   })
 }

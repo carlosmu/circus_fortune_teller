@@ -87,8 +87,7 @@ export function setupFortuneSync() {
     gameData.gameState = 'OCUPADO'
     gameData.revelationRoundSalt = data.roundSalt
     gameData.pendingGuestCategory = null
-    gameData.revelationPhase =
-      gameData.currentFortuneTellerId !== null ? 'ft_asks_topic' : 'auto_resolving'
+    gameData.revelationPhase = 'ft_asks_topic'
     const localUserId = getPlayer()?.userId ?? null
     if (localUserId !== null && localUserId === data.guestId) {
       startRevealFortuneCinematic()
@@ -157,18 +156,13 @@ export function setupFortuneSync() {
         gameData.fortuneTellerReleaseAtMs = null
         gameData.fortuneTellerTimeRemainingSec = 0
 
-        if (
-          gameData.gameState === 'OCUPADO' &&
-          gameData.currentGuestId !== null &&
-          (revelPhase === 'ft_asks_topic' ||
-            revelPhase === 'guest_chooses_category' ||
-            revelPhase === 'ft_chooses_kind')
-        ) {
-          if (revelPhase !== 'ft_chooses_kind') {
+        if (gameData.gameState === 'OCUPADO' && gameData.currentGuestId !== null) {
+          if (revelPhase === 'ft_asks_topic') {
             gameData.pendingGuestCategory = null
+            fortuneMessageBus.emit('revelation-fallback-auto', {})
+          } else if (revelPhase === 'ft_chooses_kind' && gameData.pendingGuestCategory !== null) {
+            fortuneMessageBus.emit('revelation-fallback-auto', {})
           }
-          gameData.revelationPhase = 'auto_resolving'
-          fortuneMessageBus.emit('revelation-fallback-auto', {})
         }
       } else {
         gameData.fortuneTellerSessionEndsAtMs = data.fortuneTellerSessionEndsAtMs ?? gameData.fortuneTellerSessionEndsAtMs
