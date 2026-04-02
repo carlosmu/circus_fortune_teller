@@ -26,12 +26,17 @@ import { EntityNames } from '../assets/scene/entity-names'
 const TABLE_CENTER = { x: 8, y: 0, z: 8 }
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
-/** Si entraste por Sit Spot, el avatar queda en la silla (no en FORTUNE_TELLER_POSITION): tolerancia XZ más amplia. */
-const FORTUNE_TELLER_MOVE_THRESHOLD_CHAIR = 2.5
-/** Sit Spot: Fortune_Teller — mismo XZ que composite entity 521 (sincronizar si mueves el sit en el editor). */
+/**
+ * Solo radio horizontal alrededor del Sit Spot: Fortune_Teller. Antes se usaba min(dist silla, dist mago) ≤ 2.5 m,
+ * así que podías ir a la mesa y seguir siendo FT. Ahora solo cuenta la silla: al levantarte sales del radio enseguida.
+ */
+const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.75
+/** Tras soltar el rol por dejar la silla, empuja al jugador al menos esta distancia desde el sit (XZ). */
+const FORTUNE_TELLER_LEAVE_NUDGE_METERS = 2.5
+/** Sit Spot: Fortune_Teller — fallback si la entidad aún no existe (composite 521). */
 const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
-/** Tiempo en ms sin comprobar movimiento tras convertirse en fortune teller (dar tiempo al teletransporte). */
-const FORTUNE_TELLER_GRACE_MS = 1500
+/** Tiempo en ms antes de aplicar la regla de alejamiento (solo para dejar terminar movePlayerTo/emote). */
+const FORTUNE_TELLER_GRACE_MS = 700
 /** Texto al apuntar con el cursor al Sit Spot del Fortune Teller (clic para tomar el rol). */
 const FORTUNE_TELLER_SIT_SPOT_HOVER = 'Become The Fortune Teller'
 const WIZARD_MOVE_OFFSET_X = 2
@@ -82,14 +87,52 @@ function horizontalDistance(
   return Math.sqrt(dx * dx + dz * dz)
 }
 
+function getFortuneTellerSitSpotXZ(): { x: number; z: number } {
+  const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
+  if (sit !== null && Transform.has(sit)) {
+    const p = Transform.get(sit).position
+    return { x: p.x, z: p.z }
+  }
+  return { x: SIT_SPOT_FT_STATION.x, z: SIT_SPOT_FT_STATION.z }
+}
+
 function playerStillAtFortuneTellerStation(playerPos: { x: number; y: number; z: number }): boolean {
   if (!lastFortuneTellerPosition) return true
   if (fortuneTellerJoinedViaSitSpot) {
-    const dSit = horizontalDistance(playerPos, SIT_SPOT_FT_STATION)
-    const dFt = horizontalDistance(playerPos, FORTUNE_TELLER_POSITION)
-    return Math.min(dSit, dFt) <= FORTUNE_TELLER_MOVE_THRESHOLD_CHAIR
+    const chair = getFortuneTellerSitSpotXZ()
+    return horizontalDistance(playerPos, chair) <= FORTUNE_TELLER_CHAIR_STAY_RADIUS
   }
   return distance(playerPos, lastFortuneTellerPosition) <= FORTUNE_TELLER_MOVE_THRESHOLD
+}
+
+/** Empuja al jugador local lejos del sit del FT (dirección “hacia invitado”, alejándose del mago). */
+function scheduleNudgeAwayFromFortuneTellerChair(): void {
+  const chair = getFortuneTellerSitSpotXZ()
+  const wizardX = FORTUNE_TELLER_POSITION.x
+  const wizardZ = FORTUNE_TELLER_POSITION.z
+  let dx = chair.x - wizardX
+  let dz = chair.z - wizardZ
+  const len = Math.sqrt(dx * dx + dz * dz) || 1
+  dx /= len
+  dz /= len
+  const n = FORTUNE_TELLER_LEAVE_NUDGE_METERS
+  const target = {
+    x: chair.x + dx * n,
+    y: 0,
+    z: chair.z + dz * n
+  }
+  executeTask(async () => {
+    try {
+      await movePlayerTo({
+        newRelativePosition: target,
+        cameraTarget: {
+          x: FORTUNE_TELLER_CAMERA_TARGET.x,
+          y: FORTUNE_TELLER_CAMERA_TARGET.y,
+          z: FORTUNE_TELLER_CAMERA_TARGET.z
+        }
+      })
+    } catch (_e) {}
+  })
 }
 
 function clearFortuneTellerAndShowWizard() {
@@ -467,7 +510,11 @@ export function setupWizard() {
     const pos = Transform.get(engine.PlayerEntity).position
     const current = { x: pos.x, y: pos.y, z: pos.z }
     if (!playerStillAtFortuneTellerStation(current)) {
+      const wasSitSpotFt = fortuneTellerJoinedViaSitSpot
       clearFortuneTellerAndShowWizard()
+      if (wasSitSpotFt) {
+        scheduleNudgeAwayFromFortuneTellerChair()
+      }
     }
   })
 }
