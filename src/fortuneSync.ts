@@ -33,6 +33,11 @@ export type RevelationPhaseUpdateMessage = {
   pendingGuestCategory?: FortuneCategory | null
 }
 
+export type GuestSeatMessage = {
+  seatUserId: string | null
+  seatUserName: string | null
+}
+
 export type FortuneTellerSessionUpdateMessage = {
   fortuneTellerId: string | null
   fortuneTellerSessionEndsAtMs: number | null
@@ -99,6 +104,11 @@ export function setupFortuneSync() {
     if (data.pendingGuestCategory !== undefined) {
       gameData.pendingGuestCategory = data.pendingGuestCategory
     }
+  })
+
+  fortuneMessageBus.on('guest-seat-update', (data: GuestSeatMessage) => {
+    gameData.guestSeatUserId = data.seatUserId
+    gameData.guestSeatUserName = data.seatUserName
   })
 
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {

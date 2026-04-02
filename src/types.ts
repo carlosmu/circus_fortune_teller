@@ -23,6 +23,9 @@ export type RevelationPhase =
 export type GlobalGameData = {
   currentGuestId: string | null
   currentGuestName: string | null
+  /** Player currently seated at Sit Spot: Guest (synced). */
+  guestSeatUserId: string | null
+  guestSeatUserName: string | null
   currentFortuneTellerId: string | null
   /** Display name of the current fortune teller (synced with MessageBus). */
   currentFortuneTellerName: string | null

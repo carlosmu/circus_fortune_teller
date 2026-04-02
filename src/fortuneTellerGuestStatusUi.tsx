@@ -13,7 +13,7 @@ const EMPTY_READING_SLOT = '-'
  */
 export function FortuneTellerGuestStatusBar() {
   const ftPlayerName = gameData.currentFortuneTellerName
-  const guestPlayerName = gameData.currentGuestName
+  const guestPlayerName = gameData.guestSeatUserName ?? gameData.currentGuestName
   const ftLabel = ftPlayerName ?? 'Free'
   const guestLabel = guestPlayerName ?? 'Free'
   const hasActiveFortuneTeller = gameData.currentFortuneTellerId !== null

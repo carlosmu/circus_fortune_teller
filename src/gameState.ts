@@ -3,6 +3,8 @@ import type { GlobalGameData } from './types'
 export const gameData: GlobalGameData = {
   currentGuestId: null,
   currentGuestName: null,
+  guestSeatUserId: null,
+  guestSeatUserName: null,
   currentFortuneTellerId: null,
   currentFortuneTellerName: null,
   fortuneTellerSessionEndsAtMs: null,
