@@ -20,6 +20,16 @@ const FORTUNE_TELLER_RELEASE_DELAY_AFTER_LAST_READING_MS = 6000
 const VIRTUAL_HOST_ASK_TOPIC_MS = 2600
 /** Pause before the virtual host picks warning / advice / prediction. */
 const VIRTUAL_HOST_CHOOSES_KIND_MS = 2600
+const CATEGORY_REPEAT_RESPONSE_LINES = [
+  'The cards refuse to speak of the same thread twice.',
+  'That path has already been unveiled.'
+]
+
+function pickCategoryRepeatResponse(): string {
+  const guestId = gameData.currentGuestId ?? ''
+  const h = (guestId.length + gameData.revelationRoundSalt + gameData.currentIteration) >>> 0
+  return CATEGORY_REPEAT_RESPONSE_LINES[h % CATEGORY_REPEAT_RESPONSE_LINES.length]!
+}
 
 function delayMs(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -170,6 +180,13 @@ export function guestSubmitChosenCategory(category: FortuneCategory): void {
   const guestId = gameData.currentGuestId ?? ''
   const options = pickThreeGuestCategoriesSeeded(guestId, gameData.revelationRoundSalt)
   if (!options.includes(category)) return
+  if (gameData.previouslySelectedCategories.includes(category)) {
+    gameData.categoryRejectionLine = pickCategoryRepeatResponse()
+    gameData.centerBannerText = gameData.categoryRejectionLine
+    gameData.centerBannerUntilMs = Date.now() + 2200
+    return
+  }
+  gameData.categoryRejectionLine = null
 
   fortuneMessageBus.emit('revelation-phase-update', {
     phase: 'ft_chooses_kind',

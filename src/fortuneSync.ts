@@ -123,6 +123,8 @@ export function setupFortuneSync() {
     gameData.revelationRoundSalt = data.roundSalt
     gameData.pendingGuestCategory = null
     gameData.revelationPhase = 'ft_asks_topic'
+    gameData.currentIteration = data.sessionReadingIndex as 1 | 2 | 3
+    gameData.categoryRejectionLine = null
     gameData.guestReadingsUsedThisSeat = Math.max(
       gameData.guestReadingsUsedThisSeat,
       data.sessionReadingIndex
@@ -144,6 +146,16 @@ export function setupFortuneSync() {
     gameData.revelationPhase = data.phase
     if (data.pendingGuestCategory !== undefined) {
       gameData.pendingGuestCategory = data.pendingGuestCategory
+      if (
+        data.phase === 'ft_chooses_kind' &&
+        data.pendingGuestCategory !== null &&
+        !gameData.previouslySelectedCategories.includes(data.pendingGuestCategory)
+      ) {
+        gameData.previouslySelectedCategories = [
+          ...gameData.previouslySelectedCategories,
+          data.pendingGuestCategory
+        ]
+      }
     }
     touchGuestReadingInteractionDeadline()
   })
@@ -151,6 +163,9 @@ export function setupFortuneSync() {
   fortuneMessageBus.on('guest-seat-update', (data: GuestSeatMessage) => {
     if (data.seatUserId !== previousGuestSeatUserId) {
       gameData.guestReadingsUsedThisSeat = 0
+      gameData.previouslySelectedCategories = []
+      gameData.currentIteration = 1
+      gameData.categoryRejectionLine = null
     }
     previousGuestSeatUserId = data.seatUserId
     gameData.guestSeatUserId = data.seatUserId
@@ -169,6 +184,9 @@ export function setupFortuneSync() {
     gameData.revelationRoundSalt = 0
     gameData.guestLastInteractionAtMs = null
     gameData.guestReadingsUsedThisSeat = 0
+    gameData.previouslySelectedCategories = []
+    gameData.currentIteration = 1
+    gameData.categoryRejectionLine = null
     if (gameData.guestSeatUserId === data.guestId) {
       gameData.guestSeatUserId = null
       gameData.guestSeatUserName = null
@@ -212,6 +230,7 @@ export function setupFortuneSync() {
     gameData.pendingGuestCategory = null
     gameData.revelationRoundSalt = 0
     gameData.guestLastInteractionAtMs = null
+    gameData.categoryRejectionLine = null
   })
 
   fortuneMessageBus.on(

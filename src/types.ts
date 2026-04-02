@@ -60,6 +60,12 @@ export type GlobalGameData = {
   revelationRoundSalt: number
   /** Category chosen by the guest before the fortune teller picks warning / advice / prediction. */
   pendingGuestCategory: FortuneCategory | null
+  /** Memoria mínima de sesión para evitar repetir temas en la misma silla. */
+  previouslySelectedCategories: FortuneCategory[]
+  /** Iteración actual de lectura en la sesión de silla (1..3). */
+  currentIteration: 1 | 2 | 3
+  /** Respuesta diegética temporal cuando el guest intenta repetir categoría. */
+  categoryRejectionLine: string | null
   /** Alpha for "Waiting for the fortune teller..." text (0.5–1.0, animated). */
   waitingPanelAlpha: number
 }

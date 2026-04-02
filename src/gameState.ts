@@ -21,5 +21,8 @@ export const gameData: GlobalGameData = {
   revelationPhase: 'idle',
   revelationRoundSalt: 0,
   pendingGuestCategory: null,
+  previouslySelectedCategories: [],
+  currentIteration: 1,
+  categoryRejectionLine: null,
   waitingPanelAlpha: 1
 }
