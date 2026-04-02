@@ -19,11 +19,8 @@ import {
   FORTUNE_TELLER_CAMERA_TARGET,
   BECOME_FORTUNE_TELLER_PROMPT
 } from './scene'
-import { startOrbitCinematic, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
+import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 import { EntityNames } from '../assets/scene/entity-names'
-
-/** Center of the table used as orbit pivot for the cinematic. */
-const TABLE_CENTER = { x: 8, y: 0, z: 8 }
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
 /**
@@ -206,6 +203,9 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   if (!userId) return
   if (gameData.currentFortuneTellerId === userId) return
   if (gameData.currentFortuneTellerId !== null) return
+  const hostEntryPathStart = Transform.has(engine.PlayerEntity)
+    ? Transform.get(engine.PlayerEntity).position
+    : { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z }
   hideBecomeFortuneTellerPrompt()
   const ftName = player?.name?.trim() || null
   gameData.currentFortuneTellerId = userId
@@ -272,18 +272,10 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       } finally {
         sitSpotFtTeleportPending = false
       }
-      startOrbitCinematic(
-        TABLE_CENTER,
-        { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z },
-        () => {}
-      )
+      startHostCinematicCamera(hostEntryPathStart, () => {})
     })
   } else {
-    startOrbitCinematic(
-      TABLE_CENTER,
-      { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z },
-      () => {}
-    )
+    startHostCinematicCamera(hostEntryPathStart, () => {})
     executeTask(async () => {
       try {
         await movePlayerTo({

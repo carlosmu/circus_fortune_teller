@@ -1,6 +1,6 @@
 import { engine, Transform, VirtualCamera, MainCamera } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
-import { WIZARD, FORTUNE_TELLER_POSITION } from './scene'
+import { TABLE, WIZARD, FORTUNE_TELLER_POSITION } from './scene'
 import { gameData } from './gameState'
 
 type Vec3 = { x: number; y: number; z: number }
@@ -56,6 +56,23 @@ export const CINEMATIC_CONFIG = {
   revealTargetOffsetZ: 0
 }
 
+/**
+ * Cinemática host: pivote en el centro de la mesa, hijo con offset; rotación del padre 90° con ease-in-out.
+ * Coordenadas de escena: X 0→16 izquierda a derecha, Z 0→16 arriba a abajo; mesa ~(8, 8).
+ */
+export const HOST_PIVOT_CINEMATIC_CONFIG = {
+  /** X >= umbral: arco lado derecho (yaw 0 to 90 deg, CCW desde arriba). X < umbral: espejo (180 to 90 deg). */
+  xThreshold: 8,
+  /** Radio horizontal de la órbita (metros). */
+  radius: 6,
+  /** Altura local Y del hijo (cámara). */
+  cameraHeight: 2,
+  /** Punto de mira en el centro del pivote, altura local Y. */
+  lookTargetY: 1.5,
+  /** Duración del barrido de 90° (segundos). */
+  duration: 2.8
+}
+
 export let cinematicBarAlpha = 0
 export let cinematicActive = false
 
@@ -77,7 +94,7 @@ let startAngle = 0
 let endAngle = 0
 let completeCb: (() => void) | null = null
 let smoothedLookDir: Vec3 = { x: 0, y: 0, z: 1 }
-let cinematicMode: 'none' | 'orbit' | 'reveal' = 'none'
+let cinematicMode: 'none' | 'orbit' | 'reveal' | 'hostPivotArc' = 'none'
 
 let revealPhase: 'blend-in' | 'hold' | 'blend-out' = 'blend-in'
 let revealElapsed = 0
@@ -87,6 +104,13 @@ let revealLookTarget: Vec3 = { x: 8, y: 2, z: 6 }
 let revealReturnLookTarget: Vec3 = { x: 8, y: 1, z: 7 }
 let revealStartLookDir: Vec3 = { x: 0, y: 0, z: 1 }
 
+let hostPivotPivotEnt: ReturnType<typeof engine.addEntity> | null = null
+let hostPivotCamEnt: ReturnType<typeof engine.addEntity> | null = null
+let hostPivotElapsed = 0
+let hostPivotYawStart = 0
+let hostPivotYawEnd = 90
+let hostPivotCompleteCb: (() => void) | null = null
+
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
 }
@@ -94,6 +118,12 @@ function clamp01(v: number): number {
 function smootherstep(t: number): number {
   const c = clamp01(t)
   return c * c * c * (c * (c * 6 - 15) + 10)
+}
+
+/** Ease-in-out cuadrático (cinemática host). */
+function easeInOutQuad(t: number): number {
+  const c = clamp01(t)
+  return c < 0.5 ? 2 * c * c : 1 - Math.pow(-2 * c + 2, 2) / 2
 }
 
 function easeOutQuint(t: number): number {
@@ -177,6 +207,76 @@ function getWizardInfo(fallbackPivot: Vec3): {
     frontAngle: Math.atan2(startPos.z - fallbackPivot.z, startPos.x - fallbackPivot.x),
     startPos,
     lookTarget
+  }
+}
+
+function ensureHostPivotRig(): void {
+  const cfg = HOST_PIVOT_CINEMATIC_CONFIG
+  if (hostPivotPivotEnt !== null && hostPivotCamEnt !== null) return
+
+  const pivot = engine.addEntity()
+  const cam = engine.addEntity()
+  hostPivotPivotEnt = pivot
+  hostPivotCamEnt = cam
+
+  Transform.create(pivot, {
+    position: Vector3.create(0, 0, 0),
+    rotation: Quaternion.fromEulerDegrees(0, 0, 0),
+    parent: TABLE
+  })
+
+  const lx = cfg.radius
+  const ly = cfg.cameraHeight
+  const lz = 0
+  const tx = 0 - lx
+  const ty = cfg.lookTargetY - ly
+  const tz = 0 - lz
+  const lookForward = normalize({ x: tx, y: ty, z: tz })
+
+  Transform.create(cam, {
+    position: Vector3.create(lx, ly, lz),
+    rotation: Quaternion.lookRotation(Vector3.create(lookForward.x, lookForward.y, lookForward.z)),
+    parent: pivot
+  })
+
+  VirtualCamera.create(cam, {
+    defaultTransition: { transitionMode: VirtualCamera.Transition.Speed(20) }
+  })
+}
+
+/**
+ * Cinemática al convertirse en Host (solo cliente que hace clic): pivote en la mesa, hijo con VirtualCamera,
+ * rotación del padre 90° con ease-in-out; la cámara mira el centro del pivote (mesa).
+ * X >= xThreshold: yaw 0 to 90 (CCW from above). X < xThreshold: 180 to 90 (mirrored arc).
+ */
+export function startHostCinematicCamera(playerPos: Vec3, onComplete?: () => void): void {
+  ensureHostPivotRig()
+  const pivot = hostPivotPivotEnt!
+  const cam = hostPivotCamEnt!
+  const cfg = HOST_PIVOT_CINEMATIC_CONFIG
+
+  if (playerPos.x >= cfg.xThreshold) {
+    hostPivotYawStart = 70
+    hostPivotYawEnd = 90
+  } else {
+    hostPivotYawStart = 120
+    hostPivotYawEnd = 90
+  }
+
+  hostPivotElapsed = 0
+  hostPivotCompleteCb = onComplete ?? null
+  cinematicMode = 'hostPivotArc'
+  cinematicActive = true
+  isBlending = false
+  isOrbiting = false
+  isSettling = false
+  completeCb = null
+
+  const ptr = Transform.getMutable(pivot)
+  ptr.rotation = Quaternion.fromEulerDegrees(0, hostPivotYawStart, 0)
+
+  if (MainCamera.has(engine.CameraEntity)) {
+    MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = cam
   }
 }
 
@@ -281,6 +381,8 @@ export function stopOrbitCinematic(): void {
   cinematicMode = 'none'
   cinematicActive = false
   completeCb = null
+  hostPivotCompleteCb = null
+  hostPivotElapsed = 0
   if (MainCamera.has(engine.CameraEntity)) {
     MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = undefined
   }
@@ -292,6 +394,28 @@ export function setupCinematicCamera(): void {
       cinematicBarAlpha = Math.min(1, cinematicBarAlpha + dt / CINEMATIC_CONFIG.barsFadeIn)
     } else if (cinematicBarAlpha > 0) {
       cinematicBarAlpha = Math.max(0, cinematicBarAlpha - dt / CINEMATIC_CONFIG.barsFadeOut)
+    }
+
+    if (cinematicActive && cinematicMode === 'hostPivotArc' && hostPivotPivotEnt !== null) {
+      const cfg = HOST_PIVOT_CINEMATIC_CONFIG
+      hostPivotElapsed += dt
+      const rawT = clamp01(hostPivotElapsed / cfg.duration)
+      const t = easeInOutQuad(rawT)
+      const yaw = lerp(hostPivotYawStart, hostPivotYawEnd, t)
+      const ptr = Transform.getMutable(hostPivotPivotEnt)
+      ptr.rotation = Quaternion.fromEulerDegrees(0, yaw, 0)
+
+      if (rawT >= 1) {
+        cinematicMode = 'none'
+        cinematicActive = false
+        if (MainCamera.has(engine.CameraEntity)) {
+          MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = undefined
+        }
+        const cb = hostPivotCompleteCb
+        hostPivotCompleteCb = null
+        if (cb) cb()
+      }
+      return
     }
 
     if (!cinematicActive || camEntity === null) return

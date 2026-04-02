@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 520" width="920" height="520">
+  <defs>
+    <style type="text/css"><![CDATA[
+      .bg { fill: #2d2d32; }
+      .neon { fill: none; stroke: #39ff14; stroke-width: 1.25; }
+      .neon-thin { fill: none; stroke: #39ff14; stroke-width: 0.9; opacity: 0.65; }
+      .neon-text { fill: #39ff14; font-family: Consolas, "Courier New", monospace; font-weight: bold; }
+      .neon-text-sm { fill: #39ff14; font-family: Consolas, "Courier New", monospace; font-size: 10px; font-weight: bold; }
+      .title { fill: #39ff14; font-family: Consolas, "Courier New", monospace; font-size: 15px; font-weight: bold; }
+      .subtitle { fill: #7dffb3; font-family: Consolas, "Courier New", monospace; font-size: 10px; }
+      .orbit { fill: none; stroke: #0a0a0a; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .orbit-glow { fill: none; stroke: #1a1a1e; stroke-width: 5; stroke-linecap: round; opacity: 0.9; }
+      .view-arrow { fill: none; stroke: #39ff14; stroke-width: 2; marker-end: url(#arrowNeon); }
+      .callout-line { stroke: #39ff14; stroke-width: 0.8; fill: none; opacity: 0.85; }
+      .panel-border { fill: none; stroke: #39ff14; stroke-width: 1; opacity: 0.35; }
+      .star { fill: #39ff14; stroke: #b4ffc9; stroke-width: 0.6; }
+    ]]></style>
+    <marker id="arrowNeon" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#39ff14"/>
+    </marker>
+    <marker id="arrowAxis" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#39ff14"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="920" height="520" rx="4"/>
+
+  <text x="460" y="28" class="title" text-anchor="middle">BECOME HOST - CONDITIONAL LOGIC DIAGRAM</text>
+  <line class="callout-line" x1="460" y1="38" x2="520" y2="58"/>
+  <text x="525" y="62" class="subtitle" text-anchor="start">Coordinate system and direction defined in image_3.png</text>
+
+  <!-- LEFT PANEL -->
+  <rect class="panel-border" x="24" y="48" width="410" height="448" rx="2"/>
+  <text x="229" y="72" class="neon-text" text-anchor="middle" font-size="13px">PLAYER X &lt; 8.0m (RIGHT SIDE)</text>
+  <text x="229" y="92" class="neon-text" text-anchor="middle" font-size="11px">IF PLAYER_X &lt; 8.0 -&gt; ACTIVE PATH = ORIGINAL ORBIT</text>
+
+  <g id="panel-left" transform="translate(44,108)">
+    <g class="grid">
+      <path class="neon-thin" d="
+        M0,0 h320 M0,18 h320 M0,36 h320 M0,54 h320 M0,72 h320 M0,90 h320 M0,108 h320 M0,126 h320
+        M0,144 h320 M0,162 h320 M0,180 h320 M0,198 h320 M0,216 h320 M0,234 h320 M0,252 h320 M0,270 h320 M0,288 h320
+        M320,0 v288 M302,0 v288 M284,0 v288 M266,0 v288 M248,0 v288 M230,0 v288 M212,0 v288 M194,0 v288
+        M176,0 v288 M158,0 v288 M140,0 v288 M122,0 v288 M104,0 v288 M86,0 v288 M68,0 v288 M50,0 v288 M32,0 v288
+      "/>
+      <rect class="neon" x="32" y="0" width="288" height="288"/>
+    </g>
+
+    <line class="neon" x1="320" y1="0" x2="24" y2="0" marker-end="url(#arrowAxis)"/>
+    <text x="170" y="-8" class="neon-text-sm" text-anchor="middle">X (0 to 16, increases LEFT)</text>
+    <line class="neon" x1="320" y1="0" x2="320" y2="288" marker-end="url(#arrowAxis)"/>
+    <text x="338" y="150" class="neon-text-sm" text-anchor="middle" transform="rotate(90,338,150)">Z (0 to 16, increases DOWN)</text>
+
+    <text x="328" y="12" class="neon-text-sm" text-anchor="end">(0,0)</text>
+    <text x="24" y="12" class="neon-text-sm" text-anchor="start">(16,0)</text>
+    <text x="328" y="284" class="neon-text-sm" text-anchor="end">(0,16)</text>
+    <text x="24" y="284" class="neon-text-sm" text-anchor="start">(16,16)</text>
+    <text x="308" y="-22" class="neon-text-sm" text-anchor="end">0</text>
+    <text x="40" y="-22" class="neon-text-sm" text-anchor="start">16</text>
+    <text x="338" y="8" class="neon-text-sm" text-anchor="start">0</text>
+    <text x="338" y="292" class="neon-text-sm" text-anchor="start">16</text>
+
+    <g transform="translate(176,144)">
+      <polygon class="star" points="0,-9 2.6,-2.8 9.5,-2.8 4.2,1.7 6.4,8.8 0,4.5 -6.4,8.8 -4.2,1.7 -9.5,-2.8 -2.6,-2.8"/>
+    </g>
+    <text x="176" y="138" class="neon-text-sm" text-anchor="middle" font-size="9px">STAR (FOCAL POINT)</text>
+    <text x="176" y="168" class="neon-text-sm" text-anchor="middle" font-size="8px">(8, 0, 8)</text>
+
+    <line class="neon-thin" x1="176" y1="0" x2="176" y2="288" stroke-dasharray="4 4"/>
+
+    <path class="orbit-glow" d="M 104 72 Q 140 130 176 72"/>
+    <path class="orbit" d="M 104 72 Q 140 130 176 72"/>
+    <text x="128" y="124" class="neon-text-sm" fill="#0a0a0a" stroke="#39ff14" stroke-width="0.35" font-size="9px">ORIGINAL ORBIT</text>
+    <text x="98" y="68" class="neon-text-sm" text-anchor="middle">~(12,4)</text>
+    <text x="176" y="64" class="neon-text-sm" text-anchor="middle">(8,4)</text>
+
+    <line class="view-arrow" x1="104" y1="72" x2="176" y2="144"/>
+    <line class="view-arrow" x1="140" y1="101" x2="176" y2="144"/>
+    <line class="view-arrow" x1="176" y1="72" x2="176" y2="144"/>
+    <text x="200" y="200" class="neon-text-sm" font-size="9px">ORIGINAL VIEW VECTORS</text>
+  </g>
+
+  <!-- RIGHT PANEL -->
+  <rect class="panel-border" x="486" y="48" width="410" height="448" rx="2"/>
+  <text x="691" y="72" class="neon-text" text-anchor="middle" font-size="13px">PLAYER X &gt;= 8.0m (LEFT SIDE)</text>
+  <text x="691" y="92" class="neon-text" text-anchor="middle" font-size="11px">IF PLAYER_X &gt;= 8.0 -&gt; ACTIVE PATH = MIRRORED ORBIT</text>
+
+  <g id="panel-right" transform="translate(506,108)">
+    <g class="grid">
+      <path class="neon-thin" d="
+        M0,0 h320 M0,18 h320 M0,36 h320 M0,54 h320 M0,72 h320 M0,90 h320 M0,108 h320 M0,126 h320
+        M0,144 h320 M0,162 h320 M0,180 h320 M0,198 h320 M0,216 h320 M0,234 h320 M0,252 h320 M0,270 h320 M0,288 h320
+        M320,0 v288 M302,0 v288 M284,0 v288 M266,0 v288 M248,0 v288 M230,0 v288 M212,0 v288 M194,0 v288
+        M176,0 v288 M158,0 v288 M140,0 v288 M122,0 v288 M104,0 v288 M86,0 v288 M68,0 v288 M50,0 v288 M32,0 v288
+      "/>
+      <rect class="neon" x="32" y="0" width="288" height="288"/>
+    </g>
+
+    <line class="neon" x1="320" y1="0" x2="24" y2="0" marker-end="url(#arrowAxis)"/>
+    <text x="170" y="-8" class="neon-text-sm" text-anchor="middle">X (0 to 16, increases LEFT)</text>
+    <line class="neon" x1="320" y1="0" x2="320" y2="288" marker-end="url(#arrowAxis)"/>
+    <text x="338" y="150" class="neon-text-sm" text-anchor="middle" transform="rotate(90,338,150)">Z (0 to 16, increases DOWN)</text>
+
+    <text x="328" y="12" class="neon-text-sm" text-anchor="end">(0,0)</text>
+    <text x="24" y="12" class="neon-text-sm" text-anchor="start">(16,0)</text>
+    <text x="328" y="284" class="neon-text-sm" text-anchor="end">(0,16)</text>
+    <text x="24" y="284" class="neon-text-sm" text-anchor="start">(16,16)</text>
+    <text x="308" y="-22" class="neon-text-sm" text-anchor="end">0</text>
+    <text x="40" y="-22" class="neon-text-sm" text-anchor="start">16</text>
+    <text x="338" y="8" class="neon-text-sm" text-anchor="start">0</text>
+    <text x="338" y="292" class="neon-text-sm" text-anchor="start">16</text>
+
+    <g transform="translate(176,144)">
+      <polygon class="star" points="0,-9 2.6,-2.8 9.5,-2.8 4.2,1.7 6.4,8.8 0,4.5 -6.4,8.8 -4.2,1.7 -9.5,-2.8 -2.6,-2.8"/>
+    </g>
+    <text x="176" y="138" class="neon-text-sm" text-anchor="middle" font-size="9px">STAR (FOCAL POINT)</text>
+    <text x="176" y="168" class="neon-text-sm" text-anchor="middle" font-size="8px">(8, 0, 8)</text>
+
+    <line class="neon-thin" x1="176" y1="0" x2="176" y2="288" stroke-dasharray="4 4"/>
+
+    <path class="orbit-glow" d="M 248 72 Q 212 130 176 72"/>
+    <path class="orbit" d="M 248 72 Q 212 130 176 72"/>
+    <text x="218" y="124" class="neon-text-sm" fill="#0a0a0a" stroke="#39ff14" stroke-width="0.35" font-size="9px">MIRRORED ORBIT</text>
+    <text x="252" y="68" class="neon-text-sm" text-anchor="middle">~(4,4)</text>
+    <text x="176" y="64" class="neon-text-sm" text-anchor="middle">(8,4)</text>
+
+    <line class="view-arrow" x1="248" y1="72" x2="176" y2="144"/>
+    <line class="view-arrow" x1="212" y1="101" x2="176" y2="144"/>
+    <line class="view-arrow" x1="176" y1="72" x2="176" y2="144"/>
+    <text x="48" y="200" class="neon-text-sm" font-size="9px">MIRRORED VIEW VECTORS</text>
+  </g>
+
+  <text x="460" y="505" class="subtitle" text-anchor="middle">Top-down XZ (Y=0) | Look-at STAR (8,0,8) | Black = orbit path | Green = view to focal</text>
+</svg>

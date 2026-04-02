@@ -5,6 +5,7 @@
  * Object containing all entity names in the scene for autocomplete support.
  */
 export enum EntityNames {
+  Audio_Stream = "Audio Stream",
   Chair_Fortune_Teller = "Chair_Fortune_Teller",
   Chair_Guest = "Chair_Guest",
   Music = "Music",
