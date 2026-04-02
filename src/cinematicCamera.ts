@@ -65,8 +65,10 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
   xThreshold: 8,
   /** Radio horizontal de la órbita (metros). */
   radius: 6,
-  /** Altura local Y del hijo (cámara). */
-  cameraHeight: 2,
+  /** Altura local Y del hijo al inicio del arco (interpola hacia cameraHeightEnd). */
+  cameraHeightStart: 4,
+  /** Altura local Y del hijo al final del arco. */
+  cameraHeightEnd: 2,
   /** Punto de mira en el centro del pivote, altura local Y. */
   lookTargetY: 1.5,
   /** Duración del barrido de 90° (segundos). */
@@ -153,6 +155,27 @@ function lookDir(from: Vec3, to: Vec3): Vec3 {
   return normalize({ x: to.x - from.x, y: to.y - from.y, z: to.z - from.z })
 }
 
+/** Posición local del hijo (radio, Y, 0) y rotación hacia (0, lookTargetY, 0) en espacio del pivote. */
+function setHostPivotCameraLocalPose(
+  cfg: typeof HOST_PIVOT_CINEMATIC_CONFIG,
+  cam: ReturnType<typeof engine.addEntity>,
+  heightY: number
+): void {
+  const lx = cfg.radius
+  const ly = heightY
+  const lz = 0
+  const lookForward = normalize({
+    x: -lx,
+    y: cfg.lookTargetY - ly,
+    z: -lz
+  })
+  const tr = Transform.getMutable(cam)
+  tr.position.x = lx
+  tr.position.y = ly
+  tr.position.z = lz
+  tr.rotation = Quaternion.lookRotation(Vector3.create(lookForward.x, lookForward.y, lookForward.z))
+}
+
 function getOrCreateCamEntity(): ReturnType<typeof engine.addEntity> {
   if (camEntity !== null) return camEntity
   const e = engine.addEntity()
@@ -225,23 +248,17 @@ function ensureHostPivotRig(): void {
     parent: TABLE
   })
 
-  const lx = cfg.radius
-  const ly = cfg.cameraHeight
-  const lz = 0
-  const tx = 0 - lx
-  const ty = cfg.lookTargetY - ly
-  const tz = 0 - lz
-  const lookForward = normalize({ x: tx, y: ty, z: tz })
-
   Transform.create(cam, {
-    position: Vector3.create(lx, ly, lz),
-    rotation: Quaternion.lookRotation(Vector3.create(lookForward.x, lookForward.y, lookForward.z)),
+    position: Vector3.create(cfg.radius, cfg.cameraHeightStart, 0),
+    rotation: Quaternion.fromEulerDegrees(0, 0, 0),
     parent: pivot
   })
 
   VirtualCamera.create(cam, {
     defaultTransition: { transitionMode: VirtualCamera.Transition.Speed(20) }
   })
+
+  setHostPivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
 }
 
 /**
@@ -256,7 +273,7 @@ export function startHostCinematicCamera(playerPos: Vec3, onComplete?: () => voi
   const cfg = HOST_PIVOT_CINEMATIC_CONFIG
 
   if (playerPos.x >= cfg.xThreshold) {
-    hostPivotYawStart = 70
+    hostPivotYawStart = 60
     hostPivotYawEnd = 90
   } else {
     hostPivotYawStart = 120
@@ -274,6 +291,7 @@ export function startHostCinematicCamera(playerPos: Vec3, onComplete?: () => voi
 
   const ptr = Transform.getMutable(pivot)
   ptr.rotation = Quaternion.fromEulerDegrees(0, hostPivotYawStart, 0)
+  setHostPivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
 
   if (MainCamera.has(engine.CameraEntity)) {
     MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = cam
@@ -396,14 +414,21 @@ export function setupCinematicCamera(): void {
       cinematicBarAlpha = Math.max(0, cinematicBarAlpha - dt / CINEMATIC_CONFIG.barsFadeOut)
     }
 
-    if (cinematicActive && cinematicMode === 'hostPivotArc' && hostPivotPivotEnt !== null) {
+    if (
+      cinematicActive &&
+      cinematicMode === 'hostPivotArc' &&
+      hostPivotPivotEnt !== null &&
+      hostPivotCamEnt !== null
+    ) {
       const cfg = HOST_PIVOT_CINEMATIC_CONFIG
       hostPivotElapsed += dt
       const rawT = clamp01(hostPivotElapsed / cfg.duration)
       const t = easeInOutQuad(rawT)
       const yaw = lerp(hostPivotYawStart, hostPivotYawEnd, t)
+      const camH = lerp(cfg.cameraHeightStart, cfg.cameraHeightEnd, t)
       const ptr = Transform.getMutable(hostPivotPivotEnt)
       ptr.rotation = Quaternion.fromEulerDegrees(0, yaw, 0)
+      setHostPivotCameraLocalPose(cfg, hostPivotCamEnt, camH)
 
       if (rawT >= 1) {
         cinematicMode = 'none'
