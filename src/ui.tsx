@@ -8,6 +8,8 @@ import { SHOW_UI_FORTUNE } from './sceneConfig'
 import {
   fortuneTellerInviteGuestToChooseTopic,
   fortuneTellerSubmitKind,
+  guestAcceptMoreFortune,
+  guestDeclineMoreFortune,
   guestSubmitChosenCategory
 } from './fortuneTellerSystem'
 import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
@@ -122,16 +124,18 @@ function CinematicLetterbox({ alpha }: { alpha: number }) {
 
 function uiComponent() {
   const fortune = gameData.currentFortune
+  const phase = gameData.revelationPhase
   const isVisible =
-    SHOW_UI_FORTUNE && gameData.gameState === 'MOSTRANDO_FORTUNA' && !!fortune
+    SHOW_UI_FORTUNE &&
+    gameData.gameState === 'MOSTRANDO_FORTUNA' &&
+    !!fortune &&
+    phase === 'fortune_display'
 
   const player = getPlayer()
   const isFortuneTeller =
     !!player && gameData.currentFortuneTellerId !== null && gameData.currentFortuneTellerId === player.userId
   const isGuest = !!player && gameData.currentGuestId !== null && gameData.currentGuestId === player.userId
   const hasHumanFortuneTeller = gameData.currentFortuneTellerId !== null
-
-  const phase = gameData.revelationPhase
   const showFtInvite =
     SHOW_UI_FORTUNE &&
     gameData.gameState === 'OCUPADO' &&
@@ -157,10 +161,31 @@ function uiComponent() {
 
   const activeOwnsInteraction =
     (isFortuneTeller && (phase === 'ft_asks_topic' || phase === 'ft_chooses_kind')) ||
-    (isGuest && phase === 'guest_chooses_category')
+    (isGuest && phase === 'guest_chooses_category') ||
+    (isGuest && phase === 'guest_learn_more')
 
   const showWaitingPanel =
     SHOW_UI_FORTUNE && gameData.gameState === 'OCUPADO' && !activeOwnsInteraction
+
+  const showGuestLearnMore =
+    SHOW_UI_FORTUNE &&
+    gameData.gameState === 'MOSTRANDO_FORTUNA' &&
+    phase === 'guest_learn_more' &&
+    isGuest
+
+  const showFortuneTellerLearnMorePrompt =
+    SHOW_UI_FORTUNE &&
+    gameData.gameState === 'MOSTRANDO_FORTUNA' &&
+    phase === 'guest_learn_more' &&
+    isFortuneTeller &&
+    hasHumanFortuneTeller
+
+  const showSpectatorLearnMoreWait =
+    SHOW_UI_FORTUNE &&
+    gameData.gameState === 'MOSTRANDO_FORTUNA' &&
+    phase === 'guest_learn_more' &&
+    !isGuest &&
+    !isFortuneTeller
 
   const waitingAlpha = gameData.waitingPanelAlpha
   const waitingCaption = revelationWaitingCaption(phase, isGuest, isFortuneTeller, hasHumanFortuneTeller)
@@ -292,6 +317,157 @@ function uiComponent() {
               fontSize={22}
               font="serif"
             />
+          </UiEntity>
+        </UiEntity>
+      )}
+
+      {showFortuneTellerLearnMorePrompt && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '30%',
+              height: '50%',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
+            }}
+            uiBackground={{
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch'
+            }}
+          >
+            <Label
+              uiTransform={{ width: '88%', height: '22%' }}
+              value="Would you learn more of your future?"
+              textAlign="middle-center"
+              fontSize={18}
+              font="serif"
+              color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+            />
+            <Label
+              uiTransform={{ width: '86%', height: '20%', margin: { top: 8 } }}
+              value="Ask the guest. They will choose Yes or No."
+              textAlign="middle-center"
+              fontSize={15}
+              font="serif"
+            />
+          </UiEntity>
+        </UiEntity>
+      )}
+
+      {showSpectatorLearnMoreWait && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '28%',
+              height: '45%',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
+            }}
+            uiBackground={{
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch'
+            }}
+          >
+            <Label
+              uiTransform={{ width: '85%', height: '55%' }}
+              value="The guest decides whether to hear another reading..."
+              textAlign="middle-center"
+              fontSize={18}
+              font="serif"
+            />
+          </UiEntity>
+        </UiEntity>
+      )}
+
+      {showGuestLearnMore && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '30%',
+              height: '55%',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
+            }}
+            uiBackground={{
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch'
+            }}
+          >
+            <Label
+              uiTransform={{ width: '90%', height: '18%' }}
+              value="Would you learn more of your future?"
+              textAlign="middle-center"
+              fontSize={18}
+              font="serif"
+              color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+            />
+            <UiEntity
+              uiTransform={{
+                width: '72%',
+                height: '14%',
+                margin: { top: 16 },
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'stretch'
+              }}
+            >
+              <UiEntity
+                uiTransform={{ width: '46%', height: '100%' }}
+                uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                onMouseDown={() => guestAcceptMoreFortune()}
+              >
+                <Label
+                  uiTransform={{ width: '100%', height: '100%' }}
+                  value="Yes"
+                  textAlign="middle-center"
+                  fontSize={16}
+                  font="serif"
+                />
+              </UiEntity>
+              <UiEntity
+                uiTransform={{ width: '46%', height: '100%' }}
+                uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                onMouseDown={() => guestDeclineMoreFortune()}
+              >
+                <Label
+                  uiTransform={{ width: '100%', height: '100%' }}
+                  value="No"
+                  textAlign="middle-center"
+                  fontSize={16}
+                  font="serif"
+                />
+              </UiEntity>
+            </UiEntity>
           </UiEntity>
         </UiEntity>
       )}

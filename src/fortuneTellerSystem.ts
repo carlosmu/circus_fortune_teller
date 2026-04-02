@@ -2,7 +2,13 @@ import { executeTask } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { FORTUNES } from './fortunes'
-import { fortuneMessageBus, type RevelationPhaseUpdateMessage } from './fortuneSync'
+import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
+import {
+  fortuneMessageBus,
+  GUEST_MAX_READINGS_PER_SEAT,
+  type GuestChairDeclineMoreMessage,
+  type RevelationPhaseUpdateMessage
+} from './fortuneSync'
 import { pickKindSeeded, pickThreeGuestCategoriesSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind } from './types'
 
@@ -105,7 +111,7 @@ export function revealFortuneFromChoices(
 
   gameData.currentFortune = fortune
   gameData.gameState = 'MOSTRANDO_FORTUNA'
-  gameData.revelationPhase = 'idle'
+  gameData.revelationPhase = 'fortune_display'
 
   if (gameData.currentFortuneTellerId !== null) {
     gameData.fortuneTellerReadingsDone += 1
@@ -169,6 +175,39 @@ export function guestSubmitChosenCategory(category: FortuneCategory): void {
     phase: 'ft_chooses_kind',
     pendingGuestCategory: category
   })
+}
+
+/** Tras la fortuna: el invitado acepta otra lectura — mismo ciclo desde la pregunta del FT (índice de sesión +1). */
+export function guestAcceptMoreFortune(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId === null || localUserId !== gameData.currentGuestId) return
+  if (gameData.gameState !== 'MOSTRANDO_FORTUNA' || gameData.revelationPhase !== 'guest_learn_more') return
+  if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) return
+
+  const sessionReadingIndex = gameData.guestReadingsUsedThisSeat + 1
+  const roundSalt = Date.now()
+  fortuneMessageBus.emit('guest-requested-fortune', {
+    guestId: localUserId,
+    guestName: getPlayer()?.name ?? 'Visitor',
+    roundSalt,
+    sessionReadingIndex
+  })
+  scheduleVirtualHostDelayThenOpenGuestCategories()
+}
+
+/** No quiere más: cierra sesión y expulsa de la silla (teleport) en el cliente invitado. */
+export function guestDeclineMoreFortune(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId === null || localUserId !== gameData.currentGuestId) return
+  if (gameData.gameState !== 'MOSTRANDO_FORTUNA' || gameData.revelationPhase !== 'guest_learn_more') return
+
+  fortuneMessageBus.emit('hide-fortune', {})
+  fortuneMessageBus.emit('guest-seat-update', {
+    seatUserId: null,
+    seatUserName: null
+  })
+  fortuneMessageBus.emit('guest-chair-decline-more', { guestId: localUserId } satisfies GuestChairDeclineMoreMessage)
+  displaceGuestSeatOccupantToRandomArea()
 }
 
 export function fortuneTellerSubmitKind(kind: FortuneKind): void {

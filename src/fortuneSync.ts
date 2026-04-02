@@ -47,6 +47,11 @@ export type GuestReadingIdleKickMessage = {
   guestId: string
 }
 
+/** El invitado eligió “No” a otra fortuna; el cliente local usa esto para limpiar flags del Sit Spot. */
+export type GuestChairDeclineMoreMessage = {
+  guestId: string
+}
+
 export type RevelationPhaseUpdateMessage = {
   phase: RevelationPhase
   pendingGuestCategory?: FortuneCategory | null
@@ -130,6 +135,12 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on('revelation-phase-update', (data: RevelationPhaseUpdateMessage) => {
+    if (data.phase === 'guest_learn_more') {
+      if (gameData.gameState === 'MOSTRANDO_FORTUNA') {
+        gameData.revelationPhase = data.phase
+      }
+      return
+    }
     gameData.revelationPhase = data.phase
     if (data.pendingGuestCategory !== undefined) {
       gameData.pendingGuestCategory = data.pendingGuestCategory
@@ -178,7 +189,7 @@ export function setupFortuneSync() {
       gameData.currentGuestId = data.guestId
       gameData.currentGuestName = data.guestName
       gameData.gameState = 'MOSTRANDO_FORTUNA'
-      gameData.revelationPhase = 'idle'
+      gameData.revelationPhase = 'fortune_display'
       gameData.pendingGuestCategory = null
       gameData.guestLastInteractionAtMs = null
       playRevealSound()
@@ -189,6 +200,10 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on('hide-fortune', (_data: unknown) => {
+    const localUserId = getPlayer()?.userId ?? null
+    if (localUserId !== null && localUserId === gameData.currentGuestId) {
+      stopOrbitCinematic()
+    }
     gameData.currentGuestId = null
     gameData.currentGuestName = null
     gameData.currentFortune = null

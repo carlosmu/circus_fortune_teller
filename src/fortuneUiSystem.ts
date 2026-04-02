@@ -1,6 +1,6 @@
 import { engine } from '@dcl/sdk/ecs'
 import { gameData } from './gameState'
-import { fortuneMessageBus } from './fortuneSync'
+import { fortuneMessageBus, GUEST_MAX_READINGS_PER_SEAT } from './fortuneSync'
 import { FORTUNE_DISPLAY_DURATION } from './sceneConfig'
 
 let uiSystemInitialized = false
@@ -16,21 +16,21 @@ export function setupFortuneUiSystem() {
       return
     }
 
+    if (gameData.revelationPhase !== 'fortune_display') {
+      return
+    }
+
     uiTimer += dt
 
     if (uiTimer >= FORTUNE_DISPLAY_DURATION) {
       uiTimer = 0
 
-      // Close session and release guest (local)
-      gameData.currentGuestId = null
-      gameData.currentGuestName = null
-      gameData.currentFortune = null
-      gameData.gameState = 'LIBRE'
-      gameData.revelationPhase = 'idle'
-      gameData.pendingGuestCategory = null
-      gameData.revelationRoundSalt = 0
+      if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) {
+        fortuneMessageBus.emit('hide-fortune', {})
+        return
+      }
 
-      fortuneMessageBus.emit('hide-fortune', {})
+      fortuneMessageBus.emit('revelation-phase-update', { phase: 'guest_learn_more' })
     }
   })
 }

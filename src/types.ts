@@ -19,6 +19,10 @@ export type RevelationPhase =
   | 'ft_asks_topic'
   | 'guest_chooses_category'
   | 'ft_chooses_kind'
+  /** Texto de la fortuna visible (MOSTRANDO_FORTUNA). */
+  | 'fortune_display'
+  /** Tras el tiempo de lectura: la pregunta de si desea otra lectura (MOSTRANDO_FORTUNA). */
+  | 'guest_learn_more'
 
 export type GlobalGameData = {
   currentGuestId: string | null

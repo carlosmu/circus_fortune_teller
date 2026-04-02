@@ -17,6 +17,7 @@ import {
   GUEST_READING_IDLE_TIMEOUT_MS
 } from './fortuneSync'
 import { scheduleVirtualHostDelayThenOpenGuestCategories } from './fortuneTellerSystem'
+import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import { TABLE, FORTUNE_TELLER_CAMERA_TARGET } from './scene'
 
 export const GUEST_SPOT = engine.addEntity()
@@ -37,15 +38,6 @@ const TABLE_HOVER_TABLE = 'Sit for a fortune reading'
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
 const GUEST_SIT_HOVER_MAX_READINGS =
   'Maximum 3 readings — leave the chair and sit again for a new session'
-
-/**
- * Rectángulo XZ (mundo) para teleport al salir de la silla por inactividad o al completar el máximo de lecturas.
- * Misma lógica/área que `moveFortuneTellerToRandomArea` en setupWizard.ts (`FORTUNE_TELLER_RANDOM_*`).
- */
-const GUEST_SEAT_DISPLACE_RANDOM_MIN_X = 3
-const GUEST_SEAT_DISPLACE_RANDOM_MAX_X = 13
-const GUEST_SEAT_DISPLACE_RANDOM_MIN_Z = 7
-const GUEST_SEAT_DISPLACE_RANDOM_MAX_Z = 12
 
 /** InteractionType.PROXIMITY: solo queremos clic con cursor, no prompt "E". */
 const POINTER_INTERACTION_PROXIMITY = 1
@@ -245,26 +237,6 @@ function registerTablePointer(mode: 'wait' | 'disabled-fortune-teller' | 'table'
 
 let lastTableMode: 'wait' | 'disabled-fortune-teller' | 'table' | null = null
 
-/** Igual que al terminar la sesión del Fortune Teller: área aleatoria + misma cámara objetivo. */
-function displaceGuestSeatOccupantToRandomArea(): void {
-  executeTask(async () => {
-    try {
-      await movePlayerTo({
-        newRelativePosition: {
-          x: randomInRange(GUEST_SEAT_DISPLACE_RANDOM_MIN_X, GUEST_SEAT_DISPLACE_RANDOM_MAX_X),
-          y: 1,
-          z: randomInRange(GUEST_SEAT_DISPLACE_RANDOM_MIN_Z, GUEST_SEAT_DISPLACE_RANDOM_MAX_Z)
-        },
-        cameraTarget: {
-          x: FORTUNE_TELLER_CAMERA_TARGET.x,
-          y: FORTUNE_TELLER_CAMERA_TARGET.y,
-          z: FORTUNE_TELLER_CAMERA_TARGET.z
-        }
-      })
-    } catch (_e) {}
-  })
-}
-
 export function setupGuestSpot() {
   Transform.create(GUEST_SPOT, {
     position: Vector3.create(8, 1, 8.6)
@@ -274,6 +246,12 @@ export function setupGuestSpot() {
   lastTableMode = 'table'
 
   fortuneMessageBus.on('guest-reading-idle-kick', (data: { guestId: string }) => {
+    if (getPlayer()?.userId === data.guestId) {
+      guestJoinedViaSitSpot = false
+    }
+  })
+
+  fortuneMessageBus.on('guest-chair-decline-more', (data: { guestId: string }) => {
     if (getPlayer()?.userId === data.guestId) {
       guestJoinedViaSitSpot = false
     }
