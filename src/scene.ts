@@ -1,4 +1,4 @@
-import { engine, GltfContainer, Transform, VisibilityComponent, AudioSource } from '@dcl/sdk/ecs'
+import { engine, GltfContainer, Transform, VisibilityComponent, AudioSource, Animator } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
 
 export const TABLE = engine.addEntity()
@@ -8,6 +8,8 @@ export const LIGHTS_TENT = engine.addEntity()
 export const WIZARD = engine.addEntity()
 /** Entity with fortune_teller_collider.glb: click area for "Become Fortune Teller". */
 export const FORTUNE_TELLER_COLLIDER = engine.addEntity()
+/** Animated GLB shown when player enters the Fortune Teller trigger area. */
+export const BECOME_FORTUNE_TELLER_PROMPT = engine.addEntity()
 
 const BACKGROUND_MUSIC = engine.addEntity()
 
@@ -18,6 +20,8 @@ const WIZARD_POSITION = Vector3.create(8, 0, 5)
 export const FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 5)
 /** Point the fortune teller camera looks at (table/guest). */
 export const FORTUNE_TELLER_CAMERA_TARGET = Vector3.create(8, 1, 8)
+/** Position of Chair_Fortune_Teller (composite entity 518). */
+export const CHAIR_FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 4.75)
 
 export function setupScene() {
   // TABLE ENTITY
@@ -66,6 +70,18 @@ export function setupScene() {
   })
   GltfContainer.create(LIGHTS_TENT, {
     src: 'assets/models/lights_tent.glb'
+  })
+
+  // "Become Fortune Teller" animated prompt — hidden until player enters trigger
+  Transform.create(BECOME_FORTUNE_TELLER_PROMPT, {
+    position: Vector3.create(CHAIR_FORTUNE_TELLER_POSITION.x, CHAIR_FORTUNE_TELLER_POSITION.y, CHAIR_FORTUNE_TELLER_POSITION.z)
+  })
+  GltfContainer.create(BECOME_FORTUNE_TELLER_PROMPT, {
+    src: 'assets/models/become_fortune_teller.glb'
+  })
+  VisibilityComponent.create(BECOME_FORTUNE_TELLER_PROMPT, { visible: false })
+  Animator.create(BECOME_FORTUNE_TELLER_PROMPT, {
+    states: [{ clip: 'become_fortune_teller', playing: true, loop: true, speed: 1 }]
   })
 
   // Background music: global loop

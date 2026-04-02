@@ -2,20 +2,22 @@ import {
   engine,
   Animator,
   Transform,
+  VisibilityComponent,
   pointerEventsSystem,
   InputAction,
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
-import { movePlayerTo } from '~system/RestrictedActions'
+import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
 import {
   WIZARD,
   FORTUNE_TELLER_COLLIDER,
   FORTUNE_TELLER_POSITION,
-  FORTUNE_TELLER_CAMERA_TARGET
+  FORTUNE_TELLER_CAMERA_TARGET,
+  BECOME_FORTUNE_TELLER_PROMPT
 } from './scene'
 import { startOrbitCinematic, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 
@@ -40,8 +42,8 @@ const FORTUNE_TELLER_RANDOM_MAX_Z = 12
 /** Trigger area bounds from composite entity 519 "Trigger: Fortune_Teller". */
 const TRIGGER_FT_CENTER_X = 7.98
 const TRIGGER_FT_CENTER_Z = 3.64
-const TRIGGER_FT_HALF_X = 2 // scale.x / 2
-const TRIGGER_FT_HALF_Z = 1 // scale.z / 2
+const TRIGGER_FT_HALF_X = 8 // scale.x / 2
+const TRIGGER_FT_HALF_Z = 2 // scale.z / 2
 const TRIGGER_FT_MIN_X = TRIGGER_FT_CENTER_X - TRIGGER_FT_HALF_X
 const TRIGGER_FT_MAX_X = TRIGGER_FT_CENTER_X + TRIGGER_FT_HALF_X
 const TRIGGER_FT_MIN_Z = TRIGGER_FT_CENTER_Z - TRIGGER_FT_HALF_Z
@@ -180,6 +182,7 @@ function fortuneTellerClickCallback() {
           z: FORTUNE_TELLER_CAMERA_TARGET.z
         }
       })
+      await triggerEmote({ predefinedEmote: 'sittingChair1' })
     } catch (_e) {}
   })
 }
@@ -241,6 +244,36 @@ function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
   }
 }
 
+function showBecomeFortuneTellerPrompt(): void {
+  if (VisibilityComponent.has(BECOME_FORTUNE_TELLER_PROMPT)) {
+    VisibilityComponent.getMutable(BECOME_FORTUNE_TELLER_PROMPT).visible = true
+  }
+  if (Animator.has(BECOME_FORTUNE_TELLER_PROMPT)) {
+    const animator = Animator.getMutable(BECOME_FORTUNE_TELLER_PROMPT)
+    if (animator.states.length === 0) {
+      animator.states.push({ clip: 'default', playing: true, loop: true, speed: 1 })
+    } else {
+      for (const state of animator.states) {
+        state.playing = true
+        state.loop = true
+        state.speed = 1
+      }
+    }
+  }
+}
+
+function hideBecomeFortuneTellerPrompt(): void {
+  if (VisibilityComponent.has(BECOME_FORTUNE_TELLER_PROMPT)) {
+    VisibilityComponent.getMutable(BECOME_FORTUNE_TELLER_PROMPT).visible = false
+  }
+  if (Animator.has(BECOME_FORTUNE_TELLER_PROMPT)) {
+    const animator = Animator.getMutable(BECOME_FORTUNE_TELLER_PROMPT)
+    for (const state of animator.states) {
+      state.playing = false
+    }
+  }
+}
+
 export function setupWizard() {
   setupCinematicCamera()
   registerFortuneTellerColliderPointer('become')
@@ -257,7 +290,7 @@ export function setupWizard() {
   }
 
   engine.addSystem((dt: number) => {
-    // --- Trigger area detection: become Fortune Teller on enter ---
+    // --- Trigger area: show/hide "become fortune teller" animated prompt ---
     if (Transform.has(engine.PlayerEntity)) {
       const playerPos = Transform.get(engine.PlayerEntity).position
       const insideTrigger =
@@ -267,13 +300,10 @@ export function setupWizard() {
         playerPos.z <= TRIGGER_FT_MAX_Z
       if (insideTrigger && !playerWasInFortuneTellerTrigger) {
         playerWasInFortuneTellerTrigger = true
-        const player = getPlayer()
-        const userId = player?.userId ?? null
-        if (userId && gameData.currentFortuneTellerId === null) {
-          fortuneTellerClickCallback()
-        }
-      } else if (!insideTrigger) {
+        showBecomeFortuneTellerPrompt()
+      } else if (!insideTrigger && playerWasInFortuneTellerTrigger) {
         playerWasInFortuneTellerTrigger = false
+        hideBecomeFortuneTellerPrompt()
       }
     }
 
