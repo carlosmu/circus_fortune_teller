@@ -11,7 +11,11 @@ import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { EntityNames } from '../assets/scene/entity-names'
 import { gameData } from './gameState'
-import { fortuneMessageBus } from './fortuneSync'
+import {
+  fortuneMessageBus,
+  GUEST_MAX_READINGS_PER_SEAT,
+  GUEST_READING_IDLE_TIMEOUT_MS
+} from './fortuneSync'
 import { scheduleVirtualHostDelayThenOpenGuestCategories } from './fortuneTellerSystem'
 import { TABLE, FORTUNE_TELLER_CAMERA_TARGET } from './scene'
 
@@ -31,6 +35,17 @@ const TABLE_HOVER_DISABLED_FORTUNE_TELLER = 'Fortune Teller cannot reveal as Gue
 const TABLE_HOVER_TABLE = 'Sit for a fortune reading'
 /** Mismo gesto que antes era la mesa: sentarse aquí pide la fortuna. */
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
+const GUEST_SIT_HOVER_MAX_READINGS =
+  'Maximum 3 readings — leave the chair and sit again for a new session'
+
+/**
+ * Rectángulo XZ (mundo) para teleport al salir de la silla por inactividad o al completar el máximo de lecturas.
+ * Misma lógica/área que `moveFortuneTellerToRandomArea` en setupWizard.ts (`FORTUNE_TELLER_RANDOM_*`).
+ */
+const GUEST_SEAT_DISPLACE_RANDOM_MIN_X = 3
+const GUEST_SEAT_DISPLACE_RANDOM_MAX_X = 13
+const GUEST_SEAT_DISPLACE_RANDOM_MIN_Z = 7
+const GUEST_SEAT_DISPLACE_RANDOM_MAX_Z = 12
 
 /** InteractionType.PROXIMITY: solo queremos clic con cursor, no prompt "E". */
 const POINTER_INTERACTION_PROXIMITY = 1
@@ -40,6 +55,15 @@ let sitSpotGuestStripFramesLeft = 0
 let guestJoinedViaSitSpot = false
 let sitSpotGuestTeleportPending = false
 let guestSatAtMs = 0
+let lastAppliedGuestSitMode: 'default' | 'max' | null = null
+/** Evita múltiples emit/move si el kick por idle tarda un frame en reflejarse en gameData. */
+let guestReadingIdleKickDispatched = false
+/** Evita varios clear-seat + teleport si alcanzó 3 lecturas y el asiento tarda en sincronizar. */
+let guestMaxReadingsDisplaceDispatched = false
+
+function randomInRange(min: number, max: number): number {
+  return min + Math.random() * (max - min)
+}
 
 function horizontalDistance(
   a: { x: number; z: number },
@@ -117,24 +141,36 @@ function stripSitSpotGuestProximityUi(entity: ReturnType<typeof engine.addEntity
   }
 }
 
-function registerGuestSitSpotHandlers(entity: ReturnType<typeof engine.addEntity>): void {
+function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEntity>): void {
+  const localUserId = getPlayer()?.userId ?? null
+  const maxed =
+    localUserId !== null &&
+    localUserId === gameData.guestSeatUserId &&
+    gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT &&
+    gameData.gameState === 'LIBRE'
+  const mode = maxed ? 'max' : 'default'
+  if (mode === lastAppliedGuestSitMode) return
+  lastAppliedGuestSitMode = mode
+  pointerEventsSystem.removeOnPointerDown(entity)
   pointerEventsSystem.onPointerDown(
     {
       entity,
       opts: {
         button: InputAction.IA_POINTER,
-        hoverText: GUEST_SIT_SPOT_HOVER,
+        hoverText: maxed ? GUEST_SIT_HOVER_MAX_READINGS : GUEST_SIT_SPOT_HOVER,
         maxDistance: 8,
         showFeedback: true,
         showHighlight: true
       }
     },
-    guestSitSpotClickCallback
+    maxed ? () => {} : guestSitSpotClickCallback
   )
   stripSitSpotGuestProximityUi(entity)
 }
 
 function emitGuestFortuneRequestFromChair() {
+  if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) return
+  const sessionReadingIndex = gameData.guestReadingsUsedThisSeat + 1
   executeTask(async () => {
     const player = getPlayer()
     const userId = player?.userId ?? 'unknown'
@@ -143,7 +179,8 @@ function emitGuestFortuneRequestFromChair() {
     fortuneMessageBus.emit('guest-requested-fortune', {
       guestId: userId,
       guestName: name,
-      roundSalt
+      roundSalt,
+      sessionReadingIndex
     })
     scheduleVirtualHostDelayThenOpenGuestCategories()
   })
@@ -156,6 +193,7 @@ function guestSitSpotClickCallback() {
   if (gameData.gameState !== 'LIBRE') return
 
   if (gameData.guestSeatUserId === localUserId) {
+    if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) return
     emitGuestFortuneRequestFromChair()
     return
   }
@@ -207,6 +245,26 @@ function registerTablePointer(mode: 'wait' | 'disabled-fortune-teller' | 'table'
 
 let lastTableMode: 'wait' | 'disabled-fortune-teller' | 'table' | null = null
 
+/** Igual que al terminar la sesión del Fortune Teller: área aleatoria + misma cámara objetivo. */
+function displaceGuestSeatOccupantToRandomArea(): void {
+  executeTask(async () => {
+    try {
+      await movePlayerTo({
+        newRelativePosition: {
+          x: randomInRange(GUEST_SEAT_DISPLACE_RANDOM_MIN_X, GUEST_SEAT_DISPLACE_RANDOM_MAX_X),
+          y: 1,
+          z: randomInRange(GUEST_SEAT_DISPLACE_RANDOM_MIN_Z, GUEST_SEAT_DISPLACE_RANDOM_MAX_Z)
+        },
+        cameraTarget: {
+          x: FORTUNE_TELLER_CAMERA_TARGET.x,
+          y: FORTUNE_TELLER_CAMERA_TARGET.y,
+          z: FORTUNE_TELLER_CAMERA_TARGET.z
+        }
+      })
+    } catch (_e) {}
+  })
+}
+
 export function setupGuestSpot() {
   Transform.create(GUEST_SPOT, {
     position: Vector3.create(8, 1, 8.6)
@@ -215,12 +273,18 @@ export function setupGuestSpot() {
   registerTablePointer('table')
   lastTableMode = 'table'
 
+  fortuneMessageBus.on('guest-reading-idle-kick', (data: { guestId: string }) => {
+    if (getPlayer()?.userId === data.guestId) {
+      guestJoinedViaSitSpot = false
+    }
+  })
+
   engine.addSystem(() => {
     if (!guestSitSpotRegistered) {
       const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
       if (sitSpot !== null) {
         guestSitSpotRegistered = true
-        registerGuestSitSpotHandlers(sitSpot)
+        applyGuestSitSpotPointerIfNeeded(sitSpot)
         sitSpotGuestStripFramesLeft = 15
       }
     } else if (sitSpotGuestStripFramesLeft > 0) {
@@ -242,6 +306,46 @@ export function setupGuestSpot() {
     if (mode !== lastTableMode) {
       lastTableMode = mode
       registerTablePointer(mode)
+    }
+
+    const sitSpotEntity = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
+    if (sitSpotEntity !== null) {
+      applyGuestSitSpotPointerIfNeeded(sitSpotEntity)
+    }
+
+    if (
+      gameData.gameState !== 'OCUPADO' ||
+      gameData.currentGuestId !== localUserId
+    ) {
+      guestReadingIdleKickDispatched = false
+    } else if (
+      localUserId !== null &&
+      gameData.guestLastInteractionAtMs !== null &&
+      Date.now() - gameData.guestLastInteractionAtMs >= GUEST_READING_IDLE_TIMEOUT_MS &&
+      !guestReadingIdleKickDispatched
+    ) {
+      guestReadingIdleKickDispatched = true
+      fortuneMessageBus.emit('guest-reading-idle-kick', { guestId: localUserId })
+      displaceGuestSeatOccupantToRandomArea()
+    }
+
+    const maxReadingsDisplacePending =
+      gameData.gameState === 'LIBRE' &&
+      localUserId !== null &&
+      localUserId === gameData.guestSeatUserId &&
+      gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT &&
+      !sitSpotGuestTeleportPending
+
+    if (!maxReadingsDisplacePending) {
+      guestMaxReadingsDisplaceDispatched = false
+    } else if (!guestMaxReadingsDisplaceDispatched) {
+      guestMaxReadingsDisplaceDispatched = true
+      guestJoinedViaSitSpot = false
+      fortuneMessageBus.emit('guest-seat-update', {
+        seatUserId: null,
+        seatUserName: null
+      })
+      displaceGuestSeatOccupantToRandomArea()
     }
 
     if (

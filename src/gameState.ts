@@ -5,6 +5,8 @@ export const gameData: GlobalGameData = {
   currentGuestName: null,
   guestSeatUserId: null,
   guestSeatUserName: null,
+  guestReadingsUsedThisSeat: 0,
+  guestLastInteractionAtMs: null,
   currentFortuneTellerId: null,
   currentFortuneTellerName: null,
   fortuneTellerSessionEndsAtMs: null,

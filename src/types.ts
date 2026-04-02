@@ -26,6 +26,10 @@ export type GlobalGameData = {
   /** Player currently seated at Sit Spot: Guest (synced). */
   guestSeatUserId: string | null
   guestSeatUserName: string | null
+  /** Lecturas ya pedidas en esta sesión de silla (1–3); se resetea al cambiar de ocupante. */
+  guestReadingsUsedThisSeat: number
+  /** Última actividad del invitado durante OCUPADO (ms); si pasan ~30s sin avanzar, expulsión. */
+  guestLastInteractionAtMs: number | null
   currentFortuneTellerId: string | null
   /** Display name of the current fortune teller (synced with MessageBus). */
   currentFortuneTellerName: string | null

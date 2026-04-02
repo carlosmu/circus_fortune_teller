@@ -7,11 +7,24 @@ import { gameData } from './gameState'
 import { showFortune3DText } from './fortune3DText'
 import { FORTUNE_TELLER_POSITION } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
-import { startRevealFortuneCinematic } from './cinematicCamera'
+import { startRevealFortuneCinematic, stopOrbitCinematic } from './cinematicCamera'
 import type { FortuneCategory, RevelationPhase } from './types'
 
 /** MessageBus to sync fortune state across all players in the scene */
 export const fortuneMessageBus = new MessageBus()
+
+/** Máximo de pedidos de lectura por sesión en la silla de invitado. */
+export const GUEST_MAX_READINGS_PER_SEAT = 3
+/** Sin interacción durante OCUPADO tras este tiempo → expulsión + teleport (solo cliente invitado mueve). */
+export const GUEST_READING_IDLE_TIMEOUT_MS = 30000
+
+let previousGuestSeatUserId: string | null = null
+
+function touchGuestReadingInteractionDeadline(): void {
+  if (gameData.gameState === 'OCUPADO' && gameData.currentGuestId !== null) {
+    gameData.guestLastInteractionAtMs = Date.now()
+  }
+}
 
 /** Fortune index in FORTUNES instead of full text to stay under MessageBus size limit. */
 export type ShowFortuneMessage = {
@@ -26,6 +39,12 @@ export type GuestRequestedMessage = {
   guestName: string
   /** Shared by all clients so card options and auto picks match. */
   roundSalt: number
+  /** 1..GUEST_MAX_READINGS_PER_SEAT — lectura de esta sesión en la silla. */
+  sessionReadingIndex: number
+}
+
+export type GuestReadingIdleKickMessage = {
+  guestId: string
 }
 
 export type RevelationPhaseUpdateMessage = {
@@ -87,12 +106,23 @@ function soundCleanupSystem(dt: number) {
 export function setupFortuneSync() {
   engine.addSystem(soundCleanupSystem)
   fortuneMessageBus.on('guest-requested-fortune', (data: GuestRequestedMessage) => {
+    if (
+      data.sessionReadingIndex < 1 ||
+      data.sessionReadingIndex > GUEST_MAX_READINGS_PER_SEAT
+    ) {
+      return
+    }
     gameData.currentGuestId = data.guestId
     gameData.currentGuestName = data.guestName
     gameData.gameState = 'OCUPADO'
     gameData.revelationRoundSalt = data.roundSalt
     gameData.pendingGuestCategory = null
     gameData.revelationPhase = 'ft_asks_topic'
+    gameData.guestReadingsUsedThisSeat = Math.max(
+      gameData.guestReadingsUsedThisSeat,
+      data.sessionReadingIndex
+    )
+    gameData.guestLastInteractionAtMs = Date.now()
     const localUserId = getPlayer()?.userId ?? null
     if (localUserId !== null && localUserId === data.guestId) {
       startRevealFortuneCinematic()
@@ -104,11 +134,35 @@ export function setupFortuneSync() {
     if (data.pendingGuestCategory !== undefined) {
       gameData.pendingGuestCategory = data.pendingGuestCategory
     }
+    touchGuestReadingInteractionDeadline()
   })
 
   fortuneMessageBus.on('guest-seat-update', (data: GuestSeatMessage) => {
+    if (data.seatUserId !== previousGuestSeatUserId) {
+      gameData.guestReadingsUsedThisSeat = 0
+    }
+    previousGuestSeatUserId = data.seatUserId
     gameData.guestSeatUserId = data.seatUserId
     gameData.guestSeatUserName = data.seatUserName
+  })
+
+  fortuneMessageBus.on('guest-reading-idle-kick', (data: GuestReadingIdleKickMessage) => {
+    if (gameData.currentGuestId !== data.guestId) return
+    stopOrbitCinematic()
+    gameData.currentGuestId = null
+    gameData.currentGuestName = null
+    gameData.currentFortune = null
+    gameData.gameState = 'LIBRE'
+    gameData.revelationPhase = 'idle'
+    gameData.pendingGuestCategory = null
+    gameData.revelationRoundSalt = 0
+    gameData.guestLastInteractionAtMs = null
+    gameData.guestReadingsUsedThisSeat = 0
+    if (gameData.guestSeatUserId === data.guestId) {
+      gameData.guestSeatUserId = null
+      gameData.guestSeatUserName = null
+      previousGuestSeatUserId = null
+    }
   })
 
   fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {
@@ -126,6 +180,7 @@ export function setupFortuneSync() {
       gameData.gameState = 'MOSTRANDO_FORTUNA'
       gameData.revelationPhase = 'idle'
       gameData.pendingGuestCategory = null
+      gameData.guestLastInteractionAtMs = null
       playRevealSound()
       if (SHOW_3D_FORTUNE) {
         showFortune3DText({ text: fortune.text, category: fortune.category, type: fortune.type })
@@ -141,6 +196,7 @@ export function setupFortuneSync() {
     gameData.revelationPhase = 'idle'
     gameData.pendingGuestCategory = null
     gameData.revelationRoundSalt = 0
+    gameData.guestLastInteractionAtMs = null
   })
 
   fortuneMessageBus.on(
