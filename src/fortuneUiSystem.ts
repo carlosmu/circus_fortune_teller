@@ -1,10 +1,11 @@
 import { engine } from '@dcl/sdk/ecs'
 import { gameData } from './gameState'
 import { fortuneMessageBus, GUEST_MAX_READINGS_PER_SEAT } from './fortuneSync'
-import { FORTUNE_DISPLAY_DURATION } from './sceneConfig'
+import { FORTUNE_DISPLAY_DURATION, FORTUNE_FAREWELL_MAX_READINGS_DURATION } from './sceneConfig'
 
 let uiSystemInitialized = false
 let uiTimer = 0
+let farewellTimer = 0
 
 export function setupFortuneUiSystem() {
   if (uiSystemInitialized) return
@@ -13,8 +14,21 @@ export function setupFortuneUiSystem() {
   engine.addSystem((dt) => {
     if (gameData.gameState !== 'MOSTRANDO_FORTUNA') {
       uiTimer = 0
+      farewellTimer = 0
       return
     }
+
+    if (gameData.revelationPhase === 'guest_farewell_max_readings') {
+      uiTimer = 0
+      farewellTimer += dt
+      if (farewellTimer >= FORTUNE_FAREWELL_MAX_READINGS_DURATION) {
+        farewellTimer = 0
+        fortuneMessageBus.emit('hide-fortune', {})
+      }
+      return
+    }
+
+    farewellTimer = 0
 
     if (gameData.revelationPhase !== 'fortune_display') {
       return
@@ -26,7 +40,7 @@ export function setupFortuneUiSystem() {
       uiTimer = 0
 
       if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) {
-        fortuneMessageBus.emit('hide-fortune', {})
+        fortuneMessageBus.emit('revelation-phase-update', { phase: 'guest_farewell_max_readings' })
         return
       }
 

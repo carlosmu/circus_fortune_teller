@@ -23,6 +23,8 @@ export type RevelationPhase =
   | 'fortune_display'
   /** Tras el tiempo de lectura: la pregunta de si desea otra lectura (MOSTRANDO_FORTUNA). */
   | 'guest_learn_more'
+  /** Tras la 3ª lectura: mensaje de cierre antes de expulsar (MOSTRANDO_FORTUNA). */
+  | 'guest_farewell_max_readings'
 
 export type GlobalGameData = {
   currentGuestId: string | null

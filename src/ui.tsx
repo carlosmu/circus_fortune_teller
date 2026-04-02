@@ -14,7 +14,7 @@ import {
 } from './fortuneTellerSystem'
 import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
 import { cinematicBarAlpha } from './cinematicCamera'
-import { pickThreeGuestCategoriesSeeded } from './revelationRng'
+import { pickGuestMaxReadingsFarewellLine, pickThreeGuestCategoriesSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind, RevelationPhase } from './types'
 
 let waitingPanelTime = 0
@@ -187,6 +187,16 @@ function uiComponent() {
     !isGuest &&
     !isFortuneTeller
 
+  const showFarewellMaxReadings =
+    SHOW_UI_FORTUNE &&
+    gameData.gameState === 'MOSTRANDO_FORTUNA' &&
+    phase === 'guest_farewell_max_readings' &&
+    gameData.currentGuestId !== null
+
+  const maxReadingsFarewellLine = showFarewellMaxReadings
+    ? pickGuestMaxReadingsFarewellLine(gameData.currentGuestId ?? '', gameData.revelationRoundSalt)
+    : ''
+
   const waitingAlpha = gameData.waitingPanelAlpha
   const waitingCaption = revelationWaitingCaption(phase, isGuest, isFortuneTeller, hasHumanFortuneTeller)
   const guestName = gameData.currentGuestName ?? ''
@@ -316,6 +326,42 @@ function uiComponent() {
               textAlign="top-center"
               fontSize={22}
               font="serif"
+            />
+          </UiEntity>
+        </UiEntity>
+      )}
+
+      {showFarewellMaxReadings && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '28%',
+              height: '50%',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
+            }}
+            uiBackground={{
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch'
+            }}
+          >
+            <Label
+              uiTransform={{ width: '88%', height: '70%' }}
+              value={maxReadingsFarewellLine}
+              textAlign="middle-center"
+              fontSize={20}
+              font="serif"
+              color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
           </UiEntity>
         </UiEntity>

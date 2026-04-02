@@ -135,7 +135,7 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on('revelation-phase-update', (data: RevelationPhaseUpdateMessage) => {
-    if (data.phase === 'guest_learn_more') {
+    if (data.phase === 'guest_learn_more' || data.phase === 'guest_farewell_max_readings') {
       if (gameData.gameState === 'MOSTRANDO_FORTUNA') {
         gameData.revelationPhase = data.phase
       }

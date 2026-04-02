@@ -21,6 +21,19 @@ export function hashString(s: string): number {
   return h >>> 0
 }
 
+/** Frases al completar 3 lecturas en la misma sesión (elige una en todos los clientes con el mismo índice). */
+export const GUEST_MAX_READINGS_FAREWELL_LINES: readonly string[] = [
+  "Do not tempt fate—you've learned enough.",
+  'The cards have spoken. No more.',
+  'Your fate is sealed. Ask no further.',
+  'Some truths are not meant to be chased.'
+]
+
+export function pickGuestMaxReadingsFarewellLine(guestId: string, roundSalt: number): string {
+  const idx = hashString(`${guestId}:${roundSalt}:maxFarewell`) % GUEST_MAX_READINGS_FAREWELL_LINES.length
+  return GUEST_MAX_READINGS_FAREWELL_LINES[idx]!
+}
+
 /** Picks `count` distinct categories from `pool` using a stable seed. */
 export function pickDistinctCategoriesSeeded(
   seedPrefix: string,
