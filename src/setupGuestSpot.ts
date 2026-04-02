@@ -330,7 +330,6 @@ export function setupGuestSpot() {
       gameData.gameState === 'LIBRE' &&
       localUserId !== null &&
       localUserId === gameData.guestSeatUserId &&
-      guestJoinedViaSitSpot &&
       !sitSpotGuestTeleportPending &&
       Date.now() - guestSatAtMs >= GUEST_SEAT_GRACE_MS &&
       Transform.has(engine.PlayerEntity)
