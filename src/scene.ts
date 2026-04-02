@@ -6,7 +6,13 @@ export const FLOOR = engine.addEntity()
 export const TENT = engine.addEntity()
 export const LIGHTS_TENT = engine.addEntity()
 export const WIZARD = engine.addEntity()
-/** Entity with fortune_teller_collider.glb: click area for "Become Fortune Teller". */
+/**
+ * Collider legacy (host_collider.glb). Oculto: el rol se toma por Sit Spot + trigger GLB.
+ *
+ * TODOs (limpieza):
+ * - [ ] eliminar host_collider.glb (asset en assets/models/)
+ * - [ ] quitar entidad FORTUNE_TELLER_COLLIDER y GltfContainer asociado si ya no hace falta
+ */
 export const FORTUNE_TELLER_COLLIDER = engine.addEntity()
 /** Animated GLB shown when player enters the Fortune Teller trigger area. */
 export const BECOME_FORTUNE_TELLER_PROMPT = engine.addEntity()
@@ -44,15 +50,14 @@ export function setupScene() {
   })
   VisibilityComponent.create(WIZARD, { visible: true })
 
-  // FORTUNE TELLER COLLIDER: same position as wizard, for "Become Fortune Teller" click
+  // FORTUNE TELLER COLLIDER (host_collider.glb): desactivado temporalmente — ver TODO arriba
   Transform.create(FORTUNE_TELLER_COLLIDER, {
     position: WIZARD_POSITION
   })
-
-  
   GltfContainer.create(FORTUNE_TELLER_COLLIDER, {
     src: 'assets/models/host_collider.glb'
   })
+  VisibilityComponent.create(FORTUNE_TELLER_COLLIDER, { visible: false })
   Transform.create(FLOOR, {
     position: Vector3.create(8, 0, 8)
   })

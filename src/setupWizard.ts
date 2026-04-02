@@ -14,7 +14,6 @@ import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
 import {
   WIZARD,
-  FORTUNE_TELLER_COLLIDER,
   FORTUNE_TELLER_POSITION,
   FORTUNE_TELLER_CAMERA_TARGET,
   BECOME_FORTUNE_TELLER_PROMPT
@@ -33,9 +32,6 @@ const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
 /** Tiempo en ms sin comprobar movimiento tras convertirse en fortune teller (dar tiempo al teletransporte). */
 const FORTUNE_TELLER_GRACE_MS = 1500
 const FORTUNE_TELLER_HOVER_BECOME = 'Become The Fortune Teller'
-const FORTUNE_TELLER_HOVER_WAIT = 'Wait for the next turn'
-const FORTUNE_TELLER_HOVER_DISABLED_SELF = 'You are already the Fortune Teller'
-const FORTUNE_TELLER_HOVER_DISABLED_TAKEN = 'Fortune Teller already taken'
 const WIZARD_MOVE_OFFSET_X = 2
 const WIZARD_MOVE_OFFSET_Z = -1
 const WIZARD_MOVE_SPEED = 6
@@ -62,7 +58,6 @@ let fortuneTellerJoinedViaSitSpot = false
 let sitSpotFtTeleportPending = false
 let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
 let fortuneTellerBecameAtMs: number = 0
-let lastFortuneTellerColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
 let originalWizardPosition: { x: number; y: number; z: number } | null = null
 let displacedWizardPosition: { x: number; y: number; z: number } | null = null
 let currentWizardAnim: 'idle' | 'waiting' | 'reveal' | null = null
@@ -277,31 +272,6 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
   )
 }
 
-function registerFortuneTellerColliderPointer(
-  mode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken'
-) {
-  pointerEventsSystem.removeOnPointerDown(FORTUNE_TELLER_COLLIDER)
-  const hoverText =
-    mode === 'wait'
-      ? FORTUNE_TELLER_HOVER_WAIT
-      : mode === 'disabled-self'
-        ? FORTUNE_TELLER_HOVER_DISABLED_SELF
-        : mode === 'disabled-taken'
-          ? FORTUNE_TELLER_HOVER_DISABLED_TAKEN
-          : FORTUNE_TELLER_HOVER_BECOME
-  const enabled = mode === 'become'
-  pointerEventsSystem.onPointerDown(
-    {
-      entity: FORTUNE_TELLER_COLLIDER,
-      opts: {
-        button: InputAction.IA_POINTER,
-        hoverText
-      }
-    },
-    enabled ? () => fortuneTellerClickCallback() : () => {}
-  )
-}
-
 function setWizardAnimation(next: 'idle' | 'waiting' | 'reveal'): void {
   if (currentWizardAnim === next) return
   if (!Animator.has(WIZARD)) return
@@ -366,8 +336,6 @@ function hideBecomeFortuneTellerPrompt(): void {
 
 export function setupWizard() {
   setupCinematicCamera()
-  registerFortuneTellerColliderPointer('become')
-  lastFortuneTellerColliderMode = 'become'
 
   if (Transform.has(WIZARD)) {
     const pos = Transform.get(WIZARD).position
@@ -403,23 +371,6 @@ export function setupWizard() {
         fortuneTellerSitSpotRegistered = true
         registerFortuneTellerSitSpotHandlers(sitSpot)
       }
-    }
-
-    const showWait = gameData.gameState === 'MOSTRANDO_FORTUNA'
-    const localUserId = getPlayer()?.userId ?? null
-    const localIsFortuneTeller = localUserId !== null && gameData.currentFortuneTellerId === localUserId
-    const ftTakenByOther =
-      gameData.currentFortuneTellerId !== null && gameData.currentFortuneTellerId !== localUserId
-    const hoverMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' = showWait
-      ? 'wait'
-      : localIsFortuneTeller
-        ? 'disabled-self'
-        : ftTakenByOther
-          ? 'disabled-taken'
-          : 'become'
-    if (hoverMode !== lastFortuneTellerColliderMode) {
-      lastFortuneTellerColliderMode = hoverMode
-      registerFortuneTellerColliderPointer(hoverMode)
     }
 
     const desiredState: 'idle' | 'waiting' | 'reveal' =
@@ -472,6 +423,7 @@ export function setupWizard() {
       }
     }
 
+    const localUserId = getPlayer()?.userId ?? null
     if (gameData.currentFortuneTellerId !== localUserId || !lastFortuneTellerPosition) return
     if (Date.now() - fortuneTellerBecameAtMs < FORTUNE_TELLER_GRACE_MS) return
     if (fortuneTellerJoinedViaSitSpot && sitSpotFtTeleportPending) return
