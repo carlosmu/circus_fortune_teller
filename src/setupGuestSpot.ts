@@ -13,7 +13,7 @@ import { TABLE } from './scene'
 
 export const GUEST_SPOT = engine.addEntity()
 
-const TABLE_HOVER_REVEAL = 'Reveal Your Fortune'
+const TABLE_HOVER_REVEAL = 'Ask For Your Fortune'
 const TABLE_HOVER_WAIT = 'Wait for the next turn'
 const TABLE_HOVER_DISABLED_FORTUNE_TELLER = 'Fortune Teller cannot reveal as Guest'
 

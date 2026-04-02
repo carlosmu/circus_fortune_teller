@@ -36,8 +36,8 @@ export function main() {
   // Inicializar escena (mesa, wizard, etc.)
   setupScene()
 
-  // Panel 3D del leaderboard (monospace, +2m en X respecto al fortune teller)
-  setupLeaderboard3D()
+  // Panel 3D del leaderboard (deshabilitado)
+  // setupLeaderboard3D()
 
   // Load stats and update leaderboard panel
   engine.addSystem(() => {
@@ -47,7 +47,7 @@ export function main() {
     if (wallet === null) return
     statsFetched = true
     getStats(wallet).then((data) => {
-      if (data) setLeaderboardData(data)
+      if (data) { /* setLeaderboardData(data) */ }
     })
   })
 

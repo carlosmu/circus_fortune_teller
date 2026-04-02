@@ -25,7 +25,7 @@ const TABLE_CENTER = { x: 8, y: 0, z: 8 }
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
 /** Tiempo en ms sin comprobar movimiento tras convertirse en fortune teller (dar tiempo al teletransporte). */
 const FORTUNE_TELLER_GRACE_MS = 1500
-const FORTUNE_TELLER_HOVER_BECOME = 'Become Fortune Teller'
+const FORTUNE_TELLER_HOVER_BECOME = 'Become The Fortune Teller'
 const FORTUNE_TELLER_HOVER_WAIT = 'Wait for the next turn'
 const FORTUNE_TELLER_HOVER_DISABLED_SELF = 'You are already the Fortune Teller'
 const FORTUNE_TELLER_HOVER_DISABLED_TAKEN = 'Fortune Teller already taken'
@@ -37,6 +37,17 @@ const FORTUNE_TELLER_RANDOM_MIN_X = 3
 const FORTUNE_TELLER_RANDOM_MAX_X = 13
 const FORTUNE_TELLER_RANDOM_MIN_Z = 7
 const FORTUNE_TELLER_RANDOM_MAX_Z = 12
+/** Trigger area bounds from composite entity 519 "Trigger: Fortune_Teller". */
+const TRIGGER_FT_CENTER_X = 7.98
+const TRIGGER_FT_CENTER_Z = 3.64
+const TRIGGER_FT_HALF_X = 2 // scale.x / 2
+const TRIGGER_FT_HALF_Z = 1 // scale.z / 2
+const TRIGGER_FT_MIN_X = TRIGGER_FT_CENTER_X - TRIGGER_FT_HALF_X
+const TRIGGER_FT_MAX_X = TRIGGER_FT_CENTER_X + TRIGGER_FT_HALF_X
+const TRIGGER_FT_MIN_Z = TRIGGER_FT_CENTER_Z - TRIGGER_FT_HALF_Z
+const TRIGGER_FT_MAX_Z = TRIGGER_FT_CENTER_Z + TRIGGER_FT_HALF_Z
+
+let playerWasInFortuneTellerTrigger = false
 let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
 let fortuneTellerBecameAtMs: number = 0
 let lastFortuneTellerColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
@@ -246,6 +257,26 @@ export function setupWizard() {
   }
 
   engine.addSystem((dt: number) => {
+    // --- Trigger area detection: become Fortune Teller on enter ---
+    if (Transform.has(engine.PlayerEntity)) {
+      const playerPos = Transform.get(engine.PlayerEntity).position
+      const insideTrigger =
+        playerPos.x >= TRIGGER_FT_MIN_X &&
+        playerPos.x <= TRIGGER_FT_MAX_X &&
+        playerPos.z >= TRIGGER_FT_MIN_Z &&
+        playerPos.z <= TRIGGER_FT_MAX_Z
+      if (insideTrigger && !playerWasInFortuneTellerTrigger) {
+        playerWasInFortuneTellerTrigger = true
+        const player = getPlayer()
+        const userId = player?.userId ?? null
+        if (userId && gameData.currentFortuneTellerId === null) {
+          fortuneTellerClickCallback()
+        }
+      } else if (!insideTrigger) {
+        playerWasInFortuneTellerTrigger = false
+      }
+    }
+
     const showWait = gameData.gameState === 'MOSTRANDO_FORTUNA'
     const localUserId = getPlayer()?.userId ?? null
     const localIsFortuneTeller = localUserId !== null && gameData.currentFortuneTellerId === localUserId
