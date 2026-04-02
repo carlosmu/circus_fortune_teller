@@ -112,3 +112,11 @@ export function showFortune3DText(fortune: Fortune): void {
     })
   }
 }
+
+/** Oculta de inmediato el panel 3D (p. ej. si el invitado cancela durante la lectura). */
+export function hideFortune3DTextImmediate(): void {
+  fortuneTextRemaining = 0
+  if (parentEntity !== null) {
+    VisibilityComponent.createOrReplace(parentEntity, { visible: false })
+  }
+}

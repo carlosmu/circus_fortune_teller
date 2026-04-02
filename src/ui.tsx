@@ -13,6 +13,7 @@ import {
   fortuneTellerSubmitKind,
   guestAcceptSuggestedCategory,
   guestAcceptMoreFortune,
+  guestCancelFortuneSession,
   guestDeclineMoreFortune,
   guestRejectSuggestedCategory,
   guestSubmitChosenCategory
@@ -239,11 +240,40 @@ function CinematicLetterbox({ alpha }: { alpha: number }) {
         justifyContent: 'space-between',
         alignItems: 'stretch',
         positionType: 'absolute',
-        position: { top: 0, left: 0 }
+        position: { top: 0, left: 0 },
+        zIndex: 0
       }}
     >
       <UiEntity uiTransform={{ width: '100%', height: '10%' }} uiBackground={{ color: barColor }} />
       <UiEntity uiTransform={{ width: '100%', height: '10%' }} uiBackground={{ color: barColor }} />
+    </UiEntity>
+  )
+}
+
+/** × en esquina superior derecha de la tarjeta card.png (solo invitado en lectura). */
+function GuestCardCancelCorner(props: { show: boolean }) {
+  if (!props.show) return null
+  return (
+    <UiEntity
+      uiTransform={{
+        positionType: 'absolute',
+        position: { top: '4%', right: '5%' },
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+      uiBackground={{ color: Color4.create(0.12, 0.12, 0.14, 0.88) }}
+      onMouseDown={() => guestCancelFortuneSession()}
+    >
+      <Label
+        uiTransform={{ width: '100%', height: '100%' }}
+        value="×"
+        textAlign="middle-center"
+        fontSize={26}
+        font="sans-serif"
+        color={Color4.create(0.95, 0.95, 0.95, 1)}
+      />
     </UiEntity>
   )
 }
@@ -262,6 +292,10 @@ function uiComponent() {
     !!player && gameData.currentFortuneTellerId !== null && gameData.currentFortuneTellerId === player.userId
   const isGuest = !!player && gameData.currentGuestId !== null && gameData.currentGuestId === player.userId
   const hasHumanFortuneTeller = gameData.currentFortuneTellerId !== null
+  const showGuestCancelButton =
+    SHOW_UI_FORTUNE &&
+    isGuest &&
+    (gameData.gameState === 'OCUPADO' || gameData.gameState === 'MOSTRANDO_FORTUNA')
   const showFtInvite =
     SHOW_UI_FORTUNE &&
     gameData.gameState === 'OCUPADO' &&
@@ -357,11 +391,25 @@ function uiComponent() {
       uiTransform={{
         width: '100%',
         height: '100%',
+        positionType: 'relative',
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'stretch'
       }}
     >
+      {cinematicBarAlpha > 0 && <CinematicLetterbox alpha={cinematicBarAlpha} />}
+      <UiEntity
+        uiTransform={{
+          width: '100%',
+          height: '100%',
+          positionType: 'absolute',
+          position: { top: 0, left: 0 },
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'stretch',
+          zIndex: 10
+        }}
+      >
       <FortuneTellerGuestStatusBar />
 
       <UiEntity
@@ -397,7 +445,8 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -416,6 +465,7 @@ function uiComponent() {
               font="serif"
               color={Color4.create(1, 1, 1, waitingAlpha)}
             />
+            <GuestCardCancelCorner show={showGuestCancelButton && showWaitingPanel} />
           </UiEntity>
         </UiEntity>
       )}
@@ -437,7 +487,8 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -466,6 +517,7 @@ function uiComponent() {
               fontSize={22}
               font="serif"
             />
+            <GuestCardCancelCorner show={showGuestCancelButton && isVisible} />
           </UiEntity>
         </UiEntity>
       )}
@@ -487,7 +539,8 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -502,6 +555,7 @@ function uiComponent() {
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
+            <GuestCardCancelCorner show={showGuestCancelButton && showFarewellMaxReadings} />
           </UiEntity>
         </UiEntity>
       )}
@@ -601,7 +655,8 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -653,6 +708,7 @@ function uiComponent() {
                 />
               </UiEntity>
             </UiEntity>
+            <GuestCardCancelCorner show={showGuestCancelButton && showGuestLearnMore} />
           </UiEntity>
         </UiEntity>
       )}
@@ -737,7 +793,8 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -789,6 +846,7 @@ function uiComponent() {
                 />
               </UiEntity>
             </UiEntity>
+            <GuestCardCancelCorner show={showGuestCancelButton && showGuestSuggestedPrompt} />
           </UiEntity>
         </UiEntity>
       )}
@@ -810,7 +868,8 @@ function uiComponent() {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={{
               texture: { src: 'assets/images/card.png' },
@@ -865,6 +924,7 @@ function uiComponent() {
                 color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
               />
             )}
+            <GuestCardCancelCorner show={showGuestCancelButton && showGuestCategories} />
           </UiEntity>
         </UiEntity>
       )}
@@ -963,8 +1023,7 @@ function uiComponent() {
           </UiEntity>
         </UiEntity>
       )}
-
-      {cinematicBarAlpha > 0 && <CinematicLetterbox alpha={cinematicBarAlpha} />}
+      </UiEntity>
     </UiEntity>
   )
 }

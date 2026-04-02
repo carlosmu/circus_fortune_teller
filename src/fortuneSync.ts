@@ -4,7 +4,7 @@ import { Vector3 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { FORTUNES } from './fortunes'
 import { gameData } from './gameState'
-import { showFortune3DText } from './fortune3DText'
+import { hideFortune3DTextImmediate, showFortune3DText } from './fortune3DText'
 import { FORTUNE_TELLER_POSITION } from './scene'
 import { SHOW_3D_FORTUNE } from './sceneConfig'
 import { startRevealFortuneCinematic, stopOrbitCinematic } from './cinematicCamera'
@@ -236,6 +236,7 @@ export function setupFortuneSync() {
   })
 
   fortuneMessageBus.on('hide-fortune', (_data: unknown) => {
+    hideFortune3DTextImmediate()
     const localUserId = getPlayer()?.userId ?? null
     if (localUserId !== null && localUserId === gameData.currentGuestId) {
       stopOrbitCinematic()

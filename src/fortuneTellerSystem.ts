@@ -318,6 +318,24 @@ export function guestAcceptMoreFortune(): void {
   scheduleVirtualHostDelayThenOpenGuestCategories()
 }
 
+/**
+ * El invitado abandona la lectura en cualquier momento (OCUPADO o MOSTRANDO_FORTUNA).
+ * Sincroniza cierre con otros clientes y lo aleja de la silla (mismo flujo que “No” a otra fortuna).
+ */
+export function guestCancelFortuneSession(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId === null || localUserId !== gameData.currentGuestId) return
+  if (gameData.gameState !== 'OCUPADO' && gameData.gameState !== 'MOSTRANDO_FORTUNA') return
+
+  fortuneMessageBus.emit('hide-fortune', {})
+  fortuneMessageBus.emit('guest-seat-update', {
+    seatUserId: null,
+    seatUserName: null
+  })
+  fortuneMessageBus.emit('guest-chair-decline-more', { guestId: localUserId } satisfies GuestChairDeclineMoreMessage)
+  displaceGuestSeatOccupantToRandomArea()
+}
+
 /** No quiere más: cierra sesión y expulsa de la silla (teleport) en el cliente invitado. */
 export function guestDeclineMoreFortune(): void {
   const localUserId = getPlayer()?.userId ?? null
