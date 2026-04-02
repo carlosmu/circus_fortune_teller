@@ -64,13 +64,13 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
   /** X >= umbral: arco lado derecho (yaw 0 to 90 deg, CCW desde arriba). X < umbral: espejo (180 to 90 deg). */
   xThreshold: 8,
   /** Radio horizontal de la órbita (metros). */
-  radius: 6,
+  radius: 4,
   /** Altura local Y del hijo al inicio del arco (interpola hacia cameraHeightEnd). */
-  cameraHeightStart: 4,
+  cameraHeightStart: 0,
   /** Altura local Y del hijo al final del arco. */
-  cameraHeightEnd: 2,
+  cameraHeightEnd: 1.8,
   /** Punto de mira en el centro del pivote, altura local Y. */
-  lookTargetY: 1.5,
+  lookTargetY: 1.8,
   /** Duración del barrido de 90° (segundos). */
   duration: 2.8
 }
@@ -84,11 +84,17 @@ export const GUEST_PIVOT_CINEMATIC_CONFIG = {
   lookTargetY: HOST_PIVOT_CINEMATIC_CONFIG.lookTargetY,
   arcDuration: HOST_PIVOT_CINEMATIC_CONFIG.duration,
   /** Mitad derecha (player.x >= xThreshold): recorrido 210° → 150° (termina en el lado opuesto). */
-  yawStartRight: 210,
-  yawEndRight: 150,
+  yawStartRight: 30,
+  yawEndRight: -30,
   /** Mitad izquierda: espejo 150° → 210°. */
   yawStartLeft: 150,
   yawEndLeft: 210
+  // /** Mitad derecha (player.x >= xThreshold): recorrido 210° → 150° (termina en el lado opuesto). */
+  // yawStartRight: 200,
+  // yawEndRight: 140,
+  // /** Mitad izquierda: espejo 150° → 210°. */
+  // yawStartLeft: 340,
+  // yawEndLeft: 390
 }
 
 type TablePivotCamCfg = { radius: number; lookTargetY: number }
@@ -335,7 +341,7 @@ function ensureGuestPivotRig(): void {
   guestPivotCamEnt = cam
 
   Transform.create(pivot, {
-    position: Vector3.create(0, 0, 0),
+    position: Vector3.create(0, 0, -2),
     rotation: Quaternion.fromEulerDegrees(0, 0, 0),
     parent: TABLE
   })
