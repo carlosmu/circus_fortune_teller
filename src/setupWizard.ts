@@ -26,6 +26,10 @@ import { EntityNames } from '../assets/scene/entity-names'
 const TABLE_CENTER = { x: 8, y: 0, z: 8 }
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
+/** Si entraste por Sit Spot, el avatar queda en la silla (no en FORTUNE_TELLER_POSITION): tolerancia XZ más amplia. */
+const FORTUNE_TELLER_MOVE_THRESHOLD_CHAIR = 2.5
+/** Sit Spot: Fortune_Teller — mismo XZ que composite entity 521 (sincronizar si mueves el sit en el editor). */
+const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
 /** Tiempo en ms sin comprobar movimiento tras convertirse en fortune teller (dar tiempo al teletransporte). */
 const FORTUNE_TELLER_GRACE_MS = 1500
 const FORTUNE_TELLER_HOVER_BECOME = 'Become The Fortune Teller'
@@ -50,16 +54,12 @@ const TRIGGER_FT_MAX_X = TRIGGER_FT_CENTER_X + TRIGGER_FT_HALF_X
 const TRIGGER_FT_MIN_Z = TRIGGER_FT_CENTER_Z - TRIGGER_FT_HALF_Z
 const TRIGGER_FT_MAX_Z = TRIGGER_FT_CENTER_Z + TRIGGER_FT_HALF_Z
 
-/** Centro XZ del Sit Spot: Fortune_Teller (composite 521); radio holgado para avatar sentado. */
-const SIT_SPOT_FT_XZ = { x: 7.84, z: 4.58 }
-const SIT_SPOT_FT_RADIUS = 2.2
-/** Tras entrar al trigger, ventana para reclamar FT al sentarse con E (sin tocar PointerEvents de proximidad). */
-const SIT_FT_ARM_MS = 25000
-
 let playerWasInFortuneTellerTrigger = false
-let sitFtClaimArmUntilMs = 0
-let wasNearSitForFtClaim = false
 let fortuneTellerSitSpotRegistered = false
+/** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
+let fortuneTellerJoinedViaSitSpot = false
+/** Mientras movePlayerTo/emote del Sit Spot no terminaron, no aplicar la regla de alejamiento. */
+let sitSpotFtTeleportPending = false
 let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
 let fortuneTellerBecameAtMs: number = 0
 let lastFortuneTellerColliderMode: 'become' | 'wait' | 'disabled-self' | 'disabled-taken' | null = null
@@ -75,6 +75,25 @@ function distance(a: { x: number; y: number; z: number }, b: { x: number; y: num
   return Math.sqrt(dx * dx + dy * dy + dz * dz)
 }
 
+function horizontalDistance(
+  a: { x: number; z: number },
+  b: { x: number; z: number }
+): number {
+  const dx = a.x - b.x
+  const dz = a.z - b.z
+  return Math.sqrt(dx * dx + dz * dz)
+}
+
+function playerStillAtFortuneTellerStation(playerPos: { x: number; y: number; z: number }): boolean {
+  if (!lastFortuneTellerPosition) return true
+  if (fortuneTellerJoinedViaSitSpot) {
+    const dSit = horizontalDistance(playerPos, SIT_SPOT_FT_STATION)
+    const dFt = horizontalDistance(playerPos, FORTUNE_TELLER_POSITION)
+    return Math.min(dSit, dFt) <= FORTUNE_TELLER_MOVE_THRESHOLD_CHAIR
+  }
+  return distance(playerPos, lastFortuneTellerPosition) <= FORTUNE_TELLER_MOVE_THRESHOLD
+}
+
 function clearFortuneTellerAndShowWizard() {
   const previousName = gameData.currentFortuneTellerName?.trim() || 'Someone'
   gameData.currentFortuneTellerId = null
@@ -88,6 +107,8 @@ function clearFortuneTellerAndShowWizard() {
   gameData.centerBannerUntilMs = Date.now() + 2200
   lastFortuneTellerPosition = null
   fortuneTellerBecameAtMs = 0
+  fortuneTellerJoinedViaSitSpot = false
+  sitSpotFtTeleportPending = false
   stopOrbitCinematic()
   fortuneMessageBus.emit('set-fortune-teller', {
     fortuneTellerId: null,
@@ -131,12 +152,14 @@ function releaseFortuneTellerBySessionRules(): void {
   moveFortuneTellerToRandomArea()
 }
 
-function fortuneTellerClickCallback() {
+function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
+  const fromSitSpot = opts?.fromSitSpot === true
   const player = getPlayer()
   const userId = player?.userId ?? null
   if (!userId) return
   if (gameData.currentFortuneTellerId === userId) return
   if (gameData.currentFortuneTellerId !== null) return
+  hideBecomeFortuneTellerPrompt()
   const ftName = player?.name?.trim() || null
   gameData.currentFortuneTellerId = userId
   gameData.currentFortuneTellerName = ftName
@@ -166,47 +189,78 @@ function fortuneTellerClickCallback() {
     centerBannerUntilMs: gameData.centerBannerUntilMs
   })
   fortuneTellerBecameAtMs = now
-  lastFortuneTellerPosition = {
-    x: FORTUNE_TELLER_POSITION.x,
-    y: FORTUNE_TELLER_POSITION.y,
-    z: FORTUNE_TELLER_POSITION.z
+  fortuneTellerJoinedViaSitSpot = fromSitSpot
+  lastFortuneTellerPosition = fromSitSpot
+    ? {
+        x: SIT_SPOT_FT_STATION.x,
+        y: SIT_SPOT_FT_STATION.y,
+        z: SIT_SPOT_FT_STATION.z
+      }
+    : {
+        x: FORTUNE_TELLER_POSITION.x,
+        y: FORTUNE_TELLER_POSITION.y,
+        z: FORTUNE_TELLER_POSITION.z
+      }
+
+  if (fromSitSpot) {
+    // La cámara de órbita al mismo tiempo que el clic suele anular el “sit” del composite.
+    // Primero movePlayerTo + emote en la silla, luego la cinemática.
+    sitSpotFtTeleportPending = true
+    executeTask(async () => {
+      try {
+        await movePlayerTo({
+          newRelativePosition: {
+            x: SIT_SPOT_FT_STATION.x,
+            y: 0,
+            z: SIT_SPOT_FT_STATION.z
+          },
+          cameraTarget: {
+            x: FORTUNE_TELLER_CAMERA_TARGET.x,
+            y: FORTUNE_TELLER_CAMERA_TARGET.y,
+            z: FORTUNE_TELLER_CAMERA_TARGET.z
+          }
+        })
+        await triggerEmote({ predefinedEmote: 'sittingChair1' })
+      } catch (_e) {
+      } finally {
+        sitSpotFtTeleportPending = false
+      }
+      startOrbitCinematic(
+        TABLE_CENTER,
+        { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z },
+        () => {}
+      )
+    })
+  } else {
+    startOrbitCinematic(
+      TABLE_CENTER,
+      { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z },
+      () => {}
+    )
+    executeTask(async () => {
+      try {
+        await movePlayerTo({
+          newRelativePosition: {
+            x: FORTUNE_TELLER_POSITION.x,
+            y: FORTUNE_TELLER_POSITION.y,
+            z: FORTUNE_TELLER_POSITION.z
+          },
+          cameraTarget: {
+            x: FORTUNE_TELLER_CAMERA_TARGET.x,
+            y: FORTUNE_TELLER_CAMERA_TARGET.y,
+            z: FORTUNE_TELLER_CAMERA_TARGET.z
+          }
+        })
+        await triggerEmote({ predefinedEmote: 'sittingChair1' })
+      } catch (_e) {}
+    })
   }
-
-  startOrbitCinematic(
-    TABLE_CENTER,
-    { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z },
-    () => {}
-  )
-
-  executeTask(async () => {
-    try {
-      await movePlayerTo({
-        newRelativePosition: {
-          x: FORTUNE_TELLER_POSITION.x,
-          y: FORTUNE_TELLER_POSITION.y,
-          z: FORTUNE_TELLER_POSITION.z
-        },
-        cameraTarget: {
-          x: FORTUNE_TELLER_CAMERA_TARGET.x,
-          y: FORTUNE_TELLER_CAMERA_TARGET.y,
-          z: FORTUNE_TELLER_CAMERA_TARGET.z
-        }
-      })
-      await triggerEmote({ predefinedEmote: 'sittingChair1' })
-    } catch (_e) {}
-  })
 }
 
-/**
- * Clic en el Sit Spot (cursor) → mismo flujo que el collider del wizard.
- * No registramos onProximityDown: en el SDK pisa el handler de `Down` y altera PointerEvents,
- * rompiendo la E del composite. La E la sigue manejando el Creator; el Fortune Teller tras
- * sentarse se cubre con detección XZ + brazo temporal al entrar al trigger (ver system).
- */
+/** Clic (cursor) en el Sit Spot del composite → mismo flujo que el collider del wizard. */
 function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.addEntity>): void {
   const onInteract = () => {
-    hideBecomeFortuneTellerPrompt()
-    fortuneTellerClickCallback()
+    fortuneTellerClickCallback({ fromSitSpot: true })
   }
   pointerEventsSystem.onPointerDown(
     {
@@ -244,7 +298,7 @@ function registerFortuneTellerColliderPointer(
         hoverText
       }
     },
-    enabled ? fortuneTellerClickCallback : () => {}
+    enabled ? () => fortuneTellerClickCallback() : () => {}
   )
 }
 
@@ -326,7 +380,7 @@ export function setupWizard() {
   }
 
   engine.addSystem((dt: number) => {
-    // --- Trigger area: show/hide "become fortune teller" animated prompt ---
+    // --- Volumen "Trigger: Fortune_Teller" (AABB en código): solo muestra/oculta el GLB become_fortune_teller ---
     if (Transform.has(engine.PlayerEntity)) {
       const playerPos = Transform.get(engine.PlayerEntity).position
       const insideTrigger =
@@ -337,27 +391,9 @@ export function setupWizard() {
       if (insideTrigger && !playerWasInFortuneTellerTrigger) {
         playerWasInFortuneTellerTrigger = true
         showBecomeFortuneTellerPrompt()
-        sitFtClaimArmUntilMs = Date.now() + SIT_FT_ARM_MS
       } else if (!insideTrigger && playerWasInFortuneTellerTrigger) {
         playerWasInFortuneTellerTrigger = false
         hideBecomeFortuneTellerPrompt()
-        sitFtClaimArmUntilMs = 0
-        wasNearSitForFtClaim = false
-      }
-
-      // Sentarse con E: el composite mueve al avatar; sin tocar proximidad del SDK, detectamos XZ cerca de la silla
-      // solo si antes entraste al trigger (evita activar al cruzar la zona de casualidad).
-      const dx = playerPos.x - SIT_SPOT_FT_XZ.x
-      const dz = playerPos.z - SIT_SPOT_FT_XZ.z
-      const horizToSit = Math.sqrt(dx * dx + dz * dz)
-      const nearSitSpot = horizToSit <= SIT_SPOT_FT_RADIUS
-      const armActive = Date.now() < sitFtClaimArmUntilMs
-      if (nearSitSpot && !wasNearSitForFtClaim && armActive && gameData.currentFortuneTellerId === null) {
-        wasNearSitForFtClaim = true
-        hideBecomeFortuneTellerPrompt()
-        fortuneTellerClickCallback()
-      } else if (!nearSitSpot) {
-        wasNearSitForFtClaim = false
       }
     }
 
@@ -438,11 +474,12 @@ export function setupWizard() {
 
     if (gameData.currentFortuneTellerId !== localUserId || !lastFortuneTellerPosition) return
     if (Date.now() - fortuneTellerBecameAtMs < FORTUNE_TELLER_GRACE_MS) return
+    if (fortuneTellerJoinedViaSitSpot && sitSpotFtTeleportPending) return
     if (!Transform.has(engine.PlayerEntity)) return
 
     const pos = Transform.get(engine.PlayerEntity).position
     const current = { x: pos.x, y: pos.y, z: pos.z }
-    if (distance(current, lastFortuneTellerPosition) > FORTUNE_TELLER_MOVE_THRESHOLD) {
+    if (!playerStillAtFortuneTellerStation(current)) {
       clearFortuneTellerAndShowWizard()
     }
   })
