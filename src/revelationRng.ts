@@ -21,12 +21,18 @@ export function hashString(s: string): number {
   return h >>> 0
 }
 
-/** Frases al completar 3 lecturas en la misma sesión (elige una en todos los clientes con el mismo índice). */
+/** Diez frases al completar 3 lecturas en la misma sesión (elige una en todos los clientes con el mismo índice). */
 export const GUEST_MAX_READINGS_FAREWELL_LINES: readonly string[] = [
   "Do not tempt fate—you've learned enough.",
   'The cards have spoken. No more.',
   'Your fate is sealed. Ask no further.',
-  'Some truths are not meant to be chased.'
+  'Some truths are not meant to be chased.',
+  "Tempt not fate—you've seen enough.",
+  'The veil closes. No more questions.',
+  'Your path is revealed. Go no further.',
+  'The spirits fall silent. It is done.',
+  'No more threads may be pulled.',
+  "What's known is enough—press no further."
 ]
 
 export function pickGuestMaxReadingsFarewellLine(guestId: string, roundSalt: number): string {
