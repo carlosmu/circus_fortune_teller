@@ -35,7 +35,7 @@ const FORTUNE_TELLER_HOVER_BECOME = 'Become The Fortune Teller'
 const WIZARD_MOVE_OFFSET_X = 2
 const WIZARD_MOVE_OFFSET_Z = -1
 const WIZARD_MOVE_SPEED = 6
-const FORTUNE_TELLER_SESSION_INITIAL_MS = 30000
+const FORTUNE_TELLER_SESSION_INITIAL_MS = 60000
 const FORTUNE_TELLER_RANDOM_MIN_X = 3
 const FORTUNE_TELLER_RANDOM_MAX_X = 13
 const FORTUNE_TELLER_RANDOM_MIN_Z = 7
@@ -163,7 +163,7 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   gameData.fortuneTellerMaxReadings = 3
   gameData.fortuneTellerSessionEndsAtMs = now + FORTUNE_TELLER_SESSION_INITIAL_MS
   gameData.fortuneTellerReleaseAtMs = null
-  gameData.fortuneTellerTimeRemainingSec = 30
+  gameData.fortuneTellerTimeRemainingSec = 60
   gameData.centerBannerText = `${ftName ?? 'Someone'} is becoming the Fortune Teller`
   gameData.centerBannerUntilMs = now + 2200
   fortuneMessageBus.emit('set-fortune-teller', {

@@ -9,9 +9,9 @@ let fortuneTellerSystemInitialized = false
 let fortuneTellerTimer = 0
 let lastAutoCategory: FortuneCategory | null = null
 const FORTUNE_TELLER_REVEAL_DELAY = 3
-const FORTUNE_TELLER_READING_BONUS_MS = 15000
-const FORTUNE_TELLER_MAX_SESSION_MS = 60000
-const FORTUNE_TELLER_RELEASE_DELAY_AFTER_LAST_READING_MS = 3000
+const FORTUNE_TELLER_READING_BONUS_MS = 30000
+const FORTUNE_TELLER_MAX_SESSION_MS = 120000
+const FORTUNE_TELLER_RELEASE_DELAY_AFTER_LAST_READING_MS = 6000
 
 /**
  * Picks a random fortune for the category and reveals it to everyone (fortune teller only, from UI).
