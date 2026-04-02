@@ -1,6 +1,6 @@
 import { engine, Transform, VirtualCamera, MainCamera } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
-import { TABLE, WIZARD, FORTUNE_TELLER_POSITION } from './scene'
+import { TABLE, WIZARD } from './scene'
 import { gameData } from './gameState'
 
 type Vec3 = { x: number; y: number; z: number }
@@ -75,6 +75,24 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
   duration: 2.8
 }
 
+/** Guest: mismo radio/alturas/mira que host; arco 210°↔150° según mitad del escena (X respecto al centro mesa). */
+export const GUEST_PIVOT_CINEMATIC_CONFIG = {
+  xThreshold: HOST_PIVOT_CINEMATIC_CONFIG.xThreshold,
+  radius: HOST_PIVOT_CINEMATIC_CONFIG.radius,
+  cameraHeightStart: HOST_PIVOT_CINEMATIC_CONFIG.cameraHeightStart,
+  cameraHeightEnd: HOST_PIVOT_CINEMATIC_CONFIG.cameraHeightEnd,
+  lookTargetY: HOST_PIVOT_CINEMATIC_CONFIG.lookTargetY,
+  arcDuration: HOST_PIVOT_CINEMATIC_CONFIG.duration,
+  /** Mitad derecha (player.x >= xThreshold): recorrido 210° → 150° (termina en el lado opuesto). */
+  yawStartRight: 210,
+  yawEndRight: 150,
+  /** Mitad izquierda: espejo 150° → 210°. */
+  yawStartLeft: 150,
+  yawEndLeft: 210
+}
+
+type TablePivotCamCfg = { radius: number; lookTargetY: number }
+
 export let cinematicBarAlpha = 0
 export let cinematicActive = false
 
@@ -100,11 +118,6 @@ let cinematicMode: 'none' | 'orbit' | 'reveal' | 'hostPivotArc' = 'none'
 
 let revealPhase: 'blend-in' | 'hold' | 'blend-out' = 'blend-in'
 let revealElapsed = 0
-let revealStartPos: Vec3 = { x: 8, y: 1, z: 10 }
-let revealClosePos: Vec3 = { x: 8, y: 2, z: 8 }
-let revealLookTarget: Vec3 = { x: 8, y: 2, z: 6 }
-let revealReturnLookTarget: Vec3 = { x: 8, y: 1, z: 7 }
-let revealStartLookDir: Vec3 = { x: 0, y: 0, z: 1 }
 
 let hostPivotPivotEnt: ReturnType<typeof engine.addEntity> | null = null
 let hostPivotCamEnt: ReturnType<typeof engine.addEntity> | null = null
@@ -112,6 +125,12 @@ let hostPivotElapsed = 0
 let hostPivotYawStart = 0
 let hostPivotYawEnd = 90
 let hostPivotCompleteCb: (() => void) | null = null
+
+let guestPivotPivotEnt: ReturnType<typeof engine.addEntity> | null = null
+let guestPivotCamEnt: ReturnType<typeof engine.addEntity> | null = null
+/** Yaws del arco de entrada (deg); la salida invierte inicio/fin. */
+let guestArcYawStart = 210
+let guestArcYawEnd = 150
 
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
@@ -137,6 +156,14 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
 }
 
+/** Interpolación yaw en grados por el arco más corto (evita dar la vuelta larga 210↔150). */
+function lerpAngleDeg(fromDeg: number, toDeg: number, t: number): number {
+  let diff = toDeg - fromDeg
+  while (diff > 180) diff -= 360
+  while (diff < -180) diff += 360
+  return fromDeg + diff * t
+}
+
 function lerpVec(a: Vec3, b: Vec3, t: number): Vec3 {
   return {
     x: lerp(a.x, b.x, t),
@@ -156,8 +183,8 @@ function lookDir(from: Vec3, to: Vec3): Vec3 {
 }
 
 /** Posición local del hijo (radio, Y, 0) y rotación hacia (0, lookTargetY, 0) en espacio del pivote. */
-function setHostPivotCameraLocalPose(
-  cfg: typeof HOST_PIVOT_CINEMATIC_CONFIG,
+function setTablePivotCameraLocalPose(
+  cfg: TablePivotCamCfg,
   cam: ReturnType<typeof engine.addEntity>,
   heightY: number
 ): void {
@@ -258,7 +285,7 @@ function ensureHostPivotRig(): void {
     defaultTransition: { transitionMode: VirtualCamera.Transition.Speed(20) }
   })
 
-  setHostPivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
+  setTablePivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
 }
 
 /**
@@ -291,11 +318,39 @@ export function startHostCinematicCamera(playerPos: Vec3, onComplete?: () => voi
 
   const ptr = Transform.getMutable(pivot)
   ptr.rotation = Quaternion.fromEulerDegrees(0, hostPivotYawStart, 0)
-  setHostPivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
+  setTablePivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
 
   if (MainCamera.has(engine.CameraEntity)) {
     MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = cam
   }
+}
+
+function ensureGuestPivotRig(): void {
+  const cfg = GUEST_PIVOT_CINEMATIC_CONFIG
+  if (guestPivotPivotEnt !== null && guestPivotCamEnt !== null) return
+
+  const pivot = engine.addEntity()
+  const cam = engine.addEntity()
+  guestPivotPivotEnt = pivot
+  guestPivotCamEnt = cam
+
+  Transform.create(pivot, {
+    position: Vector3.create(0, 0, 0),
+    rotation: Quaternion.fromEulerDegrees(0, 0, 0),
+    parent: TABLE
+  })
+
+  Transform.create(cam, {
+    position: Vector3.create(cfg.radius, cfg.cameraHeightStart, 0),
+    rotation: Quaternion.fromEulerDegrees(0, 0, 0),
+    parent: pivot
+  })
+
+  VirtualCamera.create(cam, {
+    defaultTransition: { transitionMode: VirtualCamera.Transition.Speed(20) }
+  })
+
+  setTablePivotCameraLocalPose(cfg, cam, cfg.cameraHeightStart)
 }
 
 export function startOrbitCinematic(pivotPos: Vec3, finalPos: Vec3, onComplete: () => void): void {
@@ -342,35 +397,24 @@ export function startOrbitCinematic(pivotPos: Vec3, finalPos: Vec3, onComplete: 
 
 export function startRevealFortuneCinematic(): void {
   if (cinematicMode === 'reveal') return
-  const e = getOrCreateCamEntity()
   if (!Transform.has(engine.CameraEntity)) return
 
-  const currentCam = Transform.get(engine.CameraEntity)
-  revealStartPos = {
-    x: currentCam.position.x,
-    y: currentCam.position.y,
-    z: currentCam.position.z
-  }
-  const currentFwd = Vector3.rotate(Vector3.Forward(), currentCam.rotation)
-  revealStartLookDir = normalize({ x: currentFwd.x, y: currentFwd.y, z: currentFwd.z })
-  revealReturnLookTarget = {
-    x: revealStartPos.x + revealStartLookDir.x * 4,
-    y: revealStartPos.y + revealStartLookDir.y * 4,
-    z: revealStartPos.z + revealStartLookDir.z * 4
+  const cfgG = GUEST_PIVOT_CINEMATIC_CONFIG
+  const playerPos = Transform.has(engine.PlayerEntity)
+    ? Transform.get(engine.PlayerEntity).position
+    : { x: 8, y: 0, z: 8 }
+
+  if (playerPos.x >= cfgG.xThreshold) {
+    guestArcYawStart = cfgG.yawStartRight
+    guestArcYawEnd = cfgG.yawEndRight
+  } else {
+    guestArcYawStart = cfgG.yawStartLeft
+    guestArcYawEnd = cfgG.yawEndLeft
   }
 
-  // Always use fixed fortune teller spot for reveal closeup, independent from wizard mesh.
-  const ftPos = FORTUNE_TELLER_POSITION
-  revealClosePos = {
-    x: ftPos.x + CINEMATIC_CONFIG.revealCamOffsetX,
-    y: ftPos.y + CINEMATIC_CONFIG.revealCamOffsetY,
-    z: ftPos.z + CINEMATIC_CONFIG.revealCamOffsetZ
-  }
-  revealLookTarget = {
-    x: ftPos.x + CINEMATIC_CONFIG.revealTargetOffsetX,
-    y: ftPos.y + CINEMATIC_CONFIG.revealTargetOffsetY,
-    z: ftPos.z + CINEMATIC_CONFIG.revealTargetOffsetZ
-  }
+  ensureGuestPivotRig()
+  const pivotEnt = guestPivotPivotEnt!
+  const camEnt = guestPivotCamEnt!
 
   revealPhase = 'blend-in'
   revealElapsed = 0
@@ -380,14 +424,13 @@ export function startRevealFortuneCinematic(): void {
   isOrbiting = false
   isSettling = false
   completeCb = null
-  smoothedLookDir = revealStartLookDir
 
-  const tr = Transform.getMutable(e)
-  tr.position = Vector3.create(revealStartPos.x, revealStartPos.y, revealStartPos.z)
-  tr.rotation = currentCam.rotation
+  const ptr = Transform.getMutable(pivotEnt)
+  ptr.rotation = Quaternion.fromEulerDegrees(0, guestArcYawStart, 0)
+  setTablePivotCameraLocalPose(cfgG, camEnt, cfgG.cameraHeightStart)
 
   if (MainCamera.has(engine.CameraEntity)) {
-    MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = e
+    MainCamera.getMutable(engine.CameraEntity).virtualCameraEntity = camEnt
   }
 }
 
@@ -428,7 +471,7 @@ export function setupCinematicCamera(): void {
       const camH = lerp(cfg.cameraHeightStart, cfg.cameraHeightEnd, t)
       const ptr = Transform.getMutable(hostPivotPivotEnt)
       ptr.rotation = Quaternion.fromEulerDegrees(0, yaw, 0)
-      setHostPivotCameraLocalPose(cfg, hostPivotCamEnt, camH)
+      setTablePivotCameraLocalPose(cfg, hostPivotCamEnt, camH)
 
       if (rawT >= 1) {
         cinematicMode = 'none'
@@ -443,25 +486,25 @@ export function setupCinematicCamera(): void {
       return
     }
 
-    if (!cinematicActive || camEntity === null) return
+    if (
+      cinematicActive &&
+      cinematicMode === 'reveal' &&
+      guestPivotPivotEnt !== null &&
+      guestPivotCamEnt !== null
+    ) {
+      const cfgG = GUEST_PIVOT_CINEMATIC_CONFIG
+      const pivotEnt = guestPivotPivotEnt
+      const camEnt = guestPivotCamEnt
 
-    const tableLookTarget: Vec3 = { x: pivot.x, y: 1, z: pivot.z }
-
-    if (cinematicMode === 'reveal') {
-      const tr = Transform.getMutable(camEntity)
       if (revealPhase === 'blend-in') {
         revealElapsed += dt
-        const t = smootherstep(clamp01(revealElapsed / CINEMATIC_CONFIG.revealBlendInDuration))
-        const pos = lerpVec(revealStartPos, revealClosePos, t)
-        const targetDir = lookDir(pos, revealLookTarget)
-        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
-        tr.position.x = pos.x
-        tr.position.y = pos.y
-        tr.position.z = pos.z
-        tr.rotation = Quaternion.lookRotation(
-          Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
-        )
-        if (t >= 1) {
+        const rawT = clamp01(revealElapsed / cfgG.arcDuration)
+        const t = easeInOutQuad(rawT)
+        const yaw = lerpAngleDeg(guestArcYawStart, guestArcYawEnd, t)
+        const camH = lerp(cfgG.cameraHeightStart, cfgG.cameraHeightEnd, t)
+        Transform.getMutable(pivotEnt).rotation = Quaternion.fromEulerDegrees(0, yaw, 0)
+        setTablePivotCameraLocalPose(cfgG, camEnt, camH)
+        if (rawT >= 1) {
           revealPhase = 'hold'
           revealElapsed = 0
         }
@@ -469,42 +512,29 @@ export function setupCinematicCamera(): void {
       }
 
       if (revealPhase === 'hold') {
-        const targetDir = lookDir(revealClosePos, revealLookTarget)
-        smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
-        tr.position.x = revealClosePos.x
-        tr.position.y = revealClosePos.y
-        tr.position.z = revealClosePos.z
-        tr.rotation = Quaternion.lookRotation(
-          Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
-        )
+        Transform.getMutable(pivotEnt).rotation = Quaternion.fromEulerDegrees(0, guestArcYawEnd, 0)
+        setTablePivotCameraLocalPose(cfgG, camEnt, cfgG.cameraHeightEnd)
         const fortuneRevealed = gameData.gameState === 'MOSTRANDO_FORTUNA'
         if (fortuneRevealed) {
-          // Start counting post-reveal delay from the moment fortune was revealed.
           revealElapsed += dt
           if (revealElapsed >= CINEMATIC_CONFIG.revealPostRevealDelay) {
             revealPhase = 'blend-out'
             revealElapsed = 0
           }
         } else {
-          // Fortune not yet revealed — reset counter so delay is always measured from revelation.
           revealElapsed = 0
         }
         return
       }
 
       revealElapsed += dt
-      const t = smootherstep(clamp01(revealElapsed / CINEMATIC_CONFIG.revealBlendOutDuration))
-      const pos = lerpVec(revealClosePos, revealStartPos, t)
-      const outLook = lerpVec(revealLookTarget, revealReturnLookTarget, t)
-      const targetDir = lookDir(pos, outLook)
-      smoothedLookDir = normalize(lerpVec(smoothedLookDir, targetDir, CINEMATIC_CONFIG.revealRotationDamping))
-      tr.position.x = pos.x
-      tr.position.y = pos.y
-      tr.position.z = pos.z
-      tr.rotation = Quaternion.lookRotation(
-        Vector3.create(smoothedLookDir.x, smoothedLookDir.y, smoothedLookDir.z)
-      )
-      if (t >= 1) {
+      const rawOut = clamp01(revealElapsed / CINEMATIC_CONFIG.revealBlendOutDuration)
+      const tOut = easeInOutQuad(rawOut)
+      const yawOut = lerpAngleDeg(guestArcYawEnd, guestArcYawStart, tOut)
+      const camHOut = lerp(cfgG.cameraHeightEnd, cfgG.cameraHeightStart, tOut)
+      Transform.getMutable(pivotEnt).rotation = Quaternion.fromEulerDegrees(0, yawOut, 0)
+      setTablePivotCameraLocalPose(cfgG, camEnt, camHOut)
+      if (rawOut >= 1) {
         cinematicMode = 'none'
         cinematicActive = false
         if (MainCamera.has(engine.CameraEntity)) {
@@ -513,6 +543,10 @@ export function setupCinematicCamera(): void {
       }
       return
     }
+
+    if (!cinematicActive || camEntity === null) return
+
+    const tableLookTarget: Vec3 = { x: pivot.x, y: 1, z: pivot.z }
 
     if (isBlending) {
       blendElapsed += dt
