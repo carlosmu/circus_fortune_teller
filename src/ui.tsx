@@ -6,10 +6,15 @@ import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { SHOW_UI_FORTUNE } from './sceneConfig'
 import {
+  fortuneTellerSuggestCategory,
+  getFirstStepCategoryOptionsForUi,
+  getGuestFallbackCategoryOptionsForUi,
   fortuneTellerInviteGuestToChooseTopic,
   fortuneTellerSubmitKind,
+  guestAcceptSuggestedCategory,
   guestAcceptMoreFortune,
   guestDeclineMoreFortune,
+  guestRejectSuggestedCategory,
   guestSubmitChosenCategory
 } from './fortuneTellerSystem'
 import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
@@ -49,21 +54,6 @@ const WAITING_FORTUNE_LINES = [
   'What lies ahead is...'
 ]
 
-const HOST_TOPIC_PROMPTS_BY_ITERATION = {
-  1: [
-    'I sense matters of the heart… or something deeper.',
-    'Is it love… or something heavier that troubles you?'
-  ],
-  2: [
-    "We've spoken of one path… now another calls.",
-    'Another thread reveals itself. Choose with care.'
-  ],
-  3: [
-    'One final veil remains. Choose what must be known.',
-    'The last card waits. Speak your final concern.'
-  ]
-} as const
-
 const GUEST_THEME_PROMPTS_BY_ITERATION = {
   1: ['Choose the thread you wish to reveal.'],
   2: ['We have touched one truth; choose another path.'],
@@ -89,16 +79,88 @@ function pickBySessionSalt(lines: readonly string[]): string {
   return lines[hashString(seed) % lines.length]!
 }
 
-function hostTopicPrompt(): string {
-  return pickBySessionSalt(HOST_TOPIC_PROMPTS_BY_ITERATION[gameData.currentIteration])
-}
-
 function guestThemePrompt(): string {
   return pickBySessionSalt(GUEST_THEME_PROMPTS_BY_ITERATION[gameData.currentIteration])
 }
 
 function repeatPromptLine(): string {
   return pickBySessionSalt(REPEAT_PROMPT_OPTIONS)
+}
+
+function getIntroLine(category: FortuneCategory): string {
+  const byCategory: Record<FortuneCategory, string[]> = {
+    love: [
+      'I sense something stirring in your heart…',
+      'Your heart is not at rest…',
+      'There is a feeling you cannot ignore…'
+    ],
+    money: [
+      'I sense unease in your fortune…',
+      'Something shifts in your wealth…',
+      'Your path with fortune is uncertain…'
+    ],
+    work: [
+      'Your path of labor feels troubled…',
+      'There is tension in your work…',
+      'Your efforts may not lead where you expect…'
+    ],
+    health: [
+      'Your strength wavers…',
+      'I sense imbalance within you…',
+      'Something in you seeks attention…'
+    ],
+    luck: [
+      'Chance does not favor you equally…',
+      'Luck turns in uncertain ways…',
+      'Fortune flickers around you…'
+    ],
+    mystery: [
+      'Something hidden surrounds you…',
+      'There is more than meets the eye…',
+      'A veil lingers over your path…'
+    ],
+    pets: ['Something hidden surrounds you…'],
+    family: ['I sense something stirring in your heart…'],
+    travel: ['Luck turns in uncertain ways…']
+  }
+  const variants = byCategory[category]
+  const idx = hashString(`${category}:intro:${gameData.revelationRoundSalt}:${gameData.currentIteration}`) % variants.length
+  return variants[idx]!
+}
+
+function getConfirmLine(category: FortuneCategory): string {
+  const byCategory: Record<FortuneCategory, string[]> = {
+    love: [
+      'Shall I reveal what love holds for you?',
+      'Shall I unveil what love holds for you?'
+    ],
+    money: [
+      'Shall I reveal what fate holds for your wealth?',
+      'Shall I reveal what destiny holds for your wealth?'
+    ],
+    work: [
+      'Shall I reveal what lies ahead in your path of work?',
+      'Shall I reveal what lies ahead in your work path?'
+    ],
+    health: [
+      'Shall I reveal what lies ahead for your well-being?',
+      'Shall I reveal what lies ahead for your balance and well-being?'
+    ],
+    luck: [
+      'Shall I reveal how chance favors you?',
+      'Shall I reveal how chance may favor you?'
+    ],
+    mystery: [
+      'Shall I reveal what lies beyond the veil?',
+      'Shall I reveal what waits beyond the veil?'
+    ],
+    pets: ['Shall I reveal what lies beyond the veil?'],
+    family: ['Shall I reveal what love holds for you?'],
+    travel: ['Shall I reveal how chance favors you?']
+  }
+  const variants = byCategory[category]
+  const idx = hashString(`${category}:confirm:${gameData.revelationRoundSalt}:${gameData.currentIteration}`) % variants.length
+  return variants[idx]!
 }
 
 function pickWaitingLine(seed: string): string {
@@ -122,11 +184,11 @@ function revelationWaitingCaption(
     case 'ft_asks_topic':
       if (hasHumanFortuneTeller) {
         if (isGuest) {
-          if (gameData.currentIteration === 1) return 'The Fortune Teller is sensing your first thread...'
+          if (gameData.currentIteration === 1) return 'The Fortune Teller is choosing a thread to ask you about...'
           if (gameData.currentIteration === 2 && priorLabel) {
-            return `We've spoken of ${priorLabel.toLowerCase()}… now another path calls.`
+            return `We've spoken of ${priorLabel.toLowerCase()}… now the Fortune Teller chooses another thread.`
           }
-          return 'One final thread remains. Listen closely...'
+          return 'One final thread is being chosen. Listen closely...'
         }
         if (isFortuneTeller) return ''
         return 'Waiting for the Fortune Teller...'
@@ -136,6 +198,9 @@ function revelationWaitingCaption(
     case 'guest_chooses_category':
       if (isGuest) return ''
       return 'Waiting for the guest to choose a theme...'
+    case 'guest_suggested_category_prompt':
+      if (isGuest) return ''
+      return 'Waiting for the guest to accept or reject the omen...'
     case 'ft_chooses_kind':
       if (hasHumanFortuneTeller) {
         if (isGuest) return 'The Fortune Teller is choosing how to phrase your fortune...'
@@ -208,6 +273,12 @@ function uiComponent() {
     gameData.gameState === 'OCUPADO' &&
     phase === 'guest_chooses_category' &&
     isGuest
+  const showGuestSuggestedPrompt =
+    SHOW_UI_FORTUNE &&
+    gameData.gameState === 'OCUPADO' &&
+    phase === 'guest_suggested_category_prompt' &&
+    isGuest &&
+    gameData.suggestedCategory !== null
 
   const showFtKinds =
     SHOW_UI_FORTUNE &&
@@ -216,15 +287,18 @@ function uiComponent() {
     isFortuneTeller
 
   const guestCategoryOptions =
-    gameData.gameState === 'OCUPADO' && phase === 'guest_chooses_category' && gameData.currentGuestId
-      ? pickThreeGuestCategoriesSeeded(gameData.currentGuestId, gameData.revelationRoundSalt)
+    gameData.gameState === 'OCUPADO' && phase === 'guest_chooses_category'
+      ? getGuestFallbackCategoryOptionsForUi()
       : null
   const guestCategoryAvailableOptions = guestCategoryOptions
-    ? guestCategoryOptions.filter((cat) => !gameData.previouslySelectedCategories.includes(cat))
+    ? guestCategoryOptions
     : null
+  const firstStepFtOptions =
+    gameData.gameState === 'OCUPADO' && phase === 'ft_asks_topic' ? getFirstStepCategoryOptionsForUi() : []
 
   const activeOwnsInteraction =
     (isFortuneTeller && (phase === 'ft_asks_topic' || phase === 'ft_chooses_kind')) ||
+    (isGuest && phase === 'guest_suggested_category_prompt') ||
     (isGuest && phase === 'guest_chooses_category') ||
     (isGuest && phase === 'guest_learn_more')
 
@@ -608,25 +682,112 @@ function uiComponent() {
             }}
           >
             <Label
-              uiTransform={{ width: '88%', height: '28%' }}
-              value={hostTopicPrompt()}
+              uiTransform={{ width: '88%', height: '22%' }}
+              value={'Choose one thread to ask the guest about:'}
               textAlign="middle-center"
               fontSize={17}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
             <UiEntity
-              uiTransform={{ width: '70%', height: '18%', margin: { top: 12 } }}
-              uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
-              onMouseDown={() => fortuneTellerInviteGuestToChooseTopic()}
+              uiTransform={{
+                width: '78%',
+                height: '34%',
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                alignItems: 'stretch',
+                margin: { top: 10 }
+              }}
             >
-              <Label
-                uiTransform={{ width: '100%', height: '100%' }}
-                value="Continue"
-                textAlign="middle-center"
-                fontSize={16}
-                font="serif"
-              />
+              {firstStepFtOptions.map((cat, index) => (
+                <UiEntity
+                  key={`${cat}:${index}`}
+                  uiTransform={{ width: '30%', height: '70%' }}
+                  uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                  onMouseDown={() => fortuneTellerSuggestCategory(cat)}
+                >
+                  <Label
+                    uiTransform={{ width: '100%', height: '100%' }}
+                    value={CATEGORY_LABELS[cat]}
+                    textAlign="middle-center"
+                    fontSize={14}
+                    font="serif"
+                  />
+                </UiEntity>
+              ))}
+            </UiEntity>
+          </UiEntity>
+        </UiEntity>
+      )}
+
+      {showGuestSuggestedPrompt && (
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: '30%',
+              height: '55%',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              margin: { top: CARD_UI_VERTICAL_OFFSET }
+            }}
+            uiBackground={{
+              texture: { src: 'assets/images/card.png' },
+              textureMode: 'stretch'
+            }}
+          >
+            <Label
+              uiTransform={{ width: '90%', height: '35%' }}
+              value={getConfirmLine(gameData.suggestedCategory!)}
+              textAlign="middle-center"
+              fontSize={17}
+              font="serif"
+              color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+            />
+            <UiEntity
+              uiTransform={{
+                width: '72%',
+                height: '14%',
+                margin: { top: 16 },
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'stretch'
+              }}
+            >
+              <UiEntity
+                uiTransform={{ width: '46%', height: '100%' }}
+                uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                onMouseDown={() => guestAcceptSuggestedCategory()}
+              >
+                <Label
+                  uiTransform={{ width: '100%', height: '100%' }}
+                  value="Yes"
+                  textAlign="middle-center"
+                  fontSize={16}
+                  font="serif"
+                />
+              </UiEntity>
+              <UiEntity
+                uiTransform={{ width: '46%', height: '100%' }}
+                uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                onMouseDown={() => guestRejectSuggestedCategory()}
+              >
+                <Label
+                  uiTransform={{ width: '100%', height: '100%' }}
+                  value="No"
+                  textAlign="middle-center"
+                  fontSize={16}
+                  font="serif"
+                />
+              </UiEntity>
             </UiEntity>
           </UiEntity>
         </UiEntity>

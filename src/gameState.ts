@@ -21,6 +21,8 @@ export const gameData: GlobalGameData = {
   revelationPhase: 'idle',
   revelationRoundSalt: 0,
   pendingGuestCategory: null,
+  suggestedCategory: null,
+  rejectedCategoryThisTurn: null,
   previouslySelectedCategories: [],
   currentIteration: 1,
   categoryRejectionLine: null,

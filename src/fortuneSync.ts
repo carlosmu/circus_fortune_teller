@@ -55,6 +55,8 @@ export type GuestChairDeclineMoreMessage = {
 export type RevelationPhaseUpdateMessage = {
   phase: RevelationPhase
   pendingGuestCategory?: FortuneCategory | null
+  suggestedCategory?: FortuneCategory | null
+  rejectedCategoryThisTurn?: FortuneCategory | null
 }
 
 export type GuestSeatMessage = {
@@ -122,6 +124,8 @@ export function setupFortuneSync() {
     gameData.gameState = 'OCUPADO'
     gameData.revelationRoundSalt = data.roundSalt
     gameData.pendingGuestCategory = null
+    gameData.suggestedCategory = null
+    gameData.rejectedCategoryThisTurn = null
     gameData.revelationPhase = 'ft_asks_topic'
     gameData.currentIteration = data.sessionReadingIndex as 1 | 2 | 3
     gameData.categoryRejectionLine = null
@@ -141,6 +145,10 @@ export function setupFortuneSync() {
       if (gameData.gameState === 'MOSTRANDO_FORTUNA') {
         gameData.revelationPhase = data.phase
       }
+      if (data.suggestedCategory !== undefined) gameData.suggestedCategory = data.suggestedCategory
+      if (data.rejectedCategoryThisTurn !== undefined) {
+        gameData.rejectedCategoryThisTurn = data.rejectedCategoryThisTurn
+      }
       return
     }
     gameData.revelationPhase = data.phase
@@ -157,6 +165,10 @@ export function setupFortuneSync() {
         ]
       }
     }
+    if (data.suggestedCategory !== undefined) gameData.suggestedCategory = data.suggestedCategory
+    if (data.rejectedCategoryThisTurn !== undefined) {
+      gameData.rejectedCategoryThisTurn = data.rejectedCategoryThisTurn
+    }
     touchGuestReadingInteractionDeadline()
   })
 
@@ -166,6 +178,8 @@ export function setupFortuneSync() {
       gameData.previouslySelectedCategories = []
       gameData.currentIteration = 1
       gameData.categoryRejectionLine = null
+      gameData.suggestedCategory = null
+      gameData.rejectedCategoryThisTurn = null
     }
     previousGuestSeatUserId = data.seatUserId
     gameData.guestSeatUserId = data.seatUserId
@@ -187,6 +201,8 @@ export function setupFortuneSync() {
     gameData.previouslySelectedCategories = []
     gameData.currentIteration = 1
     gameData.categoryRejectionLine = null
+    gameData.suggestedCategory = null
+    gameData.rejectedCategoryThisTurn = null
     if (gameData.guestSeatUserId === data.guestId) {
       gameData.guestSeatUserId = null
       gameData.guestSeatUserName = null
@@ -209,6 +225,8 @@ export function setupFortuneSync() {
       gameData.gameState = 'MOSTRANDO_FORTUNA'
       gameData.revelationPhase = 'fortune_display'
       gameData.pendingGuestCategory = null
+      gameData.suggestedCategory = null
+      gameData.rejectedCategoryThisTurn = null
       gameData.guestLastInteractionAtMs = null
       playRevealSound()
       if (SHOW_3D_FORTUNE) {
@@ -231,6 +249,8 @@ export function setupFortuneSync() {
     gameData.revelationRoundSalt = 0
     gameData.guestLastInteractionAtMs = null
     gameData.categoryRejectionLine = null
+    gameData.suggestedCategory = null
+    gameData.rejectedCategoryThisTurn = null
   })
 
   fortuneMessageBus.on(

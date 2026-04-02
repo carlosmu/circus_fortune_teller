@@ -9,7 +9,7 @@ import {
   type GuestChairDeclineMoreMessage,
   type RevelationPhaseUpdateMessage
 } from './fortuneSync'
-import { pickKindSeeded, pickThreeGuestCategoriesSeeded } from './revelationRng'
+import { hashString, pickKindSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind } from './types'
 
 let fortuneTellerSystemInitialized = false
@@ -24,6 +24,7 @@ const CATEGORY_REPEAT_RESPONSE_LINES = [
   'The cards refuse to speak of the same thread twice.',
   'That path has already been unveiled.'
 ]
+const INTERACTION_CATEGORIES: FortuneCategory[] = ['luck', 'mystery', 'work', 'health', 'money', 'love']
 
 function pickCategoryRepeatResponse(): string {
   const guestId = gameData.currentGuestId ?? ''
@@ -33,6 +34,35 @@ function pickCategoryRepeatResponse(): string {
 
 function delayMs(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function pickThreeFromPoolDeterministic(seedPrefix: string, pool: FortuneCategory[]): FortuneCategory[] {
+  const remaining = [...pool]
+  const out: FortuneCategory[] = []
+  for (let step = 0; step < 3 && remaining.length > 0; step++) {
+    const idx = hashString(`${seedPrefix}:${step}`) % remaining.length
+    out.push(remaining[idx]!)
+    remaining.splice(idx, 1)
+  }
+  return out
+}
+
+function getFortuneTellerFirstStepOptions(): FortuneCategory[] {
+  const available = INTERACTION_CATEGORIES.filter(
+    (c) => !gameData.previouslySelectedCategories.includes(c)
+  )
+  const guestId = gameData.currentGuestId ?? ''
+  return pickThreeFromPoolDeterministic(`${guestId}:${gameData.revelationRoundSalt}:ftFirst3`, available)
+}
+
+function getGuestFallbackOptionsAfterReject(): FortuneCategory[] {
+  const available = INTERACTION_CATEGORIES.filter(
+    (c) =>
+      !gameData.previouslySelectedCategories.includes(c) &&
+      (gameData.rejectedCategoryThisTurn === null || c !== gameData.rejectedCategoryThisTurn)
+  )
+  const guestId = gameData.currentGuestId ?? ''
+  return pickThreeFromPoolDeterministic(`${guestId}:${gameData.revelationRoundSalt}:guestFallback3`, available)
 }
 
 function virtualHostInviteStillValid(): boolean {
@@ -60,9 +90,21 @@ export function scheduleVirtualHostDelayThenOpenGuestCategories(): void {
     if (!virtualHostInviteStillValid()) return
     await delayMs(VIRTUAL_HOST_ASK_TOPIC_MS)
     if (!virtualHostInviteStillValid()) return
+    const suggested = getFortuneTellerFirstStepOptions()[0] ?? null
+    if (suggested === null) {
+      fortuneMessageBus.emit('revelation-phase-update', {
+        phase: 'guest_chooses_category',
+        pendingGuestCategory: null,
+        suggestedCategory: null,
+        rejectedCategoryThisTurn: null
+      })
+      return
+    }
     fortuneMessageBus.emit('revelation-phase-update', {
-      phase: 'guest_chooses_category',
-      pendingGuestCategory: null
+      phase: 'guest_suggested_category_prompt',
+      pendingGuestCategory: null,
+      suggestedCategory: suggested,
+      rejectedCategoryThisTurn: null
     })
   })
 }
@@ -166,9 +208,64 @@ export function fortuneTellerInviteGuestToChooseTopic(): void {
   if (localUserId !== gameData.currentFortuneTellerId) return
   if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'ft_asks_topic') return
 
+  const suggested = getFortuneTellerFirstStepOptions()[0] ?? null
+  if (suggested === null) {
+    fortuneMessageBus.emit('revelation-phase-update', {
+      phase: 'guest_chooses_category',
+      pendingGuestCategory: null,
+      suggestedCategory: null,
+      rejectedCategoryThisTurn: null
+    })
+    return
+  }
+
+  fortuneMessageBus.emit('revelation-phase-update', {
+    phase: 'guest_suggested_category_prompt',
+    pendingGuestCategory: null,
+    suggestedCategory: suggested,
+    rejectedCategoryThisTurn: null
+  })
+}
+
+/** Primer paso humano: FT elige una de 3 categorías para preguntar al guest (Yes/No). */
+export function fortuneTellerSuggestCategory(category: FortuneCategory): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId !== gameData.currentFortuneTellerId) return
+  if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'ft_asks_topic') return
+  const options = getFortuneTellerFirstStepOptions()
+  if (!options.includes(category)) return
+
+  fortuneMessageBus.emit('revelation-phase-update', {
+    phase: 'guest_suggested_category_prompt',
+    pendingGuestCategory: null,
+    suggestedCategory: category,
+    rejectedCategoryThisTurn: null
+  })
+}
+
+export function guestAcceptSuggestedCategory(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId !== gameData.currentGuestId) return
+  if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'guest_suggested_category_prompt') return
+  if (gameData.suggestedCategory === null) return
+
+  fortuneMessageBus.emit('revelation-phase-update', {
+    phase: 'ft_chooses_kind',
+    pendingGuestCategory: gameData.suggestedCategory,
+    rejectedCategoryThisTurn: null
+  })
+}
+
+export function guestRejectSuggestedCategory(): void {
+  const localUserId = getPlayer()?.userId ?? null
+  if (localUserId !== gameData.currentGuestId) return
+  if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'guest_suggested_category_prompt') return
+  if (gameData.suggestedCategory === null) return
+
   fortuneMessageBus.emit('revelation-phase-update', {
     phase: 'guest_chooses_category',
-    pendingGuestCategory: null
+    pendingGuestCategory: null,
+    rejectedCategoryThisTurn: gameData.suggestedCategory
   })
 }
 
@@ -177,9 +274,9 @@ export function guestSubmitChosenCategory(category: FortuneCategory): void {
   if (localUserId !== gameData.currentGuestId) return
   if (gameData.gameState !== 'OCUPADO' || gameData.revelationPhase !== 'guest_chooses_category') return
 
-  const guestId = gameData.currentGuestId ?? ''
-  const options = pickThreeGuestCategoriesSeeded(guestId, gameData.revelationRoundSalt)
+  const options = getGuestFallbackOptionsAfterReject()
   if (!options.includes(category)) return
+  if (gameData.rejectedCategoryThisTurn !== null && category === gameData.rejectedCategoryThisTurn) return
   if (gameData.previouslySelectedCategories.includes(category)) {
     gameData.categoryRejectionLine = pickCategoryRepeatResponse()
     gameData.centerBannerText = gameData.categoryRejectionLine
@@ -190,8 +287,17 @@ export function guestSubmitChosenCategory(category: FortuneCategory): void {
 
   fortuneMessageBus.emit('revelation-phase-update', {
     phase: 'ft_chooses_kind',
-    pendingGuestCategory: category
+    pendingGuestCategory: category,
+    rejectedCategoryThisTurn: null
   })
+}
+
+export function getFirstStepCategoryOptionsForUi(): FortuneCategory[] {
+  return getFortuneTellerFirstStepOptions()
+}
+
+export function getGuestFallbackCategoryOptionsForUi(): FortuneCategory[] {
+  return getGuestFallbackOptionsAfterReject()
 }
 
 /** Tras la fortuna: el invitado acepta otra lectura — mismo ciclo desde la pregunta del FT (índice de sesión +1). */

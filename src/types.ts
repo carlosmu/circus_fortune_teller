@@ -17,6 +17,7 @@ export type FortuneTellerChoiceCategories = [FortuneCategory, FortuneCategory, F
 export type RevelationPhase =
   | 'idle'
   | 'ft_asks_topic'
+  | 'guest_suggested_category_prompt'
   | 'guest_chooses_category'
   | 'ft_chooses_kind'
   /** Texto de la fortuna visible (MOSTRANDO_FORTUNA). */
@@ -60,6 +61,10 @@ export type GlobalGameData = {
   revelationRoundSalt: number
   /** Category chosen by the guest before the fortune teller picks warning / advice / prediction. */
   pendingGuestCategory: FortuneCategory | null
+  /** Categoría sugerida por el host para el turno actual. */
+  suggestedCategory: FortuneCategory | null
+  /** Categoría rechazada por el guest en este turno (exclusión temporal). */
+  rejectedCategoryThisTurn: FortuneCategory | null
   /** Memoria mínima de sesión para evitar repetir temas en la misma silla. */
   previouslySelectedCategories: FortuneCategory[]
   /** Iteración actual de lectura en la sesión de silla (1..3). */
