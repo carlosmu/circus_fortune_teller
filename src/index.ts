@@ -10,6 +10,7 @@ import { setupUi } from './ui'
 import { setupScene } from './scene'
 import { registerVisit, getStats } from './supabase_api'
 import { setupLeaderboard3D, setLeaderboardData } from './leaderboard3D'
+import { setupPlayerRoleLabels } from './playerRoleLabels'
 
 let visitRegistered = false
 let statsFetched = false
@@ -52,6 +53,7 @@ export function main() {
   })
 
   setupGuestSpot()
+  setupPlayerRoleLabels()
   setupWizard()
   setupInteractionSystem()
   setupFortuneTellerSystem()
