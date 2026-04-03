@@ -37,6 +37,11 @@ const CARD_TEXTURE_BACKGROUND = {
   textureMode: 'stretch' as const
 }
 
+/** Diálogo principal y preguntas al jugador dentro de la carta. */
+const CARD_FONT_PRIMARY = 20
+/** Subtítulos (p. ej. categoría · tipo), instrucciones tipo “elige…”, y etiquetas de botones. */
+const CARD_FONT_SECONDARY = 14
+
 const CATEGORY_LABELS: Record<FortuneCategory, string> = {
   love: 'Love',
   money: 'Money',
@@ -279,7 +284,7 @@ function GuestCardCancelCorner(props: { show: boolean }) {
         uiTransform={{ width: '100%', height: '100%' }}
         value="×"
         textAlign="middle-center"
-        fontSize={26}
+        fontSize={CARD_FONT_SECONDARY}
         font="sans-serif"
         color={Color4.create(0.95, 0.95, 0.95, 1)}
       />
@@ -466,7 +471,7 @@ function uiComponent() {
               }}
               value={waitingFortuneLine}
               textAlign="middle-center"
-              fontSize={22}
+              fontSize={CARD_FONT_PRIMARY}
               font="serif"
               color={Color4.create(1, 1, 1, waitingAlpha)}
             />
@@ -499,11 +504,12 @@ function uiComponent() {
             <Label
               uiTransform={{
                 width: '80%',
-                height: '12%'
+                height: '12%',
+                margin: { top: 15 }
               }}
               value={kindLabel ? `${capitalizedCategory} · ${kindLabel}` : capitalizedCategory}
               textAlign="bottom-center"
-              fontSize={18}
+              fontSize={CARD_FONT_SECONDARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -515,7 +521,7 @@ function uiComponent() {
               }}
               value={fortuneText}
               textAlign="top-center"
-              fontSize={22}
+              fontSize={CARD_FONT_PRIMARY}
               font="serif"
             />
             <GuestCardCancelCorner show={showGuestCancelButton && isVisible} />
@@ -548,7 +554,7 @@ function uiComponent() {
               uiTransform={{ width: '88%', height: '70%' }}
               value={maxReadingsFarewellLine}
               textAlign="middle-center"
-              fontSize={20}
+              fontSize={CARD_FONT_PRIMARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -581,7 +587,7 @@ function uiComponent() {
               uiTransform={{ width: '88%', height: '22%' }}
               value={repeatPrompt}
               textAlign="middle-center"
-              fontSize={18}
+              fontSize={CARD_FONT_PRIMARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -589,7 +595,7 @@ function uiComponent() {
               uiTransform={{ width: '86%', height: '20%', margin: { top: 8 } }}
               value="Ask the guest. They will choose Yes or No."
               textAlign="middle-center"
-              fontSize={15}
+              fontSize={CARD_FONT_SECONDARY}
               font="serif"
             />
           </UiEntity>
@@ -620,7 +626,7 @@ function uiComponent() {
               uiTransform={{ width: '85%', height: '55%' }}
               value="The guest decides whether to hear another reading..."
               textAlign="middle-center"
-              fontSize={18}
+              fontSize={CARD_FONT_SECONDARY}
               font="serif"
             />
           </UiEntity>
@@ -652,7 +658,7 @@ function uiComponent() {
               uiTransform={{ width: '90%', height: '18%' }}
               value={repeatPrompt}
               textAlign="middle-center"
-              fontSize={18}
+              fontSize={CARD_FONT_PRIMARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -660,7 +666,7 @@ function uiComponent() {
               uiTransform={{
                 width: '72%',
                 height: '14%',
-                margin: { top: 16 },
+                margin: { top: 0 },
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'stretch'
@@ -675,7 +681,7 @@ function uiComponent() {
                   uiTransform={{ width: '100%', height: '100%' }}
                   value="Yes"
                   textAlign="middle-center"
-                  fontSize={16}
+                  fontSize={CARD_FONT_SECONDARY}
                   font="serif"
                 />
               </UiEntity>
@@ -688,7 +694,7 @@ function uiComponent() {
                   uiTransform={{ width: '100%', height: '100%' }}
                   value="No"
                   textAlign="middle-center"
-                  fontSize={16}
+                  fontSize={CARD_FONT_SECONDARY}
                   font="serif"
                 />
               </UiEntity>
@@ -722,7 +728,7 @@ function uiComponent() {
               uiTransform={{ width: '88%', height: '22%' }}
               value={'Choose one thread to ask the guest about:'}
               textAlign="middle-center"
-              fontSize={17}
+              fontSize={CARD_FONT_SECONDARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -747,7 +753,7 @@ function uiComponent() {
                     uiTransform={{ width: '100%', height: '100%' }}
                     value={CATEGORY_LABELS[cat]}
                     textAlign="middle-center"
-                    fontSize={14}
+                    fontSize={CARD_FONT_SECONDARY}
                     font="serif"
                   />
                 </UiEntity>
@@ -782,7 +788,7 @@ function uiComponent() {
               uiTransform={{ width: '90%', height: '35%' }}
               value={getConfirmLine(gameData.suggestedCategory!)}
               textAlign="middle-center"
-              fontSize={17}
+              fontSize={CARD_FONT_PRIMARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -805,7 +811,7 @@ function uiComponent() {
                   uiTransform={{ width: '100%', height: '100%' }}
                   value="Yes"
                   textAlign="middle-center"
-                  fontSize={16}
+                  fontSize={CARD_FONT_SECONDARY}
                   font="serif"
                 />
               </UiEntity>
@@ -818,7 +824,7 @@ function uiComponent() {
                   uiTransform={{ width: '100%', height: '100%' }}
                   value="No"
                   textAlign="middle-center"
-                  fontSize={16}
+                  fontSize={CARD_FONT_SECONDARY}
                   font="serif"
                 />
               </UiEntity>
@@ -853,7 +859,7 @@ function uiComponent() {
               uiTransform={{ width: '90%', height: '12%' }}
               value={guestThemePrompt()}
               textAlign="middle-center"
-              fontSize={18}
+              fontSize={CARD_FONT_SECONDARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -881,7 +887,7 @@ function uiComponent() {
                     uiTransform={{ width: '100%', height: '100%' }}
                     value={`${index + 1}\n${CATEGORY_LABELS[cat]}`}
                     textAlign="middle-center"
-                    fontSize={14}
+                    fontSize={CARD_FONT_SECONDARY}
                     font="serif"
                   />
                 </UiEntity>
@@ -892,7 +898,7 @@ function uiComponent() {
                 uiTransform={{ width: '92%', height: '16%', margin: { top: 8 } }}
                 value={gameData.categoryRejectionLine}
                 textAlign="middle-center"
-                fontSize={14}
+                fontSize={CARD_FONT_SECONDARY}
                 font="serif"
                 color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
               />
@@ -926,7 +932,7 @@ function uiComponent() {
               uiTransform={{ width: '90%', height: '14%' }}
               value="Choose the tone of the reading:"
               textAlign="middle-center"
-              fontSize={17}
+              fontSize={CARD_FONT_SECONDARY}
               font="serif"
               color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
             />
@@ -951,7 +957,7 @@ function uiComponent() {
                     uiTransform={{ width: '100%', height: '100%' }}
                     value={KIND_LABELS[kind]}
                     textAlign="middle-center"
-                    fontSize={15}
+                    fontSize={CARD_FONT_SECONDARY}
                     font="serif"
                   />
                 </UiEntity>
