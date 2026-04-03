@@ -21,7 +21,7 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
   /** X >= umbral: arco lado derecho (yaw 0 to 90 deg, CCW desde arriba). X < umbral: espejo (180 to 90 deg). */
   xThreshold: 8,
   /** Radio horizontal de la órbita (metros). */
-  radius: 4,
+  radius: 6,
   /** Altura local Y del hijo al inicio del arco (interpola hacia cameraHeightEnd). */
   cameraHeightStart: 0,
   /** Altura local Y del hijo al final del arco. */
@@ -165,11 +165,11 @@ export function startHostCinematicCamera(playerPos: Vec3, onComplete?: () => voi
   const cfg = HOST_PIVOT_CINEMATIC_CONFIG
 
   if (playerPos.x >= cfg.xThreshold) {
-    hostPivotYawStart = 60
-    hostPivotYawEnd = 90
+    hostPivotYawStart = 40
+    hostPivotYawEnd = 70
   } else {
-    hostPivotYawStart = 120
-    hostPivotYawEnd = 90
+    hostPivotYawStart = 140
+    hostPivotYawEnd = 110
   }
 
   hostPivotElapsed = 0
