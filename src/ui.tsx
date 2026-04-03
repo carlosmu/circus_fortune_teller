@@ -634,28 +634,31 @@ function uiComponent() {
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
-              <Label
-                uiTransform={{ width: '100%', height: '42%' }}
-                value={repeatPrompt}
-                textAlign="middle-center"
-                textWrap="wrap"
-                fontSize={CARD_FONT_PRIMARY}
-                font="serif"
-                color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
-              />
-              <Label
-                uiTransform={{ width: '100%', height: '38%', margin: { top: 8 } }}
-                value="Ask the guest. They will choose Yes or No."
-                textAlign="middle-center"
-                textWrap="wrap"
-                fontSize={CARD_FONT_SECONDARY}
-                font="serif"
-              />
+              <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
+                <Label
+                  uiTransform={{ width: '100%', height: 'auto' }}
+                  value={repeatPrompt}
+                  textAlign="top-center"
+                  textWrap="wrap"
+                  fontSize={CARD_FONT_PRIMARY}
+                  font="serif"
+                  color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+                />
+                <Label
+                  uiTransform={{ width: '100%', height: 'auto', margin: { top: 12 } }}
+                  value="Ask the guest. They will choose Yes or No."
+                  textAlign="top-center"
+                  textWrap="wrap"
+                  fontSize={CARD_FONT_SECONDARY}
+                  font="serif"
+                />
+              </UiEntity>
             </UiEntity>
           </UiEntity>
         </UiEntity>
@@ -790,47 +793,63 @@ function uiComponent() {
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
-              <Label
-                uiTransform={{ width: '100%', height: '28%' }}
-                value={'Choose one thread to ask the guest about:'}
-                textAlign="middle-center"
-                textWrap="wrap"
-                fontSize={CARD_FONT_SECONDARY}
-                font="serif"
-                color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
-              />
-              <UiEntity
-                uiTransform={{
-                  width: '100%',
-                  height: CARD_CATEGORY_ROW_HEIGHT_PX,
-                  flexDirection: 'row',
-                  justifyContent: 'space-around',
-                  alignItems: 'stretch',
-                  margin: { top: 10 }
-                }}
-              >
-                {firstStepFtOptions.map((cat, index) => (
-                  <UiEntity
-                    key={`${cat}:${index}`}
-                    uiTransform={{ width: '30%', height: '100%' }}
-                    uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
-                    onMouseDown={() => fortuneTellerSuggestCategory(cat)}
-                  >
-                    <Label
-                      uiTransform={{ width: '100%', height: '100%' }}
-                      value={CATEGORY_LABELS[cat]}
-                      textAlign="middle-center"
-                      textWrap="wrap"
-                      fontSize={CARD_FONT_SECONDARY}
-                      font="serif"
-                    />
-                  </UiEntity>
-                ))}
+              <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
+                <UiEntity
+                  uiTransform={{
+                    width: '100%',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Label
+                    uiTransform={{ width: 'auto', height: 'auto' }}
+                    value={'Choose one thread to ask the guest about:'}
+                    textAlign="middle-center"
+                    textWrap="wrap"
+                    fontSize={CARD_FONT_SECONDARY}
+                    font="serif"
+                    color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+                  />
+                </UiEntity>
+                <UiEntity
+                  uiTransform={{
+                    width: '100%',
+                    height: CARD_CATEGORY_ROW_HEIGHT_PX,
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'stretch',
+                    margin: { top: 8 }
+                  }}
+                >
+                  {firstStepFtOptions.map((cat, index) => (
+                    <UiEntity
+                      key={`${cat}:${index}`}
+                      uiTransform={{
+                        width: '20%',
+                        height: '80%',
+                        margin: { left: 5, right: 5 }
+                      }}
+                      uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                      onMouseDown={() => fortuneTellerSuggestCategory(cat)}
+                    >
+                      <Label
+                        uiTransform={{ width: '100%', height: '100%' }}
+                        value={CATEGORY_LABELS[cat]}
+                        textAlign="middle-center"
+                        textWrap="wrap"
+                        fontSize={CARD_FONT_SECONDARY}
+                        font="serif"
+                      />
+                    </UiEntity>
+                  ))}
+                </UiEntity>
               </UiEntity>
             </UiEntity>
           </UiEntity>
@@ -1012,47 +1031,59 @@ function uiComponent() {
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              positionType: 'relative'
             }}
             uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
-              <Label
-                uiTransform={{ width: '100%', height: '16%' }}
-                value="Choose the tone of the reading:"
-                textAlign="middle-center"
-                textWrap="wrap"
-                fontSize={CARD_FONT_SECONDARY}
-                font="serif"
-                color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
-              />
-              <UiEntity
-                uiTransform={{
-                  width: '100%',
-                  height: CARD_KINDS_STACK_HEIGHT_PX,
-                  flexDirection: 'column',
-                  justifyContent: 'space-around',
-                  alignItems: 'stretch',
-                  margin: { top: 10 }
-                }}
-              >
-                {KIND_ORDER.map((kind) => (
-                  <UiEntity
-                    key={kind}
-                    uiTransform={{ width: '100%', height: CARD_BUTTON_ROW_HEIGHT_PX }}
-                    uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
-                    onMouseDown={() => fortuneTellerSubmitKind(kind)}
-                  >
-                    <Label
-                      uiTransform={{ width: '100%', height: '100%' }}
-                      value={KIND_LABELS[kind]}
-                      textAlign="middle-center"
-                      textWrap="wrap"
-                      fontSize={CARD_FONT_SECONDARY}
-                      font="serif"
-                    />
-                  </UiEntity>
-                ))}
+              <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
+                <UiEntity
+                  uiTransform={{
+                    width: '100%',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Label
+                    uiTransform={{ width: 'auto', height: 'auto' }}
+                    value="Choose the tone of the reading:"
+                    textAlign="middle-center"
+                    textWrap="wrap"
+                    fontSize={CARD_FONT_SECONDARY}
+                    font="serif"
+                    color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
+                  />
+                </UiEntity>
+                <UiEntity
+                  uiTransform={{
+                    width: '100%',
+                    height: CARD_KINDS_STACK_HEIGHT_PX,
+                    flexDirection: 'column',
+                    justifyContent: 'space-around',
+                    alignItems: 'stretch',
+                    margin: { top: 8 }
+                  }}
+                >
+                  {KIND_ORDER.map((kind) => (
+                    <UiEntity
+                      key={kind}
+                      uiTransform={{ width: '100%', height: CARD_BUTTON_ROW_HEIGHT_PX }}
+                      uiBackground={{ color: Color4.create(0.15, 0.12, 0.05, 0.9) }}
+                      onMouseDown={() => fortuneTellerSubmitKind(kind)}
+                    >
+                      <Label
+                        uiTransform={{ width: '100%', height: '100%' }}
+                        value={KIND_LABELS[kind]}
+                        textAlign="middle-center"
+                        textWrap="wrap"
+                        fontSize={CARD_FONT_SECONDARY}
+                        font="serif"
+                      />
+                    </UiEntity>
+                  ))}
+                </UiEntity>
               </UiEntity>
             </UiEntity>
           </UiEntity>
