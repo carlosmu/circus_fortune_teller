@@ -37,7 +37,7 @@ const FORTUNE_TELLER_GRACE_MS = 700
 /** Texto al apuntar con el cursor al Sit Spot del Fortune Teller (clic para tomar el rol). */
 const FORTUNE_TELLER_SIT_SPOT_HOVER = 'Become The Fortune Teller'
 const WIZARD_MOVE_OFFSET_X = 2
-const WIZARD_MOVE_OFFSET_Z = -1
+const WIZARD_MOVE_OFFSET_Z = -1.25
 const WIZARD_MOVE_SPEED = 6
 const FORTUNE_TELLER_SESSION_INITIAL_MS = 60000
 const FORTUNE_TELLER_RANDOM_MIN_X = 3
