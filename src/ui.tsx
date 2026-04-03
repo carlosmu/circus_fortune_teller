@@ -27,6 +27,15 @@ let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
 /** Vertical offset (px) applied to all card.png UI panels. Negative moves up. */
 const CARD_UI_VERTICAL_OFFSET = '-100px'
+/**
+ * `card.png` es 1024×1024. Un solo tamaño fijo en px para todas las pantallas: el marco
+ * no crece ni encoge entre estados, y stretch en un cuadrado igual al aspecto de la textura no deforma.
+ */
+const CARD_PANEL_PX = { width: '480px' as const, height: '480px' as const }
+const CARD_TEXTURE_BACKGROUND = {
+  texture: { src: 'assets/images/card.png' },
+  textureMode: 'stretch' as const
+}
 
 const CATEGORY_LABELS: Record<FortuneCategory, string> = {
   love: 'Love',
@@ -440,18 +449,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '25%',
-              height: '50%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{
@@ -482,18 +487,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '25%',
-              height: '50%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{
@@ -534,18 +535,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '28%',
-              height: '50%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '88%', height: '70%' }}
@@ -572,17 +569,13 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '50%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '88%', height: '22%' }}
@@ -615,17 +608,13 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '28%',
-              height: '45%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '85%', height: '55%' }}
@@ -650,18 +639,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '55%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '90%', height: '18%' }}
@@ -725,17 +710,13 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '50%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '88%', height: '22%' }}
@@ -788,18 +769,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '55%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '90%', height: '35%' }}
@@ -863,18 +840,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '60%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '90%', height: '12%' }}
@@ -941,17 +914,13 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              width: '30%',
-              height: '60%',
+              ...CARD_PANEL_PX,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               margin: { top: CARD_UI_VERTICAL_OFFSET }
             }}
-            uiBackground={{
-              texture: { src: 'assets/images/card.png' },
-              textureMode: 'stretch'
-            }}
+            uiBackground={CARD_TEXTURE_BACKGROUND}
           >
             <Label
               uiTransform={{ width: '90%', height: '14%' }}
