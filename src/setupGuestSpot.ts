@@ -19,6 +19,7 @@ import {
 import { scheduleVirtualHostDelayThenOpenGuestCategories } from './fortuneTellerSystem'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import { TABLE, FORTUNE_TELLER_CAMERA_TARGET } from './scene'
+import { USE_FORTUNE_FSM_FLOW } from './sceneConfig'
 
 export const GUEST_SPOT = engine.addEntity()
 
@@ -174,7 +175,9 @@ function emitGuestFortuneRequestFromChair() {
       roundSalt,
       sessionReadingIndex
     })
-    scheduleVirtualHostDelayThenOpenGuestCategories()
+    if (!USE_FORTUNE_FSM_FLOW || gameData.currentFortuneTellerId === null) {
+      scheduleVirtualHostDelayThenOpenGuestCategories()
+    }
   })
 }
 

@@ -4,6 +4,7 @@ import { setupInteractionSystem } from './interactionSystem'
 import { setupFortuneTellerSystem } from './fortuneTellerSystem'
 import { setupFortuneUiSystem } from './fortuneUiSystem'
 import { setupFortuneSync } from './fortuneSync'
+import { setupFortuneFsm } from './fortuneFsm/setup'
 import { setupGuestSpot } from './setupGuestSpot'
 import { setupWizard } from './setupWizard'
 import { setupUi } from './ui'
@@ -30,6 +31,7 @@ export function main() {
 
   // Fortune sync across players (MessageBus)
   setupFortuneSync()
+  setupFortuneFsm()
 
   // Inicializar la UI base
   setupUi()

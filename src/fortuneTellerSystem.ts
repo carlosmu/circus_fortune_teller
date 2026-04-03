@@ -10,6 +10,7 @@ import {
   type RevelationPhaseUpdateMessage
 } from './fortuneSync'
 import { hashString, pickKindSeeded } from './revelationRng'
+import { USE_FORTUNE_FSM_FLOW } from './sceneConfig'
 import type { FortuneCategory, FortuneKind } from './types'
 
 let fortuneTellerSystemInitialized = false
@@ -315,7 +316,9 @@ export function guestAcceptMoreFortune(): void {
     roundSalt,
     sessionReadingIndex
   })
-  scheduleVirtualHostDelayThenOpenGuestCategories()
+  if (!USE_FORTUNE_FSM_FLOW || gameData.currentFortuneTellerId === null) {
+    scheduleVirtualHostDelayThenOpenGuestCategories()
+  }
 }
 
 /**

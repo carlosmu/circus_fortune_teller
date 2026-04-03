@@ -14,3 +14,6 @@ export const SHOW_3D_FORTUNE = false
 
 /** Mostrar la fortuna en el panel de UI. */
 export const SHOW_UI_FORTUNE = true
+
+/** Flujo Host/Guest como FSM (INIT → … → RESET); si es true, el panel legacy de revelación queda desactivado. */
+export const USE_FORTUNE_FSM_FLOW = true

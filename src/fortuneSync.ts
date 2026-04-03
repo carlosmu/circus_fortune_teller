@@ -20,7 +20,7 @@ export const GUEST_READING_IDLE_TIMEOUT_MS = 30000
 
 let previousGuestSeatUserId: string | null = null
 
-function touchGuestReadingInteractionDeadline(): void {
+export function touchGuestReadingInteractionDeadline(): void {
   if (gameData.gameState === 'OCUPADO' && gameData.currentGuestId !== null) {
     gameData.guestLastInteractionAtMs = Date.now()
   }

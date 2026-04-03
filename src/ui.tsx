@@ -4,7 +4,8 @@ import { ReactEcsRenderer } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
-import { SHOW_UI_FORTUNE } from './sceneConfig'
+import { SHOW_UI_FORTUNE, USE_FORTUNE_FSM_FLOW } from './sceneConfig'
+import { FortuneFsmLayer } from './fortuneFsm/fsmUi'
 import {
   fortuneTellerSuggestCategory,
   getFirstStepCategoryOptionsForUi,
@@ -91,6 +92,8 @@ const KIND_LABELS: Record<FortuneKind, string> = {
 }
 
 const KIND_ORDER: FortuneKind[] = ['advertencia', 'consejo', 'prediccion']
+
+const legacyFortuneUi = SHOW_UI_FORTUNE && !USE_FORTUNE_FSM_FLOW
 
 const WAITING_FORTUNE_LINES = [
   'Your fate is...',
@@ -326,7 +329,7 @@ function uiComponent() {
   const fortune = gameData.currentFortune
   const phase = gameData.revelationPhase
   const isVisible =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'MOSTRANDO_FORTUNA' &&
     !!fortune &&
     phase === 'fortune_display'
@@ -337,29 +340,29 @@ function uiComponent() {
   const isGuest = !!player && gameData.currentGuestId !== null && gameData.currentGuestId === player.userId
   const hasHumanFortuneTeller = gameData.currentFortuneTellerId !== null
   const showGuestCancelButton =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     isGuest &&
     (gameData.gameState === 'OCUPADO' || gameData.gameState === 'MOSTRANDO_FORTUNA')
   const showFtInvite =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'OCUPADO' &&
     phase === 'ft_asks_topic' &&
     isFortuneTeller
 
   const showGuestCategories =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'OCUPADO' &&
     phase === 'guest_chooses_category' &&
     isGuest
   const showGuestSuggestedPrompt =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'OCUPADO' &&
     phase === 'guest_suggested_category_prompt' &&
     isGuest &&
     gameData.suggestedCategory !== null
 
   const showFtKinds =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'OCUPADO' &&
     phase === 'ft_chooses_kind' &&
     isFortuneTeller
@@ -381,30 +384,30 @@ function uiComponent() {
     (isGuest && phase === 'guest_learn_more')
 
   const showWaitingPanel =
-    SHOW_UI_FORTUNE && gameData.gameState === 'OCUPADO' && !activeOwnsInteraction
+    legacyFortuneUi && gameData.gameState === 'OCUPADO' && !activeOwnsInteraction
 
   const showGuestLearnMore =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'MOSTRANDO_FORTUNA' &&
     phase === 'guest_learn_more' &&
     isGuest
 
   const showFortuneTellerLearnMorePrompt =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'MOSTRANDO_FORTUNA' &&
     phase === 'guest_learn_more' &&
     isFortuneTeller &&
     hasHumanFortuneTeller
 
   const showSpectatorLearnMoreWait =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'MOSTRANDO_FORTUNA' &&
     phase === 'guest_learn_more' &&
     !isGuest &&
     !isFortuneTeller
 
   const showFarewellMaxReadings =
-    SHOW_UI_FORTUNE &&
+    legacyFortuneUi &&
     gameData.gameState === 'MOSTRANDO_FORTUNA' &&
     phase === 'guest_farewell_max_readings' &&
     gameData.currentGuestId !== null
@@ -1121,6 +1124,7 @@ function uiComponent() {
           </UiEntity>
         </UiEntity>
       )}
+      <FortuneFsmLayer />
       </UiEntity>
     </UiEntity>
   )
