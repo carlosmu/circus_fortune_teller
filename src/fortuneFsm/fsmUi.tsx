@@ -24,48 +24,9 @@ const CARD_PANEL = { width: '600px' as const, height: '600px' as const }
 const CARD_BG = { texture: { src: 'assets/images/card.png' }, textureMode: 'stretch' as const }
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
 
-/** Pon a false cuando termines de alinear; borde verde 2px del área de contenido sobre card.png. */
-const FSM_CARD_CONTENT_DEBUG_OUTLINE = true
-const FSM_CARD_DEBUG_BORDER = {
-  borderWidth: FSM_CARD_CONTENT_DEBUG_OUTLINE ? 2 : 0,
-  borderColor: Color4.create(0.15, 0.92, 0.22, 1)
-} as const
-
 /**
- * Borde rojo en cada bloque hijo del área verde (hijos de CARD_ROOT_COLUMN = filas de texto / stacks / filas de botones).
- * El único hijo directo del verde es la columna raíz; los rojos marcan cada sección apilada en Y.
- */
-const FSM_CARD_GREEN_CHILD_DEBUG_OUTLINE = true
-const FSM_CARD_DEBUG_RED_CHILD = {
-  borderWidth: FSM_CARD_GREEN_CHILD_DEBUG_OUTLINE ? 2 : 0,
-  borderColor: Color4.create(0.92, 0.12, 0.1, 1)
-} as const
-
-function cloneUiChildWithRedOutline(element: any): any {
-  if (element == null || typeof element !== 'object') return element
-  const t = element.type
-  const p = element.props
-  if (t == null || p == null) return element
-  const ut = p.uiTransform ?? {}
-  return ReactEcs.createElement(t, {
-    ...p,
-    key: element.key,
-    uiTransform: { ...ut, ...FSM_CARD_DEBUG_RED_CHILD }
-  })
-}
-
-/** Cada hijo apilado bajo el rectángulo verde recibe borde rojo (merge en uiTransform). */
-function cardGreenAreaChildOutlines(children: any): any {
-  if (!FSM_CARD_GREEN_CHILD_DEBUG_OUTLINE) return children
-  if (children == null) return children
-  if (Array.isArray(children)) return children.map(cloneUiChildWithRedOutline)
-  return cloneUiChildWithRedOutline(children)
-}
-
-/**
- * Área útil sobre card.png (borde verde): en X solo un hijo directo → {@link CARD_ROOT_COLUMN}.
- * Sin margin negativo en hijos (el panel con textura suele recortar overflow).
- * margin.top aquí desplaza todo el bloque verde sobre la carta.
+ * Área útil sobre card.png: en X solo un hijo directo → {@link CARD_ROOT_COLUMN}.
+ * margin.top desplaza el bloque sobre la carta.
  */
 const CARD_CONTENT_LAYER = {
   positionType: 'absolute' as const,
@@ -77,8 +38,7 @@ const CARD_CONTENT_LAYER = {
   alignItems: 'center' as const,
   padding: { top: '6%', right: '6%', bottom: '6%', left: '6%' } as const,
   margin: { top: -20 } as const,
-  overflow: 'visible' as const,
-  ...FSM_CARD_DEBUG_BORDER
+  overflow: 'visible' as const
 }
 /**
  * Único hijo de CARD_CONTENT_LAYER: apila bloques en Y. alignItems stretch para que cada Label
@@ -352,7 +312,7 @@ function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'fle
       >
         <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER, justifyContent: justify }}>
           <UiEntity uiTransform={{ ...CARD_ROOT_COLUMN, justifyContent: justify }}>
-            {cardGreenAreaChildOutlines(props.children)}
+            {props.children}
           </UiEntity>
         </UiEntity>
       </UiEntity>
