@@ -156,10 +156,10 @@ export function startHostCinematicCamera(playerPos: Vec3, onComplete?: () => voi
 
   if (playerPos.x >= cfg.xThreshold) {
     hostPivotYawStart = -30
-    hostPivotYawEnd = 30
+    hostPivotYawEnd = 60
   } else {
     hostPivotYawStart = 210
-    hostPivotYawEnd = 150
+    hostPivotYawEnd = 120
   }
 
   hostPivotElapsed = 0
