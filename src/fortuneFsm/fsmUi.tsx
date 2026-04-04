@@ -86,7 +86,7 @@ const CARD_CONTENT_LAYER = {
  * height 100%: si es 'auto', hijos con maxHeight en % (p. ej. revelación) colapsan a altura 0 en Yoga.
  */
 const CARD_ROOT_COLUMN = {
-  width: '88%' as const,
+  width: '70%' as const,
   height: '100%' as const,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
