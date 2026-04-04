@@ -2,7 +2,6 @@ import ReactEcs, { Label, UiEntity } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from '../gameState'
-import { repeatPromptForSeed } from '../repeatFortunePrompt'
 import { SHOW_UI_FORTUNE, USE_FORTUNE_FSM_FLOW } from '../sceneConfig'
 import {
   guestContinueNo,
@@ -19,8 +18,8 @@ import { getFsmRevealFortuneText, getFsmRevealKindTitle } from './resolveRevealF
 import { fsmSession } from './session'
 import type { FsmCardChoice, FsmDeck } from './types'
 
-const CARD_OFFSET = '-100px'
-const CARD_PANEL = { width: '600px' as const, height: '600px' as const }
+const CARD_OFFSET = '80px'
+const CARD_PANEL = { width: '480px' as const, height: '480px' as const }
 const CARD_BG = { texture: { src: 'assets/images/card.png' }, textureMode: 'stretch' as const }
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
 
@@ -46,7 +45,7 @@ const CARD_CONTENT_LAYER = {
  * height 100%: si es 'auto', hijos con maxHeight en % (p. ej. revelación) colapsan a altura 0 en Yoga.
  */
 const CARD_ROOT_COLUMN = {
-  width: '70%' as const,
+  width: '75%' as const,
   height: '100%' as const,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
@@ -84,12 +83,8 @@ const GOLD = Color4.create(212 / 255, 175 / 255, 55 / 255, 1)
 
 const CARD_TEXT_ALIGN: 'middle-center' = 'middle-center'
 
-/** Misma semilla que el flujo legacy (`repeatPromptLine` en ui.tsx) para el prompt “¿algo más?”. */
-function fsmRepeatPromptLine(): string {
-  const guestId = fsmSession.guestId ?? ''
-  const seed = `${guestId}:${gameData.revelationRoundSalt}:${gameData.currentIteration}`
-  return repeatPromptForSeed(seed)
-}
+/** Pregunta fija en CONTINUE_DECISION (invitado + host); el legacy sigue usando `repeatFortunePrompt.ts`. */
+const FSM_CONTINUE_PROMPT = 'Do you want another reading?'
 
 /**
  * Wrapper para Labels "sueltos" que necesitan centrarse en X.
@@ -425,7 +420,7 @@ function HostPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <HostCardShell>
-        <CenteredLabelRow value={fsmRepeatPromptLine()} fontSize={20} color={GOLD} height={100} />
+        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={20} color={GOLD} height={80} />
         <CenteredLabelRow
           value="Ask the guest. They will choose Yes or No."
           fontSize={18}
@@ -512,7 +507,7 @@ function GuestPanel() {
         <UiEntity
           uiTransform={{
             ...CARD_CONTROL_ROW,
-            height: 200,
+            height: 120,
             maxWidth: '100%'
           }}
         >
@@ -571,7 +566,7 @@ function GuestPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <GuestCardShell>
-        <CenteredLabelRow value={fsmRepeatPromptLine()} fontSize={20} color={GOLD} height={100} />
+        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={20} color={GOLD} height={100} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           <UiEntity uiTransform={{ width: '44%', height: '100%', margin: { right: 12 } }} uiBackground={BTN} onMouseDown={() => guestContinueYes()}>
             <Label uiTransform={{ width: '100%', height: '100%' }} value="Yes" textAlign={CARD_TEXT_ALIGN} fontSize={18} font="serif" />

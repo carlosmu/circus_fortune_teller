@@ -33,7 +33,7 @@ const CARD_UI_VERTICAL_OFFSET = '-100px'
  * `card.png` es 1024×1024. Un solo tamaño fijo en px para todas las pantallas: el marco
  * no crece ni encoge entre estados, y stretch en un cuadrado igual al aspecto de la textura no deforma.
  */
-const CARD_PANEL_PX = { width: '600px' as const, height: '600px' as const }
+const CARD_PANEL_PX = { width: '512px' as const, height: '512px' as const }
 const CARD_TEXTURE_BACKGROUND = {
   texture: { src: 'assets/images/card.png' },
   textureMode: 'stretch' as const
