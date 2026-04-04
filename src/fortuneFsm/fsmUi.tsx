@@ -54,7 +54,7 @@ const CARD_ROOT_COLUMN = {
 
 /**
  * Altura como ui.tsx CARD_INNER_COLUMN (referencia para maxHeight % del cuerpo).
- * Ancho: aquí 100% del {@link CARD_ROOT_COLUMN}; el legacy usa 70% solo por el dibujo de la carta.
+ * paddingTop + sin margin negativo: el marco de la carta “come” arriba; antes -80 subía demasiado el texto.
  */
 const REVEAL_INNER_COLUMN = {
   width: '100%' as const,
@@ -62,7 +62,8 @@ const REVEAL_INNER_COLUMN = {
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
   alignItems: 'center' as const,
-  margin: { top: -80 } as const
+  padding: { top: 10, left: 0, right: 0, bottom: 0 } as const,
+  margin: { top: 0 } as const
 }
 const REVEAL_TIGHT_STACK = {
   width: '100%' as const,
