@@ -282,7 +282,7 @@ function HostPanel() {
     return (
       <HostCardShell>
         {/* FIX: CenteredLabelRow garantiza width:100% con altura fija → textAlign middle-center funciona */}
-        <CenteredLabelRow value="Ask the Guest to choose:" fontSize={20} color={GOLD} height={40} />
+        <CenteredLabelRow value="Ask the Guest:" fontSize={20} color={GOLD} height={40} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
           <UiEntity
             uiTransform={{ width: '72%', height: 52 }}
@@ -291,7 +291,7 @@ function HostPanel() {
           >
             <Label
               uiTransform={{ width: '100%', height: '100%' }}
-              value="Category"
+              value="What do you want to know?"
               textAlign={CARD_TEXT_ALIGN}
               fontSize={18}
               font="serif"
@@ -362,13 +362,13 @@ function HostPanel() {
       <HostCardShell>
         {/* FIX */}
         <CenteredLabelRow
-          value={`User selected: ${fsmSession.selectedCardType}`}
+          value={`User selected: ${fsmSession.selectedCardType}\nFortune Teller Chooses Meaning`}
           fontSize={20}
           color={GOLD}
           height={40}
         />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
-          {(['A', 'B', 'C'] as const).map((k, i) => (
+          {(['Meaning 1', 'Meaning 2', 'Meaning 3'] as const).map((k, i) => (
             <UiEntity
               key={k}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
@@ -416,7 +416,7 @@ function GuestPanel() {
     return (
       <GuestCardShell>
         {/* FIX */}
-        <CenteredLabelRow value="Choose a category for this reading." fontSize={20} color={GOLD} height={44} />
+        <CenteredLabelRow value="What do you want to know?" fontSize={20} color={GOLD} height={44} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           {offer.map((cat: FortuneCategory, i: number) => (
             <UiEntity
