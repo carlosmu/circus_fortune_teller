@@ -28,7 +28,38 @@ const FSM_CARD_DEBUG_BORDER = {
 } as const
 
 /**
- * Área útil sobre card.png: grupo de texto/botones centrado en X e Y dentro de este rectángulo.
+ * Borde rojo en cada bloque hijo del área verde (hijos de CARD_ROOT_COLUMN = filas de texto / stacks / filas de botones).
+ * El único hijo directo del verde es la columna raíz; los rojos marcan cada sección apilada en Y.
+ */
+const FSM_CARD_GREEN_CHILD_DEBUG_OUTLINE = true
+const FSM_CARD_DEBUG_RED_CHILD = {
+  borderWidth: FSM_CARD_GREEN_CHILD_DEBUG_OUTLINE ? 2 : 0,
+  borderColor: Color4.create(0.92, 0.12, 0.1, 1)
+} as const
+
+function cloneUiChildWithRedOutline(element: any): any {
+  if (element == null || typeof element !== 'object') return element
+  const t = element.type
+  const p = element.props
+  if (t == null || p == null) return element
+  const ut = p.uiTransform ?? {}
+  return ReactEcs.createElement(t, {
+    ...p,
+    key: element.key,
+    uiTransform: { ...ut, ...FSM_CARD_DEBUG_RED_CHILD }
+  })
+}
+
+/** Cada hijo apilado bajo el rectángulo verde recibe borde rojo (merge en uiTransform). */
+function cardGreenAreaChildOutlines(children: any): any {
+  if (!FSM_CARD_GREEN_CHILD_DEBUG_OUTLINE) return children
+  if (children == null) return children
+  if (Array.isArray(children)) return children.map(cloneUiChildWithRedOutline)
+  return cloneUiChildWithRedOutline(children)
+}
+
+/**
+ * Área útil sobre card.png (borde verde): en X solo un hijo directo → {@link CARD_ROOT_COLUMN}.
  * Sin margin negativo en hijos (el panel con textura suele recortar overflow).
  */
 const CARD_CONTENT_LAYER = {
@@ -43,22 +74,44 @@ const CARD_CONTENT_LAYER = {
   overflow: 'visible' as const,
   ...FSM_CARD_DEBUG_BORDER
 }
-/** Bloque interno (texto + filas): contenido apilado y centrado en X dentro del ancho disponible. */
-const STACK = {
-  width: '100%' as const,
+/**
+ * Único hijo de CARD_CONTENT_LAYER: apila bloques en Y. alignItems stretch para que cada Label
+ * con width 100% ocupe todo el ancho y textAlign middle-center se aplique al rectángulo completo.
+ */
+const CARD_ROOT_COLUMN = {
+  width: '88%' as const,
+  height: 'auto' as const,
+  maxHeight: '90%' as const,
   flexDirection: 'column' as const,
-  justifyContent: 'flex-start' as const,
+  justifyContent: 'center' as const,
+  alignItems: 'stretch' as const
+}
+/** Contenedor para N botones en columna (ej. mazos); alignSelf center para no estirar a todo el ancho del root. */
+const CARD_BUTTON_STACK = {
+  width: '100%' as const,
+  maxWidth: 340,
+  alignSelf: 'center' as const,
+  flexDirection: 'column' as const,
+  justifyContent: 'center' as const,
   alignItems: 'center' as const
 }
-const BTN_ROW = {
+/** Una fila de controles (ej. A/B/C o Sí/No): un solo elemento en el eje Y del root. */
+const CARD_CONTROL_ROW = {
   width: '100%' as const,
-  height: 56,
-  margin: { top: 10 } as const,
   flexDirection: 'row' as const,
-  justifyContent: 'space-around' as const
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const
 }
+const BTN_ROW_HEIGHT = 56
 const BTN = { color: Color4.create(0.15, 0.12, 0.05, 0.9) }
 const GOLD = Color4.create(212 / 255, 175 / 255, 55 / 255, 1)
+
+/**
+ * Alineación del `Label` del SDK: no hay `textAlign="center"` suelto; los valores son compuestos
+ * (p. ej. middle-center = vertical medio + horizontal centro). Si el padre flex usa alignItems:center,
+ * el Label a menudo no ocupa todo el ancho y el texto parece “pegado” a la izquierda.
+ */
+const CARD_TEXT_ALIGN: 'middle-center' = 'middle-center'
 
 const DECKS: FsmDeck[] = ['Funny', 'Serious', 'Strange']
 const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
@@ -86,7 +139,7 @@ function WorldBanner({ text }: { text: string }) {
       <Label
         uiTransform={{ width: '90%', height: '100%' }}
         value={text}
-        textAlign="middle-center"
+        textAlign={CARD_TEXT_ALIGN}
         textWrap="wrap"
         fontSize={20}
         font="serif"
@@ -116,7 +169,7 @@ function RevealWorldLine() {
       <Label
         uiTransform={{ width: '88%', height: 'auto', maxHeight: '40%' }}
         value={`${name}, you will… ${line}`}
-        textAlign="middle-center"
+        textAlign={CARD_TEXT_ALIGN}
         textWrap="wrap"
         fontSize={28}
         font="serif"
@@ -142,7 +195,7 @@ function GlobalFinished({ text }: { text: string }) {
       <Label
         uiTransform={{ width: '80%', height: 'auto' }}
         value={text}
-        textAlign="middle-center"
+        textAlign={CARD_TEXT_ALIGN}
         textWrap="wrap"
         fontSize={24}
         font="serif"
@@ -175,7 +228,9 @@ function HostCardShell(props: { children?: any }) {
         }}
         uiBackground={CARD_BG}
       >
-        <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER }}>{props.children}</UiEntity>
+        <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER }}>
+          <UiEntity uiTransform={{ ...CARD_ROOT_COLUMN }}>{cardGreenAreaChildOutlines(props.children)}</UiEntity>
+        </UiEntity>
       </UiEntity>
     </UiEntity>
   )
@@ -192,47 +247,28 @@ function HostPanel() {
   if (st === 'INIT') {
     return (
       <HostCardShell>
-        <UiEntity uiTransform={{ ...STACK }}>
-          {/* Centrado en X: fila + label con ancho explícito (width 'auto' en Label suele colapsar a 0 en este runtime). */}
+        <Label
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 28 }}
+          value="Ask the Guest to choose:"
+          textAlign={CARD_TEXT_ALIGN}
+          textWrap="wrap"
+          fontSize={20}
+          font="serif"
+          color={GOLD}
+        />
+        <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
           <UiEntity
-            uiTransform={{
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
+            uiTransform={{ width: '72%', height: 52 }}
+            uiBackground={BTN}
+            onMouseDown={() => hostOpenCategorySelection()}
           >
             <Label
-              uiTransform={{ width: '90%', height: 'auto', minHeight: 28 }}
-              value="Ask the Guest to choose:"
-              textAlign="middle-center"
-              textWrap="wrap"
-              fontSize={20}
+              uiTransform={{ width: '100%', height: '100%' }}
+              value="Category"
+              textAlign={CARD_TEXT_ALIGN}
+              fontSize={18}
               font="serif"
-              color={GOLD}
             />
-          </UiEntity>
-          <UiEntity
-            uiTransform={{
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              margin: { top: 16 }
-            }}
-          >
-            <UiEntity
-              uiTransform={{ width: '72%', height: 52 }}
-              uiBackground={BTN}
-              onMouseDown={() => hostOpenCategorySelection()}
-            >
-              <Label
-                uiTransform={{ width: '100%', height: '100%' }}
-                value="Category"
-                textAlign="middle-center"
-                fontSize={18}
-                font="serif"
-              />
-            </UiEntity>
           </UiEntity>
         </UiEntity>
       </HostCardShell>
@@ -243,9 +279,9 @@ function HostPanel() {
     return (
       <HostCardShell>
         <Label
-          uiTransform={{ width: '90%', height: 'auto', minHeight: 120, maxHeight: '55%' }}
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 120, maxHeight: '55%' }}
           value="The Guest is choosing a focus for the reading."
-          textAlign="middle-center"
+          textAlign={CARD_TEXT_ALIGN}
           textWrap="wrap"
           fontSize={20}
           font="serif"
@@ -258,34 +294,32 @@ function HostPanel() {
   if (st === 'DECK_SELECTION' && cat) {
     return (
       <HostCardShell>
-        <UiEntity uiTransform={{ ...STACK }}>
-          <Label
-            uiTransform={{ width: '100%', height: 'auto' }}
-            value={`I want to know about ${cat}`}
-            textAlign="middle-center"
-            textWrap="wrap"
-            fontSize={20}
-            font="serif"
-            color={GOLD}
-          />
-          <UiEntity uiTransform={{ ...BTN_ROW, margin: { top: 20 }, height: 180, flexDirection: 'column', justifyContent: 'space-between' }}>
-            {DECKS.map((d) => (
-              <UiEntity
-                key={d}
-                uiTransform={{ width: '100%', height: 52 }}
-                uiBackground={BTN}
-                onMouseDown={() => hostPickDeck(d)}
-              >
-                <Label
-                  uiTransform={{ width: '100%', height: '100%' }}
-                  value={d}
-                  textAlign="middle-center"
-                  fontSize={18}
-                  font="serif"
-                />
-              </UiEntity>
-            ))}
-          </UiEntity>
+        <Label
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 48 }}
+          value={`I want to know about ${cat}`}
+          textAlign={CARD_TEXT_ALIGN}
+          textWrap="wrap"
+          fontSize={20}
+          font="serif"
+          color={GOLD}
+        />
+        <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 18 }, height: BTN_ROW_HEIGHT }}>
+          {DECKS.map((d, i) => (
+            <UiEntity
+              key={d}
+              uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
+              uiBackground={BTN}
+              onMouseDown={() => hostPickDeck(d)}
+            >
+              <Label
+                uiTransform={{ width: '100%', height: '100%' }}
+                value={d}
+                textAlign={CARD_TEXT_ALIGN}
+                fontSize={16}
+                font="serif"
+              />
+            </UiEntity>
+          ))}
         </UiEntity>
       </HostCardShell>
     )
@@ -295,9 +329,9 @@ function HostPanel() {
     return (
       <HostCardShell>
         <Label
-          uiTransform={{ width: '90%', height: 'auto', minHeight: 80, maxHeight: '50%' }}
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 80, maxHeight: '50%' }}
           value="Guest will pick a card."
-          textAlign="middle-center"
+          textAlign={CARD_TEXT_ALIGN}
           textWrap="wrap"
           fontSize={22}
           font="serif"
@@ -310,34 +344,32 @@ function HostPanel() {
   if (st === 'FORTUNE_SELECTION' && fsmSession.selectedCardType) {
     return (
       <HostCardShell>
-        <UiEntity uiTransform={{ ...STACK }}>
-          <Label
-            uiTransform={{ width: '100%', height: 'auto' }}
-            value={`User selected: ${fsmSession.selectedCardType}`}
-            textAlign="middle-center"
-            textWrap="wrap"
-            fontSize={20}
-            font="serif"
-            color={GOLD}
-          />
-          <UiEntity uiTransform={{ ...BTN_ROW, margin: { top: 24 } }}>
-            {(['A', 'B', 'C'] as const).map((k) => (
-              <UiEntity
-                key={k}
-                uiTransform={{ width: '30%', height: '100%' }}
-                uiBackground={BTN}
-                onMouseDown={() => hostPickFortune(k)}
-              >
-                <Label
-                  uiTransform={{ width: '100%', height: '100%' }}
-                  value={k}
-                  textAlign="middle-center"
-                  fontSize={18}
-                  font="serif"
-                />
-              </UiEntity>
-            ))}
-          </UiEntity>
+        <Label
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 40 }}
+          value={`User selected: ${fsmSession.selectedCardType}`}
+          textAlign={CARD_TEXT_ALIGN}
+          textWrap="wrap"
+          fontSize={20}
+          font="serif"
+          color={GOLD}
+        />
+        <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
+          {(['A', 'B', 'C'] as const).map((k, i) => (
+            <UiEntity
+              key={k}
+              uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
+              uiBackground={BTN}
+              onMouseDown={() => hostPickFortune(k)}
+            >
+              <Label
+                uiTransform={{ width: '100%', height: '100%' }}
+                value={k}
+                textAlign={CARD_TEXT_ALIGN}
+                fontSize={18}
+                font="serif"
+              />
+            </UiEntity>
+          ))}
         </UiEntity>
       </HostCardShell>
     )
@@ -353,9 +385,9 @@ function GuestPanel() {
     return (
       <GuestCardShell>
         <Label
-          uiTransform={{ width: '90%', height: 'auto', minHeight: 80, maxHeight: '45%' }}
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 80, maxHeight: '45%' }}
           value="Reading starts…"
-          textAlign="middle-center"
+          textAlign={CARD_TEXT_ALIGN}
           textWrap="wrap"
           fontSize={22}
           font="serif"
@@ -368,25 +400,25 @@ function GuestPanel() {
   if (st === 'CATEGORY_SELECTION') {
     return (
       <GuestCardShell>
-        <UiEntity uiTransform={{ ...STACK }}>
-          <Label
-            uiTransform={{ width: '100%', height: 'auto' }}
-            value="Choose a category for this reading."
-            textAlign="middle-center"
-            textWrap="wrap"
-            fontSize={20}
-            font="serif"
-            color={GOLD}
-          />
+        <Label
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 44 }}
+          value="Choose a category for this reading."
+          textAlign={CARD_TEXT_ALIGN}
+          textWrap="wrap"
+          fontSize={20}
+          font="serif"
+          color={GOLD}
+        />
+        <UiEntity uiTransform={{ ...CARD_BUTTON_STACK, margin: { top: 20 } }}>
           <UiEntity
-            uiTransform={{ width: '50%', height: 52, margin: { top: 20 } }}
+            uiTransform={{ width: '100%', height: 52 }}
             uiBackground={BTN}
             onMouseDown={() => guestPickCategory()}
           >
             <Label
               uiTransform={{ width: '100%', height: '100%' }}
               value="Category"
-              textAlign="middle-center"
+              textAlign={CARD_TEXT_ALIGN}
               fontSize={18}
               font="serif"
             />
@@ -399,55 +431,50 @@ function GuestPanel() {
   if (st === 'CARD_SELECTION') {
     return (
       <GuestCardShell>
+        <Label
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 24, margin: { bottom: 12 } }}
+          value="Choose a card."
+          textAlign={CARD_TEXT_ALIGN}
+          fontSize={18}
+          font="serif"
+          color={GOLD}
+        />
         <UiEntity
           uiTransform={{
-            width: '100%',
-            height: 'auto',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
+            ...CARD_CONTROL_ROW,
+            height: 200,
+            maxWidth: '100%'
           }}
         >
-          <Label
-            uiTransform={{ width: '100%', height: 'auto', minHeight: 24, margin: { bottom: 12 } }}
-            value="Choose a card."
-            textAlign="middle-center"
-            fontSize={18}
-            font="serif"
-            color={GOLD}
-          />
-          <UiEntity
-            uiTransform={{
-              width: '100%',
-              height: 200,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'stretch'
-            }}
-          >
-            {CARD_SLOTS.map(({ key, idx }) => {
-              const flipped = fsmSession.cardFlipIndex === idx
-              return (
-                <UiEntity
-                  key={key}
-                  uiTransform={{ width: '31%', height: '100%' }}
-                  uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
-                  onMouseDown={() => guestPickCard(key, idx)}
-                >
-                  {flipped && (
-                    <Label
-                      uiTransform={{ width: '100%', height: '100%' }}
-                      value={key}
-                      textAlign="middle-center"
-                      fontSize={28}
-                      font="serif"
-                      color={Color4.create(1, 1, 1, 0.9)}
-                    />
-                  )}
-                </UiEntity>
-              )
-            })}
-          </UiEntity>
+          {CARD_SLOTS.map(({ key, idx }, i) => {
+            const flipped = fsmSession.cardFlipIndex === idx
+            return (
+              <UiEntity
+                key={key}
+                uiTransform={{
+                  width: '30%',
+                  height: '100%',
+                  margin: { left: i === 0 ? 0 : 12 },
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
+                onMouseDown={() => guestPickCard(key, idx)}
+              >
+                {flipped && (
+                  <Label
+                    uiTransform={{ width: '100%', height: '100%' }}
+                    value={key}
+                    textAlign={CARD_TEXT_ALIGN}
+                    fontSize={28}
+                    font="serif"
+                    color={Color4.create(1, 1, 1, 0.9)}
+                  />
+                )}
+              </UiEntity>
+            )
+          })}
         </UiEntity>
       </GuestCardShell>
     )
@@ -461,9 +488,9 @@ function GuestPanel() {
     return (
       <GuestCardShell>
         <Label
-          uiTransform={{ width: '90%', height: 'auto', minHeight: 80, maxHeight: '50%' }}
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 80, maxHeight: '50%' }}
           value={hint}
-          textAlign="middle-center"
+          textAlign={CARD_TEXT_ALIGN}
           textWrap="wrap"
           fontSize={22}
           font="serif"
@@ -476,23 +503,21 @@ function GuestPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <GuestCardShell>
-        <UiEntity uiTransform={{ ...STACK }}>
-          <Label
-            uiTransform={{ width: '100%', height: 'auto' }}
-            value="Do you want another reading?"
-            textAlign="middle-center"
-            textWrap="wrap"
-            fontSize={20}
-            font="serif"
-            color={GOLD}
-          />
-          <UiEntity uiTransform={{ ...BTN_ROW, margin: { top: 20 } }}>
-            <UiEntity uiTransform={{ width: '46%', height: '100%' }} uiBackground={BTN} onMouseDown={() => guestContinueYes()}>
-              <Label uiTransform={{ width: '100%', height: '100%' }} value="Yes" textAlign="middle-center" fontSize={18} font="serif" />
-            </UiEntity>
-            <UiEntity uiTransform={{ width: '46%', height: '100%' }} uiBackground={BTN} onMouseDown={() => guestContinueNo()}>
-              <Label uiTransform={{ width: '100%', height: '100%' }} value="No" textAlign="middle-center" fontSize={18} font="serif" />
-            </UiEntity>
+        <Label
+          uiTransform={{ width: '100%', height: 'auto', minHeight: 44 }}
+          value="Do you want another reading?"
+          textAlign={CARD_TEXT_ALIGN}
+          textWrap="wrap"
+          fontSize={20}
+          font="serif"
+          color={GOLD}
+        />
+        <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
+          <UiEntity uiTransform={{ width: '44%', height: '100%', margin: { right: 12 } }} uiBackground={BTN} onMouseDown={() => guestContinueYes()}>
+            <Label uiTransform={{ width: '100%', height: '100%' }} value="Yes" textAlign={CARD_TEXT_ALIGN} fontSize={18} font="serif" />
+          </UiEntity>
+          <UiEntity uiTransform={{ width: '44%', height: '100%' }} uiBackground={BTN} onMouseDown={() => guestContinueNo()}>
+            <Label uiTransform={{ width: '100%', height: '100%' }} value="No" textAlign={CARD_TEXT_ALIGN} fontSize={18} font="serif" />
           </UiEntity>
         </UiEntity>
       </GuestCardShell>
