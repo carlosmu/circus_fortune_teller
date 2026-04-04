@@ -1,12 +1,12 @@
 export type FortuneCategory = 'love' | 'money' | 'health' | 'work' | 'mystery' | 'pets' | 'family' | 'travel' | 'luck'
 
-export type FortuneKind = 'advertencia' | 'consejo' | 'prediccion'
+export type FortuneKind = 'warning' | 'advice' | 'prediction'
 
 export type Fortune = {
   text: string
   category: 'love' | 'money' | 'health' | 'work' | 'mystery' | 'luck'
   deck: 'funny' | 'serious' | 'strange'
-  type: 'advertencia' | 'consejo' | 'prediccion'
+  type: 'warning' | 'advice' | 'prediction'
 }
 
 export type GameState = 'LIBRE' | 'OCUPADO' | 'MOSTRANDO_FORTUNA'

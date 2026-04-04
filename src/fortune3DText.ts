@@ -11,9 +11,9 @@ import { Vector3, Color4 } from '@dcl/sdk/math'
 import type { Fortune, FortuneKind } from './types'
 
 const KIND_LINE: Record<FortuneKind, string> = {
-  advertencia: 'Warning',
-  consejo: 'Advice',
-  prediccion: 'Prediction'
+  warning: 'Warning',
+  advice: 'Advice',
+  prediction: 'Prediction'
 }
 import { WIZARD } from './scene'
 import { gameData } from './gameState'

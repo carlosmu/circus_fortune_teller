@@ -356,9 +356,9 @@ function HostPanel() {
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           {(
             [
-              { choice: 'A' as const, label: 'Predicción' },
-              { choice: 'B' as const, label: 'Consejo' },
-              { choice: 'C' as const, label: 'Advertencia' }
+              { choice: 'A' as const, label: 'Prediction' },
+              { choice: 'B' as const, label: 'Advice' },
+              { choice: 'C' as const, label: 'Warning' }
             ] as const
           ).map(({ choice, label }, i) => (
             <UiEntity

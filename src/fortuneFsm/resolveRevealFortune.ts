@@ -3,17 +3,17 @@ import { hashString } from '../revelationRng'
 import type { FortuneCategory, FortuneKind } from '../types'
 import type { FsmCardChoice, FsmDeck, FsmSession } from './types'
 
-/** Carta A = predicción, B = consejo, C = advertencia (orden meaning 1,2,3). */
+/** Carta A = prediction, B = advice, C = warning (meaning 1, 2, 3). */
 export const FSM_CHOICE_TO_KIND: Record<FsmCardChoice, FortuneKind> = {
-  A: 'prediccion',
-  B: 'consejo',
-  C: 'advertencia'
+  A: 'prediction',
+  B: 'advice',
+  C: 'warning'
 }
 
-const KIND_TITLE_ES: Record<FortuneKind, string> = {
-  prediccion: 'Predicción',
-  consejo: 'Consejo',
-  advertencia: 'Advertencia'
+const KIND_TITLE: Record<FortuneKind, string> = {
+  prediction: 'Prediction',
+  advice: 'Advice',
+  warning: 'Warning'
 }
 
 function deckToDataDeck(d: FsmDeck): 'funny' | 'serious' | 'strange' {
@@ -37,5 +37,5 @@ export function getFsmRevealFortuneText(session: Pick<FsmSession, 'guestId' | 's
 
 export function getFsmRevealKindTitle(choice: FsmCardChoice | null): string {
   if (!choice) return ''
-  return KIND_TITLE_ES[FSM_CHOICE_TO_KIND[choice]]
+  return KIND_TITLE[FSM_CHOICE_TO_KIND[choice]]
 }

@@ -86,12 +86,12 @@ const CATEGORY_LABELS: Record<FortuneCategory, string> = {
 }
 
 const KIND_LABELS: Record<FortuneKind, string> = {
-  advertencia: 'Warning',
-  consejo: 'Advice',
-  prediccion: 'Prediction'
+  warning: 'Warning',
+  advice: 'Advice',
+  prediction: 'Prediction'
 }
 
-const KIND_ORDER: FortuneKind[] = ['advertencia', 'consejo', 'prediccion']
+const KIND_ORDER: FortuneKind[] = ['warning', 'advice', 'prediction']
 
 const legacyFortuneUi = SHOW_UI_FORTUNE && !USE_FORTUNE_FSM_FLOW
 

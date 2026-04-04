@@ -10,7 +10,7 @@ export const CATEGORIES_WITH_FORTUNES: FortuneCategory[] = [
   'luck'
 ]
 
-export const FORTUNE_KINDS: FortuneKind[] = ['advertencia', 'consejo', 'prediccion']
+export const FORTUNE_KINDS: FortuneKind[] = ['warning', 'advice', 'prediction']
 
 export function hashString(s: string): number {
   let h = 2166136261
