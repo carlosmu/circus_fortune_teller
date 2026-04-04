@@ -4,8 +4,9 @@ export type FortuneKind = 'advertencia' | 'consejo' | 'prediccion'
 
 export type Fortune = {
   text: string
-  category: FortuneCategory
-  type: FortuneKind
+  category: 'love' | 'money' | 'health' | 'work' | 'mystery' | 'luck'
+  deck: 'funny' | 'serious' | 'strange'
+  type: 'advertencia' | 'consejo' | 'prediccion'
 }
 
 export type GameState = 'LIBRE' | 'OCUPADO' | 'MOSTRANDO_FORTUNA'
