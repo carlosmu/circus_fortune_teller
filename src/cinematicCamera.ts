@@ -42,10 +42,10 @@ export const GUEST_PIVOT_CINEMATIC_CONFIG = {
   lookTargetY: HOST_PIVOT_CINEMATIC_CONFIG.lookTargetY,
   duration: HOST_PIVOT_CINEMATIC_CONFIG.duration,
   pivotOffsetZ: HOST_PIVOT_CINEMATIC_CONFIG.pivotOffsetZ,
-  yawStartRight: -12,
-  yawEndRight: -42,
-  yawStartLeft: 172,
-  yawEndLeft: 198
+  yawStartRight: 10,
+  yawEndRight: -50,
+  yawStartLeft: 170,
+  yawEndLeft: 230
 }
 
 type TablePivotCamCfg = { radius: number; lookTargetY: number }
