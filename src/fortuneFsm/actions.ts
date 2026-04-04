@@ -1,12 +1,12 @@
 import { executeTask } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
+import type { FortuneCategory } from '../types'
 import { FSM_DEBOUNCE_MS, type FsmCardChoice, type FsmDeck } from './types'
 import { fsmSession, hardResetSession, sessionForSync } from './session'
 import { debounceOk, tryTransition } from './machine'
 import { broadcastFsmSession } from './sync'
 import { fortuneMessageBus, touchGuestReadingInteractionDeadline } from '../fortuneSync'
-
-const CATEGORY_BUTTON_LABEL = 'Category'
+import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
 
 function nowMs(): number {
   return Date.now()
@@ -31,15 +31,18 @@ export function hostOpenCategorySelection(): void {
   if (r.ok) emit()
 }
 
-/** Guest: pick category → DECK_SELECTION */
-export function guestPickCategory(): void {
+/** Guest: elige una de las 3 categorías mostradas → DECK_SELECTION; queda excluida en la siguiente terna. */
+export function guestPickCategory(category: FortuneCategory): void {
   if (!debounceOk(nowMs(), FSM_DEBOUNCE_MS)) return
   const p = getPlayer()
   if (!p || p.userId !== fsmSession.guestId) return
   if (fsmSession.state !== 'CATEGORY_SELECTION') return
 
-  const label = CATEGORY_BUTTON_LABEL
+  const offer = getFsmCategoryOffer(fsmSession.guestId, fsmSession.usedCategories)
+  if (!offer.includes(category)) return
 
+  const label = FSM_CATEGORY_LABELS[category]
+  fsmSession.usedCategories = [...fsmSession.usedCategories, category]
   fsmSession.selectedCategory = label
   fsmSession.worldBanner = `Reading: ${label}`
   const r = tryTransition('DECK_SELECTION')

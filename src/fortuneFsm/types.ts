@@ -1,3 +1,5 @@
+import type { FortuneCategory } from '../types'
+
 /** Core FSM states for Host + Guest fortune flow (spectators out of scope). */
 export type FsmState =
   | 'INIT'
@@ -33,8 +35,8 @@ export type FsmSession = {
   hostFortunePickedAtMs: number | null
   /** When REVEAL started (ms) for auto-advance to CONTINUE. */
   revealEnteredAtMs: number | null
-  /** Categories already used this seating (exclude on loop). */
-  usedCategories: string[]
+  /** Categorías ya elegidas en esta sesión FSM (no vuelven a salir en la terna hasta agotar las 6). */
+  usedCategories: FortuneCategory[]
   /** Card row: which slot flipped (UI). */
   cardFlipIndex: number | null
   /** Finished reading global line. */
