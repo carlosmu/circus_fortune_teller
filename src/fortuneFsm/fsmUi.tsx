@@ -85,6 +85,8 @@ const CARD_TEXT_ALIGN: 'middle-center' = 'middle-center'
 
 /** Pregunta fija en CONTINUE_DECISION (invitado + host); el legacy sigue usando `repeatFortunePrompt.ts`. */
 const FSM_CONTINUE_PROMPT = 'Do you want another reading?'
+/** Una línea ~font 20: evita hueco grande bajo la pregunta antes de botones / texto host. */
+const FSM_CONTINUE_PROMPT_ROW_HEIGHT = 44
 
 /**
  * Wrapper para Labels "sueltos" que necesitan centrarse en X.
@@ -420,12 +422,12 @@ function HostPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <HostCardShell>
-        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={20} color={GOLD} height={80} />
+        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={20} color={GOLD} height={FSM_CONTINUE_PROMPT_ROW_HEIGHT} />
         <CenteredLabelRow
           value="Ask the guest. They will choose Yes or No."
           fontSize={18}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
-          height={72}
+          height={56}
         />
       </HostCardShell>
     )
@@ -566,8 +568,13 @@ function GuestPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <GuestCardShell>
-        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={20} color={GOLD} height={100} />
-        <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
+        <CenteredLabelRow
+          value={FSM_CONTINUE_PROMPT}
+          fontSize={20}
+          color={GOLD}
+          height={FSM_CONTINUE_PROMPT_ROW_HEIGHT}
+        />
+        <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 8 }, height: BTN_ROW_HEIGHT }}>
           <UiEntity uiTransform={{ width: '44%', height: '100%', margin: { right: 12 } }} uiBackground={BTN} onMouseDown={() => guestContinueYes()}>
             <Label uiTransform={{ width: '100%', height: '100%' }} value="Yes" textAlign={CARD_TEXT_ALIGN} fontSize={18} font="serif" />
           </UiEntity>
