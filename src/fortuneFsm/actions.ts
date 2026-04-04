@@ -2,7 +2,11 @@ import { executeTask } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import type { FortuneCategory } from '../types'
 import { gameData } from '../gameState'
-import { FORTUNE_DISPLAY_DURATION } from '../sceneConfig'
+import {
+  FORTUNE_DISPLAY_DURATION,
+  FSM_REVEAL_READING_PHASE_MS,
+  FSM_REVEAL_SHOW_AT_MS
+} from '../sceneConfig'
 import { pickGuestMaxReadingsFarewellLine } from '../revelationRng'
 import { FSM_DEBOUNCE_MS, type FsmCardChoice, type FsmDeck } from './types'
 import { fsmSession, hardResetSession, sessionForSync } from './session'
@@ -98,7 +102,7 @@ export function guestPickCard(slot: FsmCardChoice, index: 0 | 1 | 2): void {
   if (r.ok) emit()
 }
 
-/** Host: fortune A/B/C — starts 2s timer to REVEAL */
+/** Host: fortune A/B/C — temporizador breve (sceneConfig) hasta REVEAL */
 export function hostPickFortune(choice: FsmCardChoice): void {
   if (!debounceOk(nowMs(), FSM_DEBOUNCE_MS)) return
   const p = getPlayer()
@@ -110,17 +114,17 @@ export function hostPickFortune(choice: FsmCardChoice): void {
   emit()
 }
 
-/** Called from engine when 2s elapsed after host fortune pick. */
+/** Called from engine: fases de hint invitado y transición a REVEAL (ver sceneConfig). */
 export function fsmTickRevealIfReady(t: number): void {
   if (!fsmSession.active || fsmSession.state !== 'FORTUNE_SELECTION') return
   if (fsmSession.selectedFortune === null || fsmSession.hostFortunePickedAtMs === null) return
   const dt = t - fsmSession.hostFortunePickedAtMs
-  if (dt >= 2000 && fsmSession.fortuneGuestHint === 'reading') {
+  if (dt >= FSM_REVEAL_READING_PHASE_MS && fsmSession.fortuneGuestHint === 'reading') {
     fsmSession.fortuneGuestHint = 'clear'
     emit()
     return
   }
-  if (dt >= 2800 && fsmSession.fortuneGuestHint === 'clear') {
+  if (dt >= FSM_REVEAL_SHOW_AT_MS && fsmSession.fortuneGuestHint === 'clear') {
     const r = tryTransition('REVEAL', {
       revealEnteredAtMs: nowMs(),
       fortuneGuestHint: 'idle'

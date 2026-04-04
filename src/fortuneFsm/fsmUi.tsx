@@ -169,11 +169,6 @@ function WorldBanner({ text }: { text: string }) {
   )
 }
 
-const LOG_REVEAL_UI = '[FortuneFSM/revealUi]'
-const LOG_FSM_LAYER = '[FortuneFSM/layer]'
-let lastRevealUiLogKey = ''
-let lastLayerRevealLogKey = ''
-
 /** Lectura final sobre card.png (host, guest y espectadores con sesión activa). */
 function RevealFortuneOnCard() {
   const name = fsmSession.guestName?.trim() || 'Guest'
@@ -182,24 +177,6 @@ function RevealFortuneOnCard() {
   const body = getFsmRevealFortuneText(fsmSession)
   const fortuneText = `${name}, ${body}`
 
-  const uiKey = `rui|${fsmSession.revealEnteredAtMs ?? 'no-ts'}|${fsmSession.guestId}|${choice ?? '-'}|${body.length}`
-  if (uiKey !== lastRevealUiLogKey) {
-    lastRevealUiLogKey = uiKey
-    console.log(LOG_REVEAL_UI, 'RevealFortuneOnCard render (datos que van al Label)', {
-      revealEnteredAtMs: fsmSession.revealEnteredAtMs,
-      active: fsmSession.active,
-      state: fsmSession.state,
-      guestId: fsmSession.guestId,
-      guestName: fsmSession.guestName,
-      selectedCategoryKey: fsmSession.selectedCategoryKey,
-      selectedDeck: fsmSession.selectedDeck,
-      selectedFortune: choice,
-      kindTitle,
-      bodyLength: body.length,
-      fortuneTextLength: fortuneText.length,
-      fortuneTextFull: fortuneText
-    })
-  }
   /**
    * Misma jerarquía que ui.tsx cuando `isVisible` (fortuna legacy): REVEAL_INNER_COLUMN da altura % fija
    * para que el Label del cuerpo con maxHeight: '68%' no quede en 0 px.
@@ -629,22 +606,6 @@ export function FortuneFsmLayer() {
   const isGuest = uid !== null && uid === fsmSession.guestId
 
   const showRevealCard = fsmSession.active && fsmSession.state === 'REVEAL'
-  if (showRevealCard) {
-    const layerKey = `REVEAL|${fsmSession.revealEnteredAtMs ?? 'no-ts'}|${fsmSession.guestId}|${fsmSession.selectedFortune ?? '-'}`
-    if (layerKey !== lastLayerRevealLogKey) {
-      lastLayerRevealLogKey = layerKey
-      console.log(LOG_FSM_LAYER, 'condición REVEAL activa → se monta RevealFortuneOnCard', {
-        revealEnteredAtMs: fsmSession.revealEnteredAtMs,
-        active: fsmSession.active,
-        state: fsmSession.state,
-        uid,
-        isHost,
-        isGuest,
-        USE_FORTUNE_FSM_FLOW,
-        SHOW_UI_FORTUNE
-      })
-    }
-  }
 
   return (
     <UiEntity

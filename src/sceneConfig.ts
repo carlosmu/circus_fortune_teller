@@ -17,3 +17,15 @@ export const SHOW_UI_FORTUNE = true
 
 /** Flujo Host/Guest como FSM (INIT → … → RESET); si es true, el panel legacy de revelación queda desactivado. */
 export const USE_FORTUNE_FSM_FLOW = true
+
+/**
+ * FSM: tras el host elige significado (A/B/C), ms hasta el mensaje “se aclara” para el invitado.
+ * Antes: 2000. Valores bajos = revelación más inmediata.
+ */
+export const FSM_REVEAL_READING_PHASE_MS = 450
+
+/**
+ * FSM: ms desde la elección del host hasta entrar en REVEAL (texto en carta).
+ * Debe ser mayor que {@link FSM_REVEAL_READING_PHASE_MS}. Antes: 2800.
+ */
+export const FSM_REVEAL_SHOW_AT_MS = 750
