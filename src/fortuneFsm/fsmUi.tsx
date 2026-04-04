@@ -157,20 +157,21 @@ function revealGlowAlpha(): number {
   return 0.75 + 0.25 * Math.sin(Date.now() / 350)
 }
 
+/** Ocupa espacio en el flujo (no absolute) para no solaparse con la carta card.png debajo. */
 function WorldBanner({ text }: { text: string }) {
   return (
     <UiEntity
       uiTransform={{
         width: '100%',
-        height: '12%',
-        positionType: 'absolute',
-        position: { top: '8%', left: 0 },
+        flexShrink: 0,
+        flexDirection: 'column',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        padding: { top: 12, bottom: 20, left: 8, right: 8 }
       }}
     >
       <Label
-        uiTransform={{ width: '90%', height: '100%' }}
+        uiTransform={{ width: '92%', height: 'auto', minHeight: 28 }}
         value={text}
         textAlign={CARD_TEXT_ALIGN}
         textWrap="wrap"
@@ -319,7 +320,7 @@ function HostPanel() {
     return (
       <HostCardShell>
         {/* FIX */}
-        <CenteredLabelRow value={`I want to know about ${cat}`} fontSize={20} color={GOLD} height={48} />
+        <CenteredLabelRow value="Fortune Teller clicks one deck" fontSize={20} color={GOLD} height={56} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 18 }, height: BTN_ROW_HEIGHT }}>
           {DECKS.map((d, i) => (
             <UiEntity
@@ -434,6 +435,24 @@ function GuestPanel() {
             </UiEntity>
           ))}
         </UiEntity>
+      </GuestCardShell>
+    )
+  }
+
+  if (st === 'DECK_SELECTION') {
+    const topic = fsmSession.selectedCategory
+    return (
+      <GuestCardShell>
+        <CenteredLabelRow
+          value={
+            topic
+              ? `The reading will focus on ${topic}. The Fortune Teller is choosing the deck…`
+              : 'The Fortune Teller is choosing the deck…'
+          }
+          fontSize={20}
+          color={GOLD}
+          height={100}
+        />
       </GuestCardShell>
     )
   }
@@ -554,8 +573,19 @@ export function FortuneFsmLayer() {
       {fsmSession.worldBanner && fsmSession.state !== 'REVEAL' && <WorldBanner text={fsmSession.worldBanner} />}
       {fsmSession.state === 'REVEAL' && <RevealWorldLine />}
       {fsmSession.sessionFinishedMessage && <GlobalFinished text={fsmSession.sessionFinishedMessage} />}
-      {fsmSession.active && isHost && <HostPanel />}
-      {fsmSession.active && isGuest && <GuestPanel />}
+      <UiEntity
+        uiTransform={{
+          width: '100%',
+          flex: 1,
+          minHeight: 0,
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center'
+        }}
+      >
+        {fsmSession.active && isHost && <HostPanel />}
+        {fsmSession.active && isGuest && <GuestPanel />}
+      </UiEntity>
     </UiEntity>
   )
 }

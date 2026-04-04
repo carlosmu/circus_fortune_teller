@@ -44,7 +44,7 @@ export function guestPickCategory(category: FortuneCategory): void {
   const label = FSM_CATEGORY_LABELS[category]
   fsmSession.usedCategories = [...fsmSession.usedCategories, category]
   fsmSession.selectedCategory = label
-  fsmSession.worldBanner = `Reading: ${label}`
+  fsmSession.worldBanner = `Selected category: ${label}`
   const r = tryTransition('DECK_SELECTION')
   if (r.ok) emit()
 }
