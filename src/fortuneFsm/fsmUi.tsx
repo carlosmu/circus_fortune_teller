@@ -83,13 +83,29 @@ const CARD_CONTENT_LAYER = {
 /**
  * Único hijo de CARD_CONTENT_LAYER: apila bloques en Y. alignItems stretch para que cada Label
  * con width 100% ocupe todo el ancho y textAlign middle-center se aplique al rectángulo completo.
+ * height 100%: si es 'auto', hijos con maxHeight en % (p. ej. revelación) colapsan a altura 0 en Yoga.
  */
 const CARD_ROOT_COLUMN = {
   width: '88%' as const,
-  height: 'auto' as const,
-  maxHeight: '90%' as const,
+  height: '100%' as const,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
+  alignItems: 'stretch' as const
+}
+
+/** Copia de ui.tsx CARD_INNER_COLUMN + CARD_TIGHT_STACK — necesarios para que maxHeight: '68%' del cuerpo tenga referencia. */
+const REVEAL_INNER_COLUMN = {
+  width: '70%' as const,
+  height: '86%' as const,
+  flexDirection: 'column' as const,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+  margin: { top: -80 } as const
+}
+const REVEAL_TIGHT_STACK = {
+  width: '100%' as const,
+  flexDirection: 'column' as const,
+  justifyContent: 'flex-start' as const,
   alignItems: 'stretch' as const
 }
 /** Una fila de controles (ej. A/B/C o Sí/No): un solo elemento en el eje Y del root. */
@@ -123,9 +139,7 @@ function CenteredLabelRow({
   color,
   height = 80,
   marginTop = 0,
-  marginBottom = 0,
-  /** Si true, el texto se alinea arriba del bloque (menos hueco vertical con heights fijos). */
-  stackFromTop = false
+  marginBottom = 0
 }: {
   value: string
   fontSize: number
@@ -133,10 +147,7 @@ function CenteredLabelRow({
   height?: number
   marginTop?: number
   marginBottom?: number
-  stackFromTop?: boolean
 }) {
-  /** En DCL, `height: 'auto'` en Label suele colapsar: el bloque mantiene `height` fija y el texto arranca arriba. */
-  const labelAlign: 'middle-center' | 'top-center' = stackFromTop ? 'top-center' : CARD_TEXT_ALIGN
   return (
     <UiEntity
       uiTransform={{
@@ -152,7 +163,7 @@ function CenteredLabelRow({
       <Label
         uiTransform={{ width: '100%', height: '100%' }}
         value={value}
-        textAlign={labelAlign}
+        textAlign={CARD_TEXT_ALIGN}
         textWrap="wrap"
         fontSize={fontSize}
         font="serif"
@@ -195,22 +206,79 @@ function WorldBanner({ text }: { text: string }) {
   )
 }
 
+const LOG_REVEAL_UI = '[FortuneFSM/revealUi]'
+const LOG_FSM_LAYER = '[FortuneFSM/layer]'
+let lastRevealUiLogKey = ''
+let lastLayerRevealLogKey = ''
+
 /** Lectura final sobre card.png (host, guest y espectadores con sesión activa). */
 function RevealFortuneOnCard() {
   const name = fsmSession.guestName?.trim() || 'Guest'
   const choice = fsmSession.selectedFortune
   const kindTitle = getFsmRevealKindTitle(choice)
   const body = getFsmRevealFortuneText(fsmSession)
+  const fortuneText = `${name}, ${body}`
+
+  const uiKey = `rui|${fsmSession.revealEnteredAtMs ?? 'no-ts'}|${fsmSession.guestId}|${choice ?? '-'}|${body.length}`
+  if (uiKey !== lastRevealUiLogKey) {
+    lastRevealUiLogKey = uiKey
+    console.log(LOG_REVEAL_UI, 'RevealFortuneOnCard render (datos que van al Label)', {
+      revealEnteredAtMs: fsmSession.revealEnteredAtMs,
+      active: fsmSession.active,
+      state: fsmSession.state,
+      guestId: fsmSession.guestId,
+      guestName: fsmSession.guestName,
+      selectedCategoryKey: fsmSession.selectedCategoryKey,
+      selectedDeck: fsmSession.selectedDeck,
+      selectedFortune: choice,
+      kindTitle,
+      bodyLength: body.length,
+      fortuneTextLength: fortuneText.length,
+      fortuneTextFull: fortuneText
+    })
+  }
+  /**
+   * Misma jerarquía que ui.tsx cuando `isVisible` (fortuna legacy): REVEAL_INNER_COLUMN da altura % fija
+   * para que el Label del cuerpo con maxHeight: '68%' no quede en 0 px.
+   */
   return (
-    <HostCardShell contentJustify="flex-start">
-      <CenteredLabelRow value={kindTitle} fontSize={18} color={GOLD} height={36} marginBottom={6} />
-      <CenteredLabelRow
-        value={`${name}, ${body}`}
-        fontSize={22}
-        color={Color4.create(0.95, 0.95, 0.95, 1)}
-        height={120}
-        stackFromTop
-      />
+    <HostCardShell>
+      <UiEntity uiTransform={{ ...REVEAL_INNER_COLUMN }}>
+        <UiEntity uiTransform={{ ...REVEAL_TIGHT_STACK }}>
+          <UiEntity
+            uiTransform={{
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <Label
+              uiTransform={{ width: 'auto', height: 'auto' }}
+              value={kindTitle || '—'}
+              textAlign="middle-center"
+              textWrap="wrap"
+              fontSize={18}
+              font="serif"
+              color={GOLD}
+            />
+          </UiEntity>
+          <Label
+            uiTransform={{
+              width: '100%',
+              height: 'auto',
+              maxHeight: '68%',
+              margin: { top: 8 }
+            }}
+            value={fortuneText}
+            textAlign="middle-center"
+            textWrap="wrap"
+            fontSize={22}
+            font="serif"
+            color={Color4.create(0.95, 0.95, 0.95, 1)}
+          />
+        </UiEntity>
+      </UiEntity>
     </HostCardShell>
   )
 }
@@ -597,6 +665,24 @@ export function FortuneFsmLayer() {
     (uid === fsmSession.hostId || uid === gameData.currentFortuneTellerId)
   const isGuest = uid !== null && uid === fsmSession.guestId
 
+  const showRevealCard = fsmSession.active && fsmSession.state === 'REVEAL'
+  if (showRevealCard) {
+    const layerKey = `REVEAL|${fsmSession.revealEnteredAtMs ?? 'no-ts'}|${fsmSession.guestId}|${fsmSession.selectedFortune ?? '-'}`
+    if (layerKey !== lastLayerRevealLogKey) {
+      lastLayerRevealLogKey = layerKey
+      console.log(LOG_FSM_LAYER, 'condición REVEAL activa → se monta RevealFortuneOnCard', {
+        revealEnteredAtMs: fsmSession.revealEnteredAtMs,
+        active: fsmSession.active,
+        state: fsmSession.state,
+        uid,
+        isHost,
+        isGuest,
+        USE_FORTUNE_FSM_FLOW,
+        SHOW_UI_FORTUNE
+      })
+    }
+  }
+
   return (
     <UiEntity
       uiTransform={{
@@ -620,7 +706,7 @@ export function FortuneFsmLayer() {
           alignItems: 'center'
         }}
       >
-        {fsmSession.active && fsmSession.state === 'REVEAL' && <RevealFortuneOnCard />}
+        {showRevealCard && <RevealFortuneOnCard />}
         {fsmSession.active && isHost && <HostPanel />}
         {fsmSession.active && isGuest && <GuestPanel />}
         {fsmSession.active &&
