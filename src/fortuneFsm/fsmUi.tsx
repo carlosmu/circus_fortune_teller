@@ -123,7 +123,9 @@ function CenteredLabelRow({
   color,
   height = 80,
   marginTop = 0,
-  marginBottom = 0
+  marginBottom = 0,
+  /** Si true, el texto se alinea arriba del bloque (menos hueco vertical con heights fijos). */
+  stackFromTop = false
 }: {
   value: string
   fontSize: number
@@ -131,7 +133,10 @@ function CenteredLabelRow({
   height?: number
   marginTop?: number
   marginBottom?: number
+  stackFromTop?: boolean
 }) {
+  /** En DCL, `height: 'auto'` en Label suele colapsar: el bloque mantiene `height` fija y el texto arranca arriba. */
+  const labelAlign: 'middle-center' | 'top-center' = stackFromTop ? 'top-center' : CARD_TEXT_ALIGN
   return (
     <UiEntity
       uiTransform={{
@@ -147,7 +152,7 @@ function CenteredLabelRow({
       <Label
         uiTransform={{ width: '100%', height: '100%' }}
         value={value}
-        textAlign={CARD_TEXT_ALIGN}
+        textAlign={labelAlign}
         textWrap="wrap"
         fontSize={fontSize}
         font="serif"
@@ -197,13 +202,14 @@ function RevealFortuneOnCard() {
   const kindTitle = getFsmRevealKindTitle(choice)
   const body = getFsmRevealFortuneText(fsmSession)
   return (
-    <HostCardShell>
-      <CenteredLabelRow value={kindTitle} fontSize={18} color={GOLD} height={40} />
+    <HostCardShell contentJustify="flex-start">
+      <CenteredLabelRow value={kindTitle} fontSize={18} color={GOLD} height={36} marginBottom={6} />
       <CenteredLabelRow
         value={`${name}, ${body}`}
         fontSize={22}
         color={Color4.create(0.95, 0.95, 0.95, 1)}
-        height={160}
+        height={120}
+        stackFromTop
       />
     </HostCardShell>
   )
@@ -249,7 +255,8 @@ function GlobalFinished({ text }: { text: string }) {
   )
 }
 
-function HostCardShell(props: { children?: any }) {
+function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start' }) {
+  const justify = props.contentJustify ?? 'center'
   return (
     <UiEntity
       uiTransform={{
@@ -272,16 +279,18 @@ function HostCardShell(props: { children?: any }) {
         }}
         uiBackground={CARD_BG}
       >
-        <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER }}>
-          <UiEntity uiTransform={{ ...CARD_ROOT_COLUMN }}>{cardGreenAreaChildOutlines(props.children)}</UiEntity>
+        <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER, justifyContent: justify }}>
+          <UiEntity uiTransform={{ ...CARD_ROOT_COLUMN, justifyContent: justify }}>
+            {cardGreenAreaChildOutlines(props.children)}
+          </UiEntity>
         </UiEntity>
       </UiEntity>
     </UiEntity>
   )
 }
 
-function GuestCardShell(props: { children?: any }) {
-  return <HostCardShell>{props.children}</HostCardShell>
+function GuestCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start' }) {
+  return <HostCardShell contentJustify={props.contentJustify}>{props.children}</HostCardShell>
 }
 
 function HostPanel() {
