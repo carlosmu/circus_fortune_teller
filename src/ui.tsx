@@ -21,6 +21,7 @@ import {
 } from './fortuneTellerSystem'
 import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
 import { cinematicBarAlpha } from './cinematicCamera'
+import { repeatPromptForSeed } from './repeatFortunePrompt'
 import { hashString, pickGuestMaxReadingsFarewellLine, pickThreeGuestCategoriesSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind, RevelationPhase } from './types'
 
@@ -108,19 +109,6 @@ const GUEST_THEME_PROMPTS_BY_ITERATION = {
   3: ['Final choice. The cards will not open again.']
 } as const
 
-const REPEAT_PROMPT_OPTIONS = [
-  'Shall we look deeper?',
-  'Would you dare to know more?',
-  'The cards still whisper… shall I listen?',
-  'There is more to uncover… will you hear it?',
-  'Do you wish me to go on?',
-  'Another thread awaits… shall I pull it?',
-  'The veil has not fully lifted… continue?',
-  'I can see further… if you allow it.',
-  'The future stirs again… shall I reveal it?',
-  'One more glimpse… do you seek it?'
-] as const
-
 function pickBySessionSalt(lines: readonly string[]): string {
   const guestId = gameData.currentGuestId ?? ''
   const seed = `${guestId}:${gameData.revelationRoundSalt}:${gameData.currentIteration}`
@@ -132,7 +120,9 @@ function guestThemePrompt(): string {
 }
 
 function repeatPromptLine(): string {
-  return pickBySessionSalt(REPEAT_PROMPT_OPTIONS)
+  const guestId = gameData.currentGuestId ?? ''
+  const seed = `${guestId}:${gameData.revelationRoundSalt}:${gameData.currentIteration}`
+  return repeatPromptForSeed(seed)
 }
 
 function getIntroLine(category: FortuneCategory): string {

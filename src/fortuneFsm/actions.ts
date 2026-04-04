@@ -1,11 +1,14 @@
 import { executeTask } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import type { FortuneCategory } from '../types'
+import { gameData } from '../gameState'
+import { FORTUNE_DISPLAY_DURATION } from '../sceneConfig'
+import { pickGuestMaxReadingsFarewellLine } from '../revelationRng'
 import { FSM_DEBOUNCE_MS, type FsmCardChoice, type FsmDeck } from './types'
 import { fsmSession, hardResetSession, sessionForSync } from './session'
 import { debounceOk, tryTransition } from './machine'
 import { broadcastFsmSession } from './sync'
-import { fortuneMessageBus, touchGuestReadingInteractionDeadline } from '../fortuneSync'
+import { fortuneMessageBus, GUEST_MAX_READINGS_PER_SEAT, touchGuestReadingInteractionDeadline } from '../fortuneSync'
 import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
 
 function nowMs(): number {
@@ -19,6 +22,25 @@ function emit(): void {
 
 function delayMs(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+const REVEAL_TO_CONTINUE_MS = FORTUNE_DISPLAY_DURATION * 1000
+
+function emitFsmSessionEnded(message: string): void {
+  const gid = fsmSession.guestId
+  fsmSession.worldBanner = null
+  fsmSession.sessionFinishedMessage = message
+  const r = tryTransition('RESET')
+  if (!r.ok) return
+  fsmSession.active = false
+  emit()
+  fortuneMessageBus.emit('hide-fortune', {})
+  if (gid) fortuneMessageBus.emit('guest-chair-decline-more', { guestId: gid })
+  executeTask(async () => {
+    await delayMs(4500)
+    hardResetSession()
+    broadcastFsmSession(sessionForSync())
+  })
 }
 
 /** Host: INIT → CATEGORY_SELECTION */
@@ -107,11 +129,17 @@ export function fsmTickRevealIfReady(t: number): void {
   }
 }
 
-/** After REVEAL dwell → CONTINUE_DECISION */
+/** After REVEAL dwell → CONTINUE_DECISION (o cierre si ya no quedan lecturas). */
 export function fsmTickContinueIfReady(t: number): void {
   if (!fsmSession.active || fsmSession.state !== 'REVEAL') return
   if (fsmSession.revealEnteredAtMs === null) return
-  if (t - fsmSession.revealEnteredAtMs < 3500) return
+  if (t - fsmSession.revealEnteredAtMs < REVEAL_TO_CONTINUE_MS) return
+  if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) {
+    emitFsmSessionEnded(
+      pickGuestMaxReadingsFarewellLine(fsmSession.guestId ?? '', gameData.revelationRoundSalt)
+    )
+    return
+  }
   const r = tryTransition('CONTINUE_DECISION')
   if (r.ok) emit()
 }
@@ -142,20 +170,7 @@ export function guestContinueNo(): void {
   const p = getPlayer()
   if (!p || p.userId !== fsmSession.guestId) return
   if (fsmSession.state !== 'CONTINUE_DECISION') return
-  const gid = fsmSession.guestId
-  fsmSession.worldBanner = null
-  fsmSession.sessionFinishedMessage = 'Your reading is finished'
-  const r = tryTransition('RESET')
-  if (!r.ok) return
-  fsmSession.active = false
-  emit()
-  fortuneMessageBus.emit('hide-fortune', {})
-  if (gid) fortuneMessageBus.emit('guest-chair-decline-more', { guestId: gid })
-  executeTask(async () => {
-    await delayMs(4500)
-    hardResetSession()
-    broadcastFsmSession(sessionForSync())
-  })
+  emitFsmSessionEnded('Your reading is finished')
 }
 
 /** Activate session at INIT (bridge). */
