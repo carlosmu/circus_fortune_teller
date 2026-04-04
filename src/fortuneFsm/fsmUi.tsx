@@ -93,9 +93,12 @@ const CARD_ROOT_COLUMN = {
   alignItems: 'stretch' as const
 }
 
-/** Copia de ui.tsx CARD_INNER_COLUMN + CARD_TIGHT_STACK — necesarios para que maxHeight: '68%' del cuerpo tenga referencia. */
+/**
+ * Altura como ui.tsx CARD_INNER_COLUMN (referencia para maxHeight % del cuerpo).
+ * Ancho: aquí 100% del {@link CARD_ROOT_COLUMN}; el legacy usa 70% solo por el dibujo de la carta.
+ */
 const REVEAL_INNER_COLUMN = {
-  width: '70%' as const,
+  width: '100%' as const,
   height: '86%' as const,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
