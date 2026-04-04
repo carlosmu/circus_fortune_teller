@@ -8,6 +8,7 @@ export function createInitialSession(): FsmSession {
     guestName: null,
     state: 'RESET',
     selectedCategory: null,
+    selectedCategoryKey: null,
     selectedDeck: null,
     selectedCardType: null,
     selectedFortune: null,

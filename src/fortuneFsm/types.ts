@@ -23,6 +23,8 @@ export type FsmSession = {
   guestName: string | null
   state: FsmState
   selectedCategory: string | null
+  /** Clave `FortuneCategory` para filtrar `FORTUNES` al revelar (la etiqueta va en `selectedCategory`). */
+  selectedCategoryKey: FortuneCategory | null
   selectedDeck: FsmDeck | null
   selectedCardType: FsmCardChoice | null
   /** Host-chosen fortune key A/B/C → mapped copy at reveal. */
@@ -44,9 +46,3 @@ export type FsmSession = {
 }
 
 export const FSM_DEBOUNCE_MS = 400
-
-export const FORTUNE_LINE_BY_CHOICE: Record<FsmCardChoice, string> = {
-  A: 'find unexpected joy in the coming days.',
-  B: 'face a trial that will strengthen you.',
-  C: 'discover a truth that was hidden from you.'
-}

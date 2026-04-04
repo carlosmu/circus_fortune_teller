@@ -219,7 +219,7 @@ export function setupFortuneSync() {
         ? FORTUNES[data.fortuneIndex]
         : null
     if (fortune) {
-      gameData.currentFortune = { text: fortune.text, category: fortune.category, type: fortune.type }
+      gameData.currentFortune = { text: fortune.text, category: fortune.category, deck: fortune.deck, type: fortune.type }
       gameData.currentGuestId = data.guestId
       gameData.currentGuestName = data.guestName
       gameData.gameState = 'MOSTRANDO_FORTUNA'
@@ -230,7 +230,7 @@ export function setupFortuneSync() {
       gameData.guestLastInteractionAtMs = null
       playRevealSound()
       if (SHOW_3D_FORTUNE) {
-        showFortune3DText({ text: fortune.text, category: fortune.category, type: fortune.type })
+        showFortune3DText({ text: fortune.text, category: fortune.category, deck: fortune.deck, type: fortune.type })
       }
     }
   })

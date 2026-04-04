@@ -14,8 +14,9 @@ import {
 } from './actions'
 import type { FortuneCategory } from '../types'
 import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
+import { getFsmRevealFortuneText, getFsmRevealKindTitle } from './resolveRevealFortune'
 import { fsmSession } from './session'
-import { FORTUNE_LINE_BY_CHOICE, type FsmCardChoice, type FsmDeck } from './types'
+import type { FsmCardChoice, FsmDeck } from './types'
 
 const CARD_OFFSET = '-100px'
 const CARD_PANEL = { width: '600px' as const, height: '600px' as const }
@@ -153,10 +154,6 @@ const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
   { key: 'C', idx: 2 }
 ]
 
-function revealGlowAlpha(): number {
-  return 0.75 + 0.25 * Math.sin(Date.now() / 350)
-}
-
 /** Ocupa espacio en el flujo (no absolute) para no solaparse con la carta card.png debajo. */
 function WorldBanner({ text }: { text: string }) {
   return (
@@ -183,33 +180,22 @@ function WorldBanner({ text }: { text: string }) {
   )
 }
 
-function RevealWorldLine() {
+/** Lectura final sobre card.png (host, guest y espectadores con sesión activa). */
+function RevealFortuneOnCard() {
   const name = fsmSession.guestName?.trim() || 'Guest'
-  const fortune = fsmSession.selectedFortune
-  const line = fortune ? FORTUNE_LINE_BY_CHOICE[fortune] : '…'
-  const a = revealGlowAlpha()
+  const choice = fsmSession.selectedFortune
+  const kindTitle = getFsmRevealKindTitle(choice)
+  const body = getFsmRevealFortuneText(fsmSession)
   return (
-    <UiEntity
-      uiTransform={{
-        width: '100%',
-        height: '100%',
-        positionType: 'absolute',
-        position: { top: 0, left: 0 },
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 5
-      }}
-    >
-      <Label
-        uiTransform={{ width: '88%', height: 'auto', maxHeight: '40%' }}
-        value={`${name}, you will… ${line}`}
-        textAlign={CARD_TEXT_ALIGN}
-        textWrap="wrap"
-        fontSize={28}
-        font="serif"
-        color={Color4.create(1, 0.95, 0.85, a)}
+    <HostCardShell>
+      <CenteredLabelRow value={kindTitle} fontSize={18} color={GOLD} height={40} />
+      <CenteredLabelRow
+        value={`${name}, ${body}`}
+        fontSize={22}
+        color={Color4.create(0.95, 0.95, 0.95, 1)}
+        height={160}
       />
-    </UiEntity>
+    </HostCardShell>
   )
 }
 
@@ -362,24 +348,30 @@ function HostPanel() {
       <HostCardShell>
         {/* FIX */}
         <CenteredLabelRow
-          value={`User selected: ${fsmSession.selectedCardType}\nFortune Teller Chooses Meaning`}
+          value={`Guest chose card ${fsmSession.selectedCardType}. Fortune Teller, pick a meaning:`}
           fontSize={20}
           color={GOLD}
-          height={40}
+          height={56}
         />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
-          {(['Meaning 1', 'Meaning 2', 'Meaning 3'] as const).map((k, i) => (
+          {(
+            [
+              { choice: 'A' as const, label: 'Predicción' },
+              { choice: 'B' as const, label: 'Consejo' },
+              { choice: 'C' as const, label: 'Advertencia' }
+            ] as const
+          ).map(({ choice, label }, i) => (
             <UiEntity
-              key={k}
+              key={choice}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
               uiBackground={BTN}
-              onMouseDown={() => hostPickFortune(k)}
+              onMouseDown={() => hostPickFortune(choice)}
             >
               <Label
                 uiTransform={{ width: '100%', height: '100%' }}
-                value={k}
+                value={label}
                 textAlign={CARD_TEXT_ALIGN}
-                fontSize={18}
+                fontSize={16}
                 font="serif"
               />
             </UiEntity>
@@ -571,7 +563,6 @@ export function FortuneFsmLayer() {
       }}
     >
       {fsmSession.worldBanner && fsmSession.state !== 'REVEAL' && <WorldBanner text={fsmSession.worldBanner} />}
-      {fsmSession.state === 'REVEAL' && <RevealWorldLine />}
       {fsmSession.sessionFinishedMessage && <GlobalFinished text={fsmSession.sessionFinishedMessage} />}
       <UiEntity
         uiTransform={{
@@ -583,6 +574,7 @@ export function FortuneFsmLayer() {
           alignItems: 'center'
         }}
       >
+        {fsmSession.active && fsmSession.state === 'REVEAL' && <RevealFortuneOnCard />}
         {fsmSession.active && isHost && <HostPanel />}
         {fsmSession.active && isGuest && <GuestPanel />}
       </UiEntity>
