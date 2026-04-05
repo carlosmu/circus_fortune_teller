@@ -644,7 +644,7 @@ function uiComponent() {
                   color={Color4.create(212 / 255, 175 / 255, 55 / 255, 1)}
                 />
                 <Label
-                  uiTransform={{ width: '100%', height: 'auto', margin: { top: 12 } }}
+                  uiTransform={{ width: '100%', height: 'auto', margin: { top: 0 } }}
                   value="Ask the guest. They will choose Yes or No."
                   textAlign="top-center"
                   textWrap="wrap"
