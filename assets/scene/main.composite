@@ -200,18 +200,18 @@
             "position": {
               "x": 8,
               "y": 0,
-              "z": 7.25
+              "z": 7.068334579467773
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
             },
             "scale": {
               "x": 1,
               "y": 1,
               "z": 1
-            },
-            "rotation": {
-              "x": 0,
-              "y": 1,
-              "z": 0,
-              "w": 0
             },
             "parent": 0
           }
@@ -262,7 +262,7 @@
           "json": {
             "position": {
               "x": 8,
-              "y": 0,
+              "y": 3,
               "z": 7.139999866485596
             },
             "scale": {
@@ -328,16 +328,16 @@
               "y": 1.25,
               "z": 3.75
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": -0.9659000039100647,
               "z": -0.25870001316070557,
               "w": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
             },
             "parent": 0
           }
@@ -407,7 +407,7 @@
         },
         "517": {
           "json": {
-            "src": "assets/asset-packs/wooden_throne/WoodBigChair_01/WoodBigChair_01.glb",
+            "src": "assets/models/Fchair.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 3
           }
@@ -678,7 +678,7 @@
         "serializationType": "map"
       },
       "data": {
-        "523": {
+        "517": {
           "json": {
             "gizmo": 1
           }
@@ -858,6 +858,31 @@
         },
         "523": {
           "json": {}
+        }
+      }
+    },
+    {
+      "name": "inspector::Hide",
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "boolean",
+            "serializationType": "boolean"
+          }
+        },
+        "serializationType": "map"
+      },
+      "data": {
+        "519": {
+          "json": {
+            "value": true
+          }
+        },
+        "520": {
+          "json": {
+            "value": true
+          }
         }
       }
     },

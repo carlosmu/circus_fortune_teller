@@ -36,7 +36,7 @@ export function setupScene() {
   })
 
   GltfContainer.create(TABLE, {
-    src: 'assets/models/table.glb'
+    src: 'assets/models/Ftable.glb'
   })
 
   // WIZARD (hidden when local player is fortune teller)
@@ -72,17 +72,19 @@ export function setupScene() {
     src: 'assets/models/floor.glb'
   })
   Transform.create(TENT, {
-    position: Vector3.create(8, 0, 8)
+    position: Vector3.create(8, 0, 8),
+    scale: Vector3.create(1.9, 1.9, 1.9)
   })
   GltfContainer.create(TENT, {
-    src: 'assets/models/tent.glb'
+    src: 'assets/models/Ftellerstent.glb'
+    // src: 'assets/models/tent.glb'
   })
   Transform.create(LIGHTS_TENT, {
     position: Vector3.create(8, 0, 8)
   })
-  GltfContainer.create(LIGHTS_TENT, {
-    src: 'assets/models/lights_tent.glb'
-  })
+  // GltfContainer.create(LIGHTS_TENT, {
+  //   src: 'assets/models/lights_tent.glb'
+  // })
 
   // "Become Fortune Teller" animated prompt — hidden until player enters trigger
   Transform.create(BECOME_FORTUNE_TELLER_PROMPT, {
