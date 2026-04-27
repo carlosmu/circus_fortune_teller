@@ -196,11 +196,15 @@ function guestSitSpotClickCallback() {
   if (gameData.guestSeatUserId !== null) return
 
   const player = getPlayer()
-  const name = player?.name ?? 'Visitor'
+  const guestDisplayName = player?.name?.trim() || null
+  const name = guestDisplayName ?? 'Visitor'
+  const now = Date.now()
 
   fortuneMessageBus.emit('guest-seat-update', {
     seatUserId: localUserId,
-    seatUserName: name
+    seatUserName: name,
+    centerBannerText: `${guestDisplayName ?? 'Someone'} is becoming the Guest`,
+    centerBannerUntilMs: now + 2200
   })
 
   guestJoinedViaSitSpot = true

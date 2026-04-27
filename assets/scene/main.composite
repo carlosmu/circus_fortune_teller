@@ -320,6 +320,27 @@
             },
             "parent": 0
           }
+        },
+        "523": {
+          "json": {
+            "position": {
+              "x": 8,
+              "y": 1.25,
+              "z": 3.75
+            },
+            "rotation": {
+              "x": 0,
+              "y": -0.9659000039100647,
+              "z": -0.25870001316070557,
+              "w": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "parent": 0
+          }
         }
       }
     },
@@ -496,6 +517,11 @@
           "json": {
             "value": "Sit Spot: Guest"
           }
+        },
+        "523": {
+          "json": {
+            "value": "Spotlight_2"
+          }
         }
       }
     },
@@ -616,6 +642,26 @@
               }
             }
           }
+        },
+        "523": {
+          "json": {
+            "active": true,
+            "color": {
+              "r": 1,
+              "g": 0.6470588445663452,
+              "b": 0
+            },
+            "intensity": 8897,
+            "range": -1,
+            "shadow": true,
+            "type": {
+              "$case": "spot",
+              "spot": {
+                "innerAngle": 49,
+                "outerAngle": 168
+              }
+            }
+          }
         }
       }
     },
@@ -632,7 +678,7 @@
         "serializationType": "map"
       },
       "data": {
-        "0": {
+        "523": {
           "json": {
             "gizmo": 1
           }
@@ -695,7 +741,8 @@
                   519,
                   520,
                   521,
-                  522
+                  522,
+                  523
                 ]
               },
               {
@@ -748,6 +795,10 @@
               },
               {
                 "entity": 522,
+                "children": []
+              },
+              {
+                "entity": 523,
                 "children": []
               }
             ]
@@ -803,6 +854,9 @@
           "json": {}
         },
         "522": {
+          "json": {}
+        },
+        "523": {
           "json": {}
         }
       }
@@ -1370,6 +1424,98 @@
               "text": "Configure the sit spot's hover text and actions. Players can click to sit here. The spot tracks whether it's free or taken and shows a message when occupied."
             },
             "version": 1
+          }
+        },
+        "523": {
+          "json": {
+            "isBasicViewEnabled": true,
+            "componentName": "",
+            "fields": [],
+            "assetId": "87c829b3-8e8d-4fcb-9f43-85d3aa9084f6",
+            "label": "Light Settings",
+            "sections": [
+              {
+                "id": "light-settings",
+                "items": [
+                  {
+                    "component": "core::LightSource",
+                    "widget": "ColorField",
+                    "label": "Color",
+                    "type": "Color3",
+                    "path": "color",
+                    "props": {
+                      "basic": true
+                    },
+                    "transform": {
+                      "in": {
+                        "steps": [
+                          {
+                            "op": "toHex"
+                          }
+                        ]
+                      },
+                      "out": {
+                        "steps": [
+                          {
+                            "op": "toColor3"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "component": "core::LightSource",
+                    "widget": "RangeField",
+                    "label": "Intensity",
+                    "path": "intensity",
+                    "constraints": {
+                      "max": 300000,
+                      "step": 1,
+                      "default": "16000"
+                    }
+                  },
+                  {
+                    "component": "core::LightSource",
+                    "widget": "RangeField",
+                    "label": "Inner Angle",
+                    "path": "type.spot.innerAngle",
+                    "constraints": {
+                      "max": 180,
+                      "step": 1,
+                      "default": "30"
+                    }
+                  },
+                  {
+                    "component": "core::LightSource",
+                    "widget": "RangeField",
+                    "label": "Outer Angle",
+                    "path": "type.spot.outerAngle",
+                    "constraints": {
+                      "max": 180,
+                      "step": 1,
+                      "default": "40"
+                    }
+                  }
+                ],
+                "columns": 1
+              },
+              {
+                "id": "shadow-mask",
+                "items": [
+                  {
+                    "component": "core::LightSource",
+                    "widget": "FileUploadField",
+                    "label": "Shadow Mask Texture",
+                    "path": "shadowMaskTexture.tex.texture.src",
+                    "props": {}
+                  }
+                ]
+              }
+            ],
+            "helpTooltip": {
+              "text": "A spotlight that can be used to illuminate a scene."
+            },
+            "version": 2
           }
         }
       }
@@ -2251,6 +2397,23 @@
               }
             ]
           }
+        },
+        "523": {
+          "json": {
+            "id": 13,
+            "value": [
+              {
+                "name": "Turn On",
+                "type": "lights_on",
+                "jsonPayload": "{}"
+              },
+              {
+                "name": "Turn Off",
+                "type": "lights_off",
+                "jsonPayload": "{}"
+              }
+            ]
+          }
         }
       }
     },
@@ -2274,7 +2437,7 @@
         "0": {
           "json": {
             "id": 0,
-            "value": 12
+            "value": 13
           }
         }
       }
@@ -2702,6 +2865,11 @@
         "522": {
           "json": {
             "src": "assets/asset-packs/sit_spot/sitting_pose_collider.glb"
+          }
+        },
+        "523": {
+          "json": {
+            "src": "assets/asset-packs/spotlight/spotlight.glb"
           }
         }
       }

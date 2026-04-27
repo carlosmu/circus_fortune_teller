@@ -62,6 +62,9 @@ export type RevelationPhaseUpdateMessage = {
 export type GuestSeatMessage = {
   seatUserId: string | null
   seatUserName: string | null
+  /** Mismo patrón que `set-fortune-teller`: banner central al ocupar la silla. */
+  centerBannerText?: string | null
+  centerBannerUntilMs?: number
 }
 
 export type FortuneTellerSessionUpdateMessage = {
@@ -184,6 +187,10 @@ export function setupFortuneSync() {
     previousGuestSeatUserId = data.seatUserId
     gameData.guestSeatUserId = data.seatUserId
     gameData.guestSeatUserName = data.seatUserName
+    if (typeof data.centerBannerUntilMs === 'number') {
+      gameData.centerBannerText = data.centerBannerText ?? null
+      gameData.centerBannerUntilMs = data.centerBannerUntilMs
+    }
   })
 
   fortuneMessageBus.on('guest-reading-idle-kick', (data: GuestReadingIdleKickMessage) => {
