@@ -2,9 +2,6 @@ import { engine, GltfContainer, Transform, VisibilityComponent, AudioSource, Ani
 import { Vector3 } from '@dcl/sdk/math'
 
 export const TABLE = engine.addEntity()
-export const FLOOR = engine.addEntity()
-export const TENT = engine.addEntity()
-export const LIGHTS_TENT = engine.addEntity()
 export const WIZARD = engine.addEntity()
 /**
  * Collider legacy (host_collider.glb). Oculto: el rol se toma por Sit Spot + trigger GLB.
@@ -30,11 +27,10 @@ export const FORTUNE_TELLER_CAMERA_TARGET = Vector3.create(8, 1, 8)
 export const CHAIR_FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 4.75)
 
 export function setupScene() {
-  // TABLE ENTITY
+  // TABLE ENTITY (referenciado por cámara/interacción)
   Transform.create(TABLE, {
     position: Vector3.create(8, 0, 8)
   })
-
   GltfContainer.create(TABLE, {
     src: 'assets/models/Ftable.glb'
   })
@@ -65,28 +61,8 @@ export function setupScene() {
     src: 'assets/models/host_collider.glb'
   })
   VisibilityComponent.create(FORTUNE_TELLER_COLLIDER, { visible: false })
-  Transform.create(FLOOR, {
-    position: Vector3.create(8, 0, 8)
-  })
-  GltfContainer.create(FLOOR, {
-    src: 'assets/models/floor.glb'
-  })
-  Transform.create(TENT, {
-    position: Vector3.create(8, 0, 8),
-    scale: Vector3.create(1.9, 1.9, 1.9)
-  })
-  GltfContainer.create(TENT, {
-    src: 'assets/models/Ftellerstent.glb'
-    // src: 'assets/models/tent.glb'
-  })
-  Transform.create(LIGHTS_TENT, {
-    position: Vector3.create(8, 0, 8)
-  })
-  // GltfContainer.create(LIGHTS_TENT, {
-  //   src: 'assets/models/lights_tent.glb'
-  // })
-
-  // "Become Fortune Teller" animated prompt — hidden until player enters trigger
+  
+    // "Become Fortune Teller" animated prompt — hidden until player enters trigger
   Transform.create(BECOME_FORTUNE_TELLER_PROMPT, {
     position: Vector3.create(CHAIR_FORTUNE_TELLER_POSITION.x, CHAIR_FORTUNE_TELLER_POSITION.y, CHAIR_FORTUNE_TELLER_POSITION.z)
   })
