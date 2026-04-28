@@ -20,8 +20,8 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
   /** X >= umbral: lado derecho; X < umbral: espejo (ajusta yaw inicio/fin en código). */
   xThreshold: 8,
   radius: 4,
-  cameraHeightStart: 0,
-  cameraHeightEnd: 1.8,
+  cameraHeightStart: 0.5,
+  cameraHeightEnd: 2.3,
   lookTargetY: 1.8,
   duration: 2.8,
   /**
