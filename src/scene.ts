@@ -15,7 +15,7 @@ export const FORTUNE_TELLER_COLLIDER = engine.addEntity()
 const BACKGROUND_MUSIC = engine.addEntity()
 
 /** Wizard position in scene (GLB origin 0,0,0, placed by code). */
-const WIZARD_POSITION = Vector3.create(8, 0.5, 6.75)
+const WIZARD_POSITION = Vector3.create(8, 0.5, 6.6)
 
 /** Fixed position of the fortune teller spot (never mutated, unlike WIZARD's Transform). */
 export const FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 5)
