@@ -8,6 +8,7 @@ import {
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
+import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { gameData } from './gameState'
@@ -28,8 +29,11 @@ const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
 const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.75
 /** Tras soltar el rol por dejar la silla, empuja al jugador al menos esta distancia desde el sit (XZ). */
 const FORTUNE_TELLER_LEAVE_NUDGE_METERS = 2.5
-/** Sit Spot: Fortune_Teller — fallback si la entidad aún no existe (composite 521). */
+/** Fallback si Sit Spot: Fortune_Teller no existe en runtime. */
 const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
+/** Forward local del Sit Spot asset. */
+const SIT_SPOT_LOCAL_FORWARD = Vector3.create(0, 0, 1)
+const AVATAR_LOOK_AHEAD_METERS = 2.5
 /** Tiempo en ms antes de aplicar la regla de alejamiento (solo para dejar terminar movePlayerTo/emote). */
 const FORTUNE_TELLER_GRACE_MS = 700
 /** Texto al apuntar con el cursor al Sit Spot del Fortune Teller (clic para tomar el rol). */
@@ -79,11 +83,41 @@ function horizontalDistance(
 
 function getFortuneTellerSitSpotXZ(): { x: number; z: number } {
   const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
-  if (sit !== null && Transform.has(sit)) {
-    const p = Transform.get(sit).position
-    return { x: p.x, z: p.z }
+  if (sit !== null) {
+    const worldPos = getEntityWorldPosition(sit)
+    if (worldPos) return { x: worldPos.x, z: worldPos.z }
   }
   return { x: SIT_SPOT_FT_STATION.x, z: SIT_SPOT_FT_STATION.z }
+}
+
+function getFortuneTellerSeatPosition(): { x: number; y: number; z: number } {
+  const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
+  if (sit !== null) {
+    const worldPos = getEntityWorldPosition(sit)
+    if (worldPos) return { x: worldPos.x, y: worldPos.y, z: worldPos.z }
+  }
+  return {
+    x: SIT_SPOT_FT_STATION.x,
+    y: SIT_SPOT_FT_STATION.y,
+    z: SIT_SPOT_FT_STATION.z
+  }
+}
+
+function getFortuneTellerSeatAvatarTarget(pos: { x: number; y: number; z: number }): { x: number; y: number; z: number } {
+  const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
+  if (sit !== null) {
+    const worldRot = getEntityWorldRotation(sit)
+    if (worldRot) {
+      const forward = Vector3.rotate(SIT_SPOT_LOCAL_FORWARD, worldRot)
+      const f = AVATAR_LOOK_AHEAD_METERS
+      return { x: pos.x + forward.x * f, y: pos.y + 1, z: pos.z + forward.z * f }
+    }
+  }
+  return {
+    x: FORTUNE_TELLER_CAMERA_TARGET.x,
+    y: FORTUNE_TELLER_CAMERA_TARGET.y,
+    z: FORTUNE_TELLER_CAMERA_TARGET.z
+  }
 }
 
 function playerStillAtFortuneTellerStation(playerPos: { x: number; y: number; z: number }): boolean {
@@ -223,12 +257,9 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   })
   fortuneTellerBecameAtMs = now
   fortuneTellerJoinedViaSitSpot = fromSitSpot
+  const ftSeatPos = getFortuneTellerSeatPosition()
   lastFortuneTellerPosition = fromSitSpot
-    ? {
-        x: SIT_SPOT_FT_STATION.x,
-        y: SIT_SPOT_FT_STATION.y,
-        z: SIT_SPOT_FT_STATION.z
-      }
+    ? ftSeatPos
     : {
         x: FORTUNE_TELLER_POSITION.x,
         y: FORTUNE_TELLER_POSITION.y,
@@ -241,17 +272,20 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
     sitSpotFtTeleportPending = true
     executeTask(async () => {
       try {
+        const seatPos = getFortuneTellerSeatPosition()
+        const avatarTarget = getFortuneTellerSeatAvatarTarget(seatPos)
         await movePlayerTo({
           newRelativePosition: {
-            x: SIT_SPOT_FT_STATION.x,
-            y: 0,
-            z: SIT_SPOT_FT_STATION.z
+            x: seatPos.x,
+            y: seatPos.y,
+            z: seatPos.z
           },
           cameraTarget: {
             x: FORTUNE_TELLER_CAMERA_TARGET.x,
             y: FORTUNE_TELLER_CAMERA_TARGET.y,
             z: FORTUNE_TELLER_CAMERA_TARGET.z
-          }
+          },
+          avatarTarget
         })
         await triggerEmote({ predefinedEmote: 'sittingChair1' })
       } catch (_e) {

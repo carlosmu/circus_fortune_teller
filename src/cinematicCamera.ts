@@ -28,7 +28,7 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
    * Z local del pivote bajo TABLE (misma idea que el guest “prolijo”): desplaza el centro del arco
    * y suele dejar el encuadre final más centrado sobre mesa/FT.
    */
-  pivotOffsetZ: -2
+  pivotOffsetZ: 0
 }
 
 /**

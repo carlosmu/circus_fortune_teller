@@ -7,6 +7,7 @@ import {
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
+import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { EntityNames } from '../assets/scene/entity-names'
@@ -23,10 +24,10 @@ import { USE_FORTUNE_FSM_FLOW } from './sceneConfig'
 
 export const GUEST_SPOT = engine.addEntity()
 
-/** Sit Spot: Guest — fallback XZ si aún no existe la entidad (composite 522). */
+/** Fallback si Sit Spot: Guest no existe en runtime. */
 const SIT_SPOT_GUEST_STATION = { x: 7.84, y: 0, z: 6.827048301696777 }
-/** Forward local del Sit Spot (escena); se rota con el Transform del composite. */
-const CHAIR_LOCAL_FORWARD = Vector3.create(0, 0, 1)
+/** Forward local del Sit Spot asset. */
+const SIT_SPOT_LOCAL_FORWARD = Vector3.create(0, 0, 1)
 const AVATAR_LOOK_AHEAD_METERS = 2.5
 const GUEST_SEAT_MOVE_THRESHOLD = 2.5
 const GUEST_SEAT_GRACE_MS = 1500
@@ -35,7 +36,6 @@ const TABLE_HOVER_WAIT = 'Wait for the next turn'
 const TABLE_HOVER_DISABLED_FORTUNE_TELLER = 'Fortune Teller cannot reveal as Guest'
 /** La mesa ya no inicia la lectura; solo decorativa / informativa. */
 const TABLE_HOVER_TABLE = 'Sit for a fortune reading'
-/** Mismo gesto que antes era la mesa: sentarse aquí pide la fortuna. */
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
 const GUEST_SIT_HOVER_MAX_READINGS =
   'Maximum 3 readings — leave the chair and sit again for a new session'
@@ -49,14 +49,8 @@ let guestJoinedViaSitSpot = false
 let sitSpotGuestTeleportPending = false
 let guestSatAtMs = 0
 let lastAppliedGuestSitMode: 'default' | 'max' | null = null
-/** Evita múltiples emit/move si el kick por idle tarda un frame en reflejarse en gameData. */
 let guestReadingIdleKickDispatched = false
-/** Evita varios clear-seat + teleport si alcanzó 3 lecturas y el asiento tarda en sincronizar. */
 let guestMaxReadingsDisplaceDispatched = false
-
-function randomInRange(min: number, max: number): number {
-  return min + Math.random() * (max - min)
-}
 
 function horizontalDistance(
   a: { x: number; z: number },
@@ -69,17 +63,14 @@ function horizontalDistance(
 
 function getGuestSitStationXZ(): { x: number; z: number } {
   const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-  if (sit !== null && Transform.has(sit)) {
-    const p = Transform.get(sit).position
-    return { x: p.x, z: p.z }
+  if (sit !== null) {
+    const worldPos = getEntityWorldPosition(sit)
+    if (worldPos) return { x: worldPos.x, z: worldPos.z }
   }
   return { x: SIT_SPOT_GUEST_STATION.x, z: SIT_SPOT_GUEST_STATION.z }
 }
 
-/**
- * Posición y orientación alineadas al Transform del Sit Spot (incl. rotación Y del editor).
- * `avatarTarget` hace que el avatar mire hacia “delante” de la silla; sin eso suele quedar mirando al revés.
- */
+/** Posición y orientación world del Sit Spot: Guest (corrige coordenadas locales del hijo). */
 function buildGuestSitMovePlayerToRequest(): {
   newRelativePosition: { x: number; y: number; z: number }
   cameraTarget: { x: number; y: number; z: number }
@@ -91,18 +82,20 @@ function buildGuestSitMovePlayerToRequest(): {
     z: FORTUNE_TELLER_CAMERA_TARGET.z
   }
   const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-  if (sit !== null && Transform.has(sit)) {
-    const t = Transform.get(sit)
-    const pos = t.position
-    const forward = Vector3.rotate(CHAIR_LOCAL_FORWARD, t.rotation)
-    const f = AVATAR_LOOK_AHEAD_METERS
-    return {
-      newRelativePosition: { x: pos.x, y: pos.y, z: pos.z },
-      cameraTarget,
-      avatarTarget: {
-        x: pos.x + forward.x * f,
-        y: pos.y + 1,
-        z: pos.z + forward.z * f
+  if (sit !== null) {
+    const worldPos = getEntityWorldPosition(sit)
+    const worldRot = getEntityWorldRotation(sit)
+    if (worldPos && worldRot) {
+      const forward = Vector3.rotate(SIT_SPOT_LOCAL_FORWARD, worldRot)
+      const f = AVATAR_LOOK_AHEAD_METERS
+      return {
+        newRelativePosition: { x: worldPos.x, y: worldPos.y, z: worldPos.z },
+        cameraTarget,
+        avatarTarget: {
+          x: worldPos.x + forward.x * f,
+          y: worldPos.y + 1,
+          z: worldPos.z + forward.z * f
+        }
       }
     }
   }
