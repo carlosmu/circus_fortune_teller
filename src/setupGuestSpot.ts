@@ -202,7 +202,7 @@ function guestSitSpotClickCallback() {
   executeTask(async () => {
     try {
       await movePlayerTo(buildGuestSitMovePlayerToRequest())
-      await triggerEmote({ predefinedEmote: 'sittingChair1' })
+      await triggerEmote({ predefinedEmote: 'sittingChair2' })
     } catch (_e) {
     } finally {
       sitSpotGuestTeleportPending = false
