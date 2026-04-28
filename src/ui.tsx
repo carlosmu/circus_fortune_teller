@@ -94,7 +94,11 @@ const KIND_LABELS: Record<FortuneKind, string> = {
 
 const KIND_ORDER: FortuneKind[] = ['warning', 'advice', 'prediction']
 
-const legacyFortuneUi = SHOW_UI_FORTUNE && !USE_FORTUNE_FSM_FLOW
+function isLegacyFortuneUiEnabled(): boolean {
+  // Keep legacy card UI as fallback when there is no human host:
+  // FSM flow only renders UI once a host/guest session is activated.
+  return SHOW_UI_FORTUNE && (!USE_FORTUNE_FSM_FLOW || gameData.currentFortuneTellerId === null)
+}
 
 const WAITING_FORTUNE_LINES = [
   'Your fate is...',
@@ -316,6 +320,7 @@ function GuestCardCancelCorner(props: { show: boolean }) {
 }
 
 function uiComponent() {
+  const legacyFortuneUi = isLegacyFortuneUiEnabled()
   const fortune = gameData.currentFortune
   const phase = gameData.revelationPhase
   const isVisible =
