@@ -11,13 +11,11 @@ export const WIZARD = engine.addEntity()
  * - [ ] quitar entidad FORTUNE_TELLER_COLLIDER y GltfContainer asociado si ya no hace falta
  */
 export const FORTUNE_TELLER_COLLIDER = engine.addEntity()
-/** Animated GLB shown when player enters the Fortune Teller trigger area. */
-export const BECOME_FORTUNE_TELLER_PROMPT = engine.addEntity()
 
 const BACKGROUND_MUSIC = engine.addEntity()
 
 /** Wizard position in scene (GLB origin 0,0,0, placed by code). */
-const WIZARD_POSITION = Vector3.create(8, 0, 5)
+const WIZARD_POSITION = Vector3.create(8, 0.5, 6.75)
 
 /** Fixed position of the fortune teller spot (never mutated, unlike WIZARD's Transform). */
 export const FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 5)
@@ -61,19 +59,6 @@ export function setupScene() {
     src: 'assets/models/host_collider.glb'
   })
   VisibilityComponent.create(FORTUNE_TELLER_COLLIDER, { visible: false })
-  
-    // "Become Fortune Teller" animated prompt — hidden until player enters trigger
-  Transform.create(BECOME_FORTUNE_TELLER_PROMPT, {
-    position: Vector3.create(CHAIR_FORTUNE_TELLER_POSITION.x, CHAIR_FORTUNE_TELLER_POSITION.y, CHAIR_FORTUNE_TELLER_POSITION.z)
-  })
-  GltfContainer.create(BECOME_FORTUNE_TELLER_PROMPT, {
-    src: 'assets/models/become_fortune_teller.glb'
-  })
-  VisibilityComponent.create(BECOME_FORTUNE_TELLER_PROMPT, { visible: false })
-  Animator.create(BECOME_FORTUNE_TELLER_PROMPT, {
-    states: [{ clip: 'become_fortune_teller', playing: true, loop: true, speed: 1 }]
-  })
-
   // Background music: global loop
   Transform.create(BACKGROUND_MUSIC, { position: Vector3.create(8, 0, 8) })
   AudioSource.create(BACKGROUND_MUSIC, {

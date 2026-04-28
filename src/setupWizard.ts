@@ -2,7 +2,6 @@ import {
   engine,
   Animator,
   Transform,
-  VisibilityComponent,
   PointerEvents,
   pointerEventsSystem,
   InputAction,
@@ -16,8 +15,7 @@ import { fortuneMessageBus } from './fortuneSync'
 import {
   WIZARD,
   FORTUNE_TELLER_POSITION,
-  FORTUNE_TELLER_CAMERA_TARGET,
-  BECOME_FORTUNE_TELLER_PROMPT
+  FORTUNE_TELLER_CAMERA_TARGET
 } from './scene'
 import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 import { EntityNames } from '../assets/scene/entity-names'
@@ -44,17 +42,6 @@ const FORTUNE_TELLER_RANDOM_MIN_X = 3
 const FORTUNE_TELLER_RANDOM_MAX_X = 13
 const FORTUNE_TELLER_RANDOM_MIN_Z = 7
 const FORTUNE_TELLER_RANDOM_MAX_Z = 12
-/** Trigger area bounds from composite entity 519 "Trigger: Fortune_Teller". */
-const TRIGGER_FT_CENTER_X = 7.98
-const TRIGGER_FT_CENTER_Z = 3.64
-const TRIGGER_FT_HALF_X = 8 // scale.x / 2
-const TRIGGER_FT_HALF_Z = 2 // scale.z / 2
-const TRIGGER_FT_MIN_X = TRIGGER_FT_CENTER_X - TRIGGER_FT_HALF_X
-const TRIGGER_FT_MAX_X = TRIGGER_FT_CENTER_X + TRIGGER_FT_HALF_X
-const TRIGGER_FT_MIN_Z = TRIGGER_FT_CENTER_Z - TRIGGER_FT_HALF_Z
-const TRIGGER_FT_MAX_Z = TRIGGER_FT_CENTER_Z + TRIGGER_FT_HALF_Z
-
-let playerWasInFortuneTellerTrigger = false
 let fortuneTellerSitSpotRegistered = false
 let sitSpotFtStripFramesLeft = 0
 /** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
@@ -206,7 +193,6 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   const hostEntryPathStart = Transform.has(engine.PlayerEntity)
     ? Transform.get(engine.PlayerEntity).position
     : { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z }
-  hideBecomeFortuneTellerPrompt()
   const ftName = player?.name?.trim() || null
   gameData.currentFortuneTellerId = userId
   gameData.currentFortuneTellerName = ftName
@@ -388,36 +374,6 @@ function applyWizardIdleAnimation(active: WizardIdleClip): void {
   }
 }
 
-function showBecomeFortuneTellerPrompt(): void {
-  if (VisibilityComponent.has(BECOME_FORTUNE_TELLER_PROMPT)) {
-    VisibilityComponent.getMutable(BECOME_FORTUNE_TELLER_PROMPT).visible = true
-  }
-  if (Animator.has(BECOME_FORTUNE_TELLER_PROMPT)) {
-    const animator = Animator.getMutable(BECOME_FORTUNE_TELLER_PROMPT)
-    if (animator.states.length === 0) {
-      animator.states.push({ clip: 'default', playing: true, loop: true, speed: 1 })
-    } else {
-      for (const state of animator.states) {
-        state.playing = true
-        state.loop = true
-        state.speed = 1
-      }
-    }
-  }
-}
-
-function hideBecomeFortuneTellerPrompt(): void {
-  if (VisibilityComponent.has(BECOME_FORTUNE_TELLER_PROMPT)) {
-    VisibilityComponent.getMutable(BECOME_FORTUNE_TELLER_PROMPT).visible = false
-  }
-  if (Animator.has(BECOME_FORTUNE_TELLER_PROMPT)) {
-    const animator = Animator.getMutable(BECOME_FORTUNE_TELLER_PROMPT)
-    for (const state of animator.states) {
-      state.playing = false
-    }
-  }
-}
-
 export function setupWizard() {
   setupCinematicCamera()
 
@@ -432,23 +388,6 @@ export function setupWizard() {
   }
 
   engine.addSystem((dt: number) => {
-    // --- Volumen "Trigger: Fortune_Teller" (AABB en código): solo muestra/oculta el GLB become_fortune_teller ---
-    if (Transform.has(engine.PlayerEntity)) {
-      const playerPos = Transform.get(engine.PlayerEntity).position
-      const insideTrigger =
-        playerPos.x >= TRIGGER_FT_MIN_X &&
-        playerPos.x <= TRIGGER_FT_MAX_X &&
-        playerPos.z >= TRIGGER_FT_MIN_Z &&
-        playerPos.z <= TRIGGER_FT_MAX_Z
-      if (insideTrigger && !playerWasInFortuneTellerTrigger) {
-        playerWasInFortuneTellerTrigger = true
-        showBecomeFortuneTellerPrompt()
-      } else if (!insideTrigger && playerWasInFortuneTellerTrigger) {
-        playerWasInFortuneTellerTrigger = false
-        hideBecomeFortuneTellerPrompt()
-      }
-    }
-
     if (!fortuneTellerSitSpotRegistered) {
       const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
       if (sitSpot !== null) {
