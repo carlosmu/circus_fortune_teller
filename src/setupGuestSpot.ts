@@ -19,7 +19,7 @@ import {
 } from './fortuneSync'
 import { scheduleVirtualHostDelayThenOpenGuestCategories } from './fortuneTellerSystem'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
-import { TABLE, FORTUNE_TELLER_CAMERA_TARGET } from './scene'
+import { FORTUNE_TELLER_CAMERA_TARGET } from './scene'
 import { USE_FORTUNE_FSM_FLOW } from './sceneConfig'
 
 export const GUEST_SPOT = engine.addEntity()
@@ -32,10 +32,6 @@ const AVATAR_LOOK_AHEAD_METERS = 2.5
 const GUEST_SEAT_MOVE_THRESHOLD = 2.5
 const GUEST_SEAT_GRACE_MS = 1500
 
-const TABLE_HOVER_WAIT = 'Wait for the next turn'
-const TABLE_HOVER_DISABLED_FORTUNE_TELLER = 'Fortune Teller cannot reveal as Guest'
-/** La mesa ya no inicia la lectura; solo decorativa / informativa. */
-const TABLE_HOVER_TABLE = 'Sit for a fortune reading'
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
 const GUEST_SIT_HOVER_MAX_READINGS =
   'Maximum 3 readings — leave the chair and sit again for a new session'
@@ -215,35 +211,11 @@ function guestSitSpotClickCallback() {
   })
 }
 
-function registerTablePointer(mode: 'wait' | 'disabled-fortune-teller' | 'table') {
-  pointerEventsSystem.removeOnPointerDown(TABLE)
-  const hoverText =
-    mode === 'wait'
-      ? TABLE_HOVER_WAIT
-      : mode === 'disabled-fortune-teller'
-        ? TABLE_HOVER_DISABLED_FORTUNE_TELLER
-        : TABLE_HOVER_TABLE
-  pointerEventsSystem.onPointerDown(
-    {
-      entity: TABLE,
-      opts: {
-        button: InputAction.IA_POINTER,
-        hoverText
-      }
-    },
-    () => {}
-  )
-}
-
-let lastTableMode: 'wait' | 'disabled-fortune-teller' | 'table' | null = null
 
 export function setupGuestSpot() {
   Transform.create(GUEST_SPOT, {
     position: Vector3.create(8, 1, 8.6)
   })
-
-  registerTablePointer('table')
-  lastTableMode = 'table'
 
   fortuneMessageBus.on('guest-reading-idle-kick', (data: { guestId: string }) => {
     if (getPlayer()?.userId === data.guestId) {
@@ -274,17 +246,6 @@ export function setupGuestSpot() {
     }
 
     const localUserId = getPlayer()?.userId ?? null
-    const localIsFortuneTeller = localUserId !== null && gameData.currentFortuneTellerId === localUserId
-    const mode: 'wait' | 'disabled-fortune-teller' | 'table' =
-      gameData.gameState === 'MOSTRANDO_FORTUNA' || gameData.gameState === 'OCUPADO'
-        ? 'wait'
-        : localIsFortuneTeller
-          ? 'disabled-fortune-teller'
-          : 'table'
-    if (mode !== lastTableMode) {
-      lastTableMode = mode
-      registerTablePointer(mode)
-    }
 
     const sitSpotEntity = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
     if (sitSpotEntity !== null) {
