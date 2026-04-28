@@ -1,4 +1,4 @@
-import { engine, Transform } from '@dcl/sdk/ecs'
+import { engine, Transform, Entity } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
 
 type Vec3 = { x: number; y: number; z: number }
@@ -8,7 +8,7 @@ type Quat = { x: number; y: number; z: number; w: number }
  * Computes world position of an entity by walking up the parent chain.
  * Necessary because Transform.get(e).position is LOCAL to the parent.
  */
-export function getEntityWorldPosition(entity: number): Vec3 | null {
+export function getEntityWorldPosition(entity: Entity): Vec3 | null {
   if (!Transform.has(entity)) return null
   const t = Transform.get(entity)
   const localPos = t.position
@@ -38,7 +38,7 @@ export function getEntityWorldPosition(entity: number): Vec3 | null {
 /**
  * Computes world rotation of an entity by multiplying rotations up the parent chain.
  */
-export function getEntityWorldRotation(entity: number): Quat | null {
+export function getEntityWorldRotation(entity: Entity): Quat | null {
   if (!Transform.has(entity)) return null
   const t = Transform.get(entity)
   const localRot = t.rotation
