@@ -15,5 +15,4 @@ export enum EntityNames {
   Sit_Spot__Fortune_Teller = "Sit Spot: Fortune_Teller",
   Sit_Spot__Guest = "Sit Spot: Guest",
   Spotlight = "Spotlight",
-  Spotlight_2 = "Spotlight_2",
 } 

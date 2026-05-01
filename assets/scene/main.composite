@@ -139,16 +139,16 @@
               "y": 0.5,
               "z": 9.703997611999512
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
             },
             "parent": 0
           }
@@ -160,16 +160,16 @@
               "y": 0.5,
               "z": 6.082486629486084
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 1,
               "z": 0,
               "w": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
             },
             "parent": 0
           }
@@ -181,16 +181,16 @@
               "y": 0.05000000074505806,
               "z": -0.5199999809265137
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 1,
               "z": 0,
               "w": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
             },
             "parent": 518
           }
@@ -202,16 +202,16 @@
               "y": 0.04927265644073486,
               "z": -0.5902614593505859
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 1,
               "z": 0,
               "w": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
             },
             "parent": 517
           }
@@ -220,7 +220,7 @@
           "json": {
             "position": {
               "x": 8,
-              "y": 0,
+              "y": -0.5838142037391663,
               "z": 8
             },
             "rotation": {
@@ -230,9 +230,9 @@
               "w": 1
             },
             "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
+              "x": 1.899999976158142,
+              "y": 1.899999976158142,
+              "z": 1.899999976158142
             },
             "parent": 0
           }
@@ -1365,7 +1365,7 @@
       }
     },
     {
-      "name": "inspector::SceneMetadata-v3",
+      "name": "inspector::SceneMetadata-v4",
       "jsonSchema": {
         "type": "object",
         "properties": {
@@ -1683,6 +1683,14 @@
               "type": "string",
               "serializationType": "utf8-string"
             }
+          },
+          "disableNearbyVoiceChat": {
+            "type": "boolean",
+            "serializationType": "optional",
+            "optionalJsonSchema": {
+              "type": "boolean",
+              "serializationType": "boolean"
+            }
           }
         },
         "serializationType": "map"
@@ -1748,7 +1756,8 @@
             "skyboxConfig": {
               "fixedTime": 41820
             },
-            "creator": ""
+            "creator": "",
+            "disableNearbyVoiceChat": false
           }
         }
       }

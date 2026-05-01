@@ -22,6 +22,7 @@ import {
 import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
 import { cinematicBarAlpha } from './cinematicCamera'
 import { repeatPromptForSeed } from './repeatFortunePrompt'
+import { fsmSession } from './fortuneFsm/session'
 import { hashString, pickGuestMaxReadingsFarewellLine, pickThreeGuestCategoriesSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind, RevelationPhase } from './types'
 
@@ -95,9 +96,11 @@ const KIND_LABELS: Record<FortuneKind, string> = {
 const KIND_ORDER: FortuneKind[] = ['warning', 'advice', 'prediction']
 
 function isLegacyFortuneUiEnabled(): boolean {
-  // Keep legacy card UI as fallback when there is no human host:
-  // FSM flow only renders UI once a host/guest session is activated.
-  return SHOW_UI_FORTUNE && (!USE_FORTUNE_FSM_FLOW || gameData.currentFortuneTellerId === null)
+  // Use legacy UI only when FSM flow is disabled, or when no FSM session is active.
+  // Checking fsmSession.active (not currentFortuneTellerId) prevents the race condition
+  // where the FT disconnects mid-session: currentFortuneTellerId becomes null while
+  // fsmSession.active is still true, which would cause both UIs to render simultaneously.
+  return SHOW_UI_FORTUNE && (!USE_FORTUNE_FSM_FLOW || !fsmSession.active)
 }
 
 const WAITING_FORTUNE_LINES = [
