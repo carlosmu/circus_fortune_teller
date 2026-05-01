@@ -28,8 +28,8 @@ import type { FortuneCategory, FortuneKind, RevelationPhase } from './types'
 
 let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
-/** Vertical offset (px) applied to all card.png UI panels. Negative moves up. */
-const CARD_UI_VERTICAL_OFFSET = '-100px'
+/** Top margin for all card.png UI panels — matches fsmUi.tsx CARD_OFFSET so both systems align. */
+const CARD_UI_VERTICAL_OFFSET = '80px'
 /**
  * `card.png` es 1024×1024. Un solo tamaño fijo en px para todas las pantallas: el marco
  * no crece ni encoge entre estados, y stretch en un cuadrado igual al aspecto de la textura no deforma.
@@ -478,6 +478,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -519,6 +521,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -585,6 +589,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -623,6 +629,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -670,6 +678,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -705,6 +715,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -782,6 +794,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -862,6 +876,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -939,6 +955,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
@@ -1020,6 +1038,8 @@ function uiComponent() {
           uiTransform={{
             width: '100%',
             height: '100%',
+            positionType: 'absolute',
+            position: { top: 0, left: 0 },
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center'
