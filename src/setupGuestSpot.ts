@@ -1,15 +1,11 @@
 import {
   engine,
   Transform,
-  PointerEvents,
-  pointerEventsSystem,
-  InputAction,
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
-import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
+import { getEntityWorldPosition } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
-import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { EntityNames } from '../assets/scene/entity-names'
 import { gameData } from './gameState'
 import {
@@ -19,32 +15,21 @@ import {
 } from './fortuneSync'
 import { scheduleVirtualHostDelayThenOpenGuestCategories } from './fortuneTellerSystem'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
-import { FORTUNE_TELLER_CAMERA_TARGET } from './scene'
 import { USE_FORTUNE_FSM_FLOW } from './sceneConfig'
 
 export const GUEST_SPOT = engine.addEntity()
 
 /** Fallback si Sit Spot: Guest no existe en runtime. */
 const SIT_SPOT_GUEST_STATION = { x: 7.84, y: 0, z: 6.827048301696777 }
-/** Forward local del Sit Spot asset. */
-const SIT_SPOT_LOCAL_FORWARD = Vector3.create(0, 0, 1)
-const AVATAR_LOOK_AHEAD_METERS = 2.5
 const GUEST_SEAT_MOVE_THRESHOLD = 2.5
 const GUEST_SEAT_GRACE_MS = 1500
 
-const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
-const GUEST_SIT_HOVER_MAX_READINGS =
-  'Maximum 3 readings — leave the chair and sit again for a new session'
+/** Distancia desde el sit spot para detectar que el composite sentó al jugador. */
+const GUEST_SIT_DETECT_THRESHOLD = 1.0
 
-/** InteractionType.PROXIMITY: solo queremos clic con cursor, no prompt "E". */
-const POINTER_INTERACTION_PROXIMITY = 1
-
-let guestSitSpotRegistered = false
-let sitSpotGuestStripFramesLeft = 0
 let guestJoinedViaSitSpot = false
 let sitSpotGuestTeleportPending = false
 let guestSatAtMs = 0
-let lastAppliedGuestSitMode: 'default' | 'max' | null = null
 let guestReadingIdleKickDispatched = false
 let guestMaxReadingsDisplaceDispatched = false
 
@@ -64,90 +49,6 @@ function getGuestSitStationXZ(): { x: number; z: number } {
     if (worldPos) return { x: worldPos.x, z: worldPos.z }
   }
   return { x: SIT_SPOT_GUEST_STATION.x, z: SIT_SPOT_GUEST_STATION.z }
-}
-
-/** Posición y orientación world del Sit Spot: Guest (corrige coordenadas locales del hijo). */
-function buildGuestSitMovePlayerToRequest(): {
-  newRelativePosition: { x: number; y: number; z: number }
-  cameraTarget: { x: number; y: number; z: number }
-  avatarTarget: { x: number; y: number; z: number }
-} {
-  const cameraTarget = {
-    x: FORTUNE_TELLER_CAMERA_TARGET.x,
-    y: FORTUNE_TELLER_CAMERA_TARGET.y,
-    z: FORTUNE_TELLER_CAMERA_TARGET.z
-  }
-  const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-  if (sit !== null) {
-    const worldPos = getEntityWorldPosition(sit)
-    const worldRot = getEntityWorldRotation(sit)
-    if (worldPos && worldRot) {
-      const forward = Vector3.rotate(SIT_SPOT_LOCAL_FORWARD, worldRot)
-      const f = AVATAR_LOOK_AHEAD_METERS
-      return {
-        newRelativePosition: { x: worldPos.x, y: worldPos.y, z: worldPos.z },
-        cameraTarget,
-        avatarTarget: {
-          x: worldPos.x + forward.x * f,
-          y: worldPos.y + 1,
-          z: worldPos.z + forward.z * f
-        }
-      }
-    }
-  }
-  return {
-    newRelativePosition: {
-      x: SIT_SPOT_GUEST_STATION.x,
-      y: SIT_SPOT_GUEST_STATION.y,
-      z: SIT_SPOT_GUEST_STATION.z
-    },
-    cameraTarget,
-    avatarTarget: cameraTarget
-  }
-}
-
-function stripSitSpotGuestProximityUi(entity: ReturnType<typeof engine.addEntity>): void {
-  if (!PointerEvents.has(entity)) return
-  const m = PointerEvents.getMutable(entity)
-  m.pointerEvents = m.pointerEvents.filter(
-    (e) => (e.interactionType ?? 0) !== POINTER_INTERACTION_PROXIMITY
-  )
-  for (const entry of m.pointerEvents) {
-    const info = entry.eventInfo
-    if (!info) continue
-    const ht = info.hoverText?.trim() ?? ''
-    if (ht === 'Sit Here') {
-      info.showFeedback = false
-      info.showHighlight = false
-    }
-  }
-}
-
-function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEntity>): void {
-  const localUserId = getPlayer()?.userId ?? null
-  const maxed =
-    localUserId !== null &&
-    localUserId === gameData.guestSeatUserId &&
-    gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT &&
-    gameData.gameState === 'LIBRE'
-  const mode = maxed ? 'max' : 'default'
-  if (mode === lastAppliedGuestSitMode) return
-  lastAppliedGuestSitMode = mode
-  pointerEventsSystem.removeOnPointerDown(entity)
-  pointerEventsSystem.onPointerDown(
-    {
-      entity,
-      opts: {
-        button: InputAction.IA_POINTER,
-        hoverText: maxed ? GUEST_SIT_HOVER_MAX_READINGS : GUEST_SIT_SPOT_HOVER,
-        maxDistance: 8,
-        showFeedback: true,
-        showHighlight: true
-      }
-    },
-    maxed ? () => {} : guestSitSpotClickCallback
-  )
-  stripSitSpotGuestProximityUi(entity)
 }
 
 function emitGuestFortuneRequestFromChair() {
@@ -170,47 +71,45 @@ function emitGuestFortuneRequestFromChair() {
   })
 }
 
-function guestSitSpotClickCallback() {
+/**
+ * Detecta que el composite del Creator Hub sentó al jugador y ejecuta la lógica de juego.
+ */
+function detectGuestSatDown(): void {
+  if (gameData.guestSeatUserId !== null) return
+  if (guestJoinedViaSitSpot) return
+  if (gameData.gameState !== 'LIBRE') return
   const localUserId = getPlayer()?.userId ?? null
   if (!localUserId) return
   if (localUserId === gameData.currentFortuneTellerId) return
-  if (gameData.gameState !== 'LIBRE') return
+  if (!Transform.has(engine.PlayerEntity)) return
 
-  if (gameData.guestSeatUserId === localUserId) {
-    if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) return
-    emitGuestFortuneRequestFromChair()
-    return
-  }
-
-  if (gameData.guestSeatUserId !== null) return
+  const pos = Transform.get(engine.PlayerEntity).position
+  const station = getGuestSitStationXZ()
+  if (horizontalDistance(pos, station) > GUEST_SIT_DETECT_THRESHOLD) return
 
   const player = getPlayer()
   const guestDisplayName = player?.name?.trim() || null
-  const name = guestDisplayName ?? 'Visitor'
   const now = Date.now()
 
   fortuneMessageBus.emit('guest-seat-update', {
     seatUserId: localUserId,
-    seatUserName: name,
+    seatUserName: guestDisplayName ?? 'Visitor',
     centerBannerText: `${guestDisplayName ?? 'Someone'} is becoming the Guest`,
     centerBannerUntilMs: now + 2200
   })
 
   guestJoinedViaSitSpot = true
-  guestSatAtMs = Date.now()
+  guestSatAtMs = now
   sitSpotGuestTeleportPending = true
   executeTask(async () => {
     try {
-      await movePlayerTo(buildGuestSitMovePlayerToRequest())
-      await triggerEmote({ predefinedEmote: 'sittingChair2' })
-    } catch (_e) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 2500))
     } finally {
       sitSpotGuestTeleportPending = false
     }
     emitGuestFortuneRequestFromChair()
   })
 }
-
 
 export function setupGuestSpot() {
   Transform.create(GUEST_SPOT, {
@@ -230,27 +129,9 @@ export function setupGuestSpot() {
   })
 
   engine.addSystem(() => {
-    if (!guestSitSpotRegistered) {
-      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-      if (sitSpot !== null) {
-        guestSitSpotRegistered = true
-        applyGuestSitSpotPointerIfNeeded(sitSpot)
-        sitSpotGuestStripFramesLeft = 15
-      }
-    } else if (sitSpotGuestStripFramesLeft > 0) {
-      sitSpotGuestStripFramesLeft -= 1
-      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-      if (sitSpot !== null) {
-        stripSitSpotGuestProximityUi(sitSpot)
-      }
-    }
+    detectGuestSatDown()
 
     const localUserId = getPlayer()?.userId ?? null
-
-    const sitSpotEntity = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-    if (sitSpotEntity !== null) {
-      applyGuestSitSpotPointerIfNeeded(sitSpotEntity)
-    }
 
     if (
       gameData.gameState !== 'OCUPADO' ||

@@ -137,7 +137,7 @@
             "position": {
               "x": 8,
               "y": 0.5,
-              "z": 9.699999809265137
+              "z": 3.9499998092651367
             },
             "rotation": {
               "x": 0,
@@ -199,8 +199,8 @@
           "json": {
             "position": {
               "x": 0,
-              "y": 0.05000000074505806,
-              "z": -0.5899999737739563
+              "y": 0.050000011920928955,
+              "z": -5.590000152587891
             },
             "rotation": {
               "x": 0,
@@ -358,7 +358,9 @@
         },
         "522": {
           "json": {
-            "src": "assets/models/Fchair.glb"
+            "src": "assets/models/Fchair.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 1
           }
         },
         "524": {
@@ -394,15 +396,6 @@
       },
       "data": {
         "521": {
-          "json": {
-            "collisionMask": 3,
-            "mesh": {
-              "$case": "box",
-              "box": {}
-            }
-          }
-        },
-        "522": {
           "json": {
             "collisionMask": 3,
             "mesh": {
@@ -630,7 +623,7 @@
       "data": {
         "522": {
           "json": {
-            "gizmo": 0
+            "gizmo": 1
           }
         }
       }
@@ -2226,18 +2219,8 @@
               {
                 "name": "Sit Here",
                 "type": "batch",
-                "jsonPayload": "{\"actions\":[\"Move here\",\"Mark as taken\",\"Delay sit anim\",\"Random sit anim\"]}",
+                "jsonPayload": "{\"actions\":[\"Move here\",\"Mark as taken\",\"Sit anim1\"]}",
                 "allowedInBasicView": true
-              },
-              {
-                "name": "Sit anim2",
-                "type": "play_default_emote",
-                "jsonPayload": "{\"emote\":\"sittingChair2\"}"
-              },
-              {
-                "name": "Random sit anim",
-                "type": "random",
-                "jsonPayload": "{\"actions\":[\"Sit anim1\",\"Sit anim2\"]}"
               },
               {
                 "name": "Print text",

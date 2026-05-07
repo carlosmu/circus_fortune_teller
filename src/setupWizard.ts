@@ -2,15 +2,10 @@ import {
   engine,
   Animator,
   Transform,
-  PointerEvents,
-  pointerEventsSystem,
-  InputAction,
   executeTask
 } from '@dcl/sdk/ecs'
-import { Vector3 } from '@dcl/sdk/math'
-import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
+import { getEntityWorldPosition } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
-import { movePlayerTo } from '~system/RestrictedActions'
 import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
 import {
@@ -31,13 +26,8 @@ const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.75
 const FORTUNE_TELLER_LEAVE_NUDGE_METERS = 2.5
 /** Fallback si Sit Spot: Fortune_Teller no existe en runtime. */
 const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
-/** Forward local del Sit Spot asset. */
-const SIT_SPOT_LOCAL_FORWARD = Vector3.create(0, 0, 1)
-const AVATAR_LOOK_AHEAD_METERS = 2.5
 /** Tiempo en ms antes de aplicar la regla de alejamiento (solo para dejar terminar movePlayerTo/emote). */
 const FORTUNE_TELLER_GRACE_MS = 700
-/** Texto al apuntar con el cursor al Sit Spot del Fortune Teller (clic para tomar el rol). */
-const FORTUNE_TELLER_SIT_SPOT_HOVER = 'Become The Fortune Teller'
 const WIZARD_MOVE_OFFSET_X = 0
 const WIZARD_MOVE_OFFSET_Z = -1.65
 const WIZARD_MOVE_SPEED = 6
@@ -46,8 +36,6 @@ const FORTUNE_TELLER_RANDOM_MIN_X = 3
 const FORTUNE_TELLER_RANDOM_MAX_X = 13
 const FORTUNE_TELLER_RANDOM_MIN_Z = 7
 const FORTUNE_TELLER_RANDOM_MAX_Z = 12
-let fortuneTellerSitSpotRegistered = false
-let sitSpotFtStripFramesLeft = 0
 /** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
 let fortuneTellerJoinedViaSitSpot = false
 /** Mientras movePlayerTo/emote del Sit Spot no terminaron, no aplicar la regla de alejamiento. */
@@ -88,36 +76,6 @@ function getFortuneTellerSitSpotXZ(): { x: number; z: number } {
     if (worldPos) return { x: worldPos.x, z: worldPos.z }
   }
   return { x: SIT_SPOT_FT_STATION.x, z: SIT_SPOT_FT_STATION.z }
-}
-
-function getFortuneTellerSeatPosition(): { x: number; y: number; z: number } {
-  const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
-  if (sit !== null) {
-    const worldPos = getEntityWorldPosition(sit)
-    if (worldPos) return { x: worldPos.x, y: worldPos.y, z: worldPos.z }
-  }
-  return {
-    x: SIT_SPOT_FT_STATION.x,
-    y: SIT_SPOT_FT_STATION.y,
-    z: SIT_SPOT_FT_STATION.z
-  }
-}
-
-function getFortuneTellerSeatAvatarTarget(pos: { x: number; y: number; z: number }): { x: number; y: number; z: number } {
-  const sit = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
-  if (sit !== null) {
-    const worldRot = getEntityWorldRotation(sit)
-    if (worldRot) {
-      const forward = Vector3.rotate(SIT_SPOT_LOCAL_FORWARD, worldRot)
-      const f = AVATAR_LOOK_AHEAD_METERS
-      return { x: pos.x + forward.x * f, y: pos.y + 1, z: pos.z + forward.z * f }
-    }
-  }
-  return {
-    x: FORTUNE_TELLER_CAMERA_TARGET.x,
-    y: FORTUNE_TELLER_CAMERA_TARGET.y,
-    z: FORTUNE_TELLER_CAMERA_TARGET.z
-  }
 }
 
 function playerStillAtFortuneTellerStation(playerPos: { x: number; y: number; z: number }): boolean {
@@ -217,6 +175,29 @@ function releaseFortuneTellerBySessionRules(): void {
   moveFortuneTellerToRandomArea()
 }
 
+/** Distancia desde el Sit Spot del FT para detectar que el composite sentó al jugador. */
+const FORTUNE_TELLER_SIT_DETECT_THRESHOLD = 1.0
+
+/**
+ * Detecta que el composite del Creator Hub sentó al jugador en el Sit Spot del Fortune Teller.
+ */
+function detectFortuneTellerSatDown(): void {
+  if (gameData.currentFortuneTellerId !== null) return
+  if (fortuneTellerJoinedViaSitSpot) return
+  const localUserId = getPlayer()?.userId ?? null
+  if (!localUserId) return
+  if (!Transform.has(engine.PlayerEntity)) return
+
+  const pos = Transform.get(engine.PlayerEntity).position
+  const station = getFortuneTellerSitSpotXZ()
+  const dx = pos.x - station.x
+  const dz = pos.z - station.z
+  const dist = Math.sqrt(dx * dx + dz * dz)
+  if (dist > FORTUNE_TELLER_SIT_DETECT_THRESHOLD) return
+
+  fortuneTellerClickCallback({ fromSitSpot: true })
+}
+
 function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   const fromSitSpot = opts?.fromSitSpot === true
   const player = getPlayer()
@@ -267,27 +248,12 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       }
 
   if (fromSitSpot) {
-    // La cámara de órbita al mismo tiempo que el clic suele anular el “sit” del composite.
-    // Primero movePlayerTo + emote en la silla, luego la cinemática.
+    // El composite del Sit Spot (Creator Hub) maneja el movimiento + emote.
+    // Solo esperamos un momento para que termine antes de iniciar la cinemática.
     sitSpotFtTeleportPending = true
     executeTask(async () => {
       try {
-        const seatPos = getFortuneTellerSeatPosition()
-        const avatarTarget = getFortuneTellerSeatAvatarTarget(seatPos)
-        await movePlayerTo({
-          newRelativePosition: {
-            x: seatPos.x,
-            y: seatPos.y,
-            z: seatPos.z
-          },
-          cameraTarget: {
-            x: FORTUNE_TELLER_CAMERA_TARGET.x,
-            y: FORTUNE_TELLER_CAMERA_TARGET.y,
-            z: FORTUNE_TELLER_CAMERA_TARGET.z
-          },
-          avatarTarget
-        })
-      } catch (_e) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 2500))
       } finally {
         sitSpotFtTeleportPending = false
       }
@@ -312,51 +278,6 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       } catch (_e) {}
     })
   }
-}
-
-/** InteractionType.PROXIMITY: el cliente suele mostrar “E” / interacción por tecla; solo queremos clic. */
-const POINTER_INTERACTION_PROXIMITY = 1
-
-/**
- * Quita interacciones PROXIMITY (prompt “E”) y silencia el hint legacy “Sit Here” del asset;
- * no toca la entrada del script con “Become The Fortune Teller”.
- */
-function stripSitSpotFortuneTellerProximityUi(entity: ReturnType<typeof engine.addEntity>): void {
-  if (!PointerEvents.has(entity)) return
-  const m = PointerEvents.getMutable(entity)
-  m.pointerEvents = m.pointerEvents.filter(
-    (e) => (e.interactionType ?? 0) !== POINTER_INTERACTION_PROXIMITY
-  )
-  for (const entry of m.pointerEvents) {
-    const info = entry.eventInfo
-    if (!info) continue
-    const ht = info.hoverText?.trim() ?? ''
-    if (ht === 'Sit Here') {
-      info.showFeedback = false
-      info.showHighlight = false
-    }
-  }
-}
-
-/** Clic (cursor) en el Sit Spot del composite → mismo flujo que el collider del wizard. */
-function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.addEntity>): void {
-  const onInteract = () => {
-    fortuneTellerClickCallback({ fromSitSpot: true })
-  }
-  pointerEventsSystem.onPointerDown(
-    {
-      entity,
-      opts: {
-        button: InputAction.IA_POINTER,
-        hoverText: FORTUNE_TELLER_SIT_SPOT_HOVER,
-        maxDistance: 8,
-        showFeedback: true,
-        showHighlight: true
-      }
-    },
-    onInteract
-  )
-  stripSitSpotFortuneTellerProximityUi(entity)
 }
 
 /** Normaliza nombre de clip (p. ej. `Armature|sit_idle` → `sit_idle`). */
@@ -420,20 +341,8 @@ export function setupWizard() {
   }
 
   engine.addSystem((dt: number) => {
-    if (!fortuneTellerSitSpotRegistered) {
-      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
-      if (sitSpot !== null) {
-        fortuneTellerSitSpotRegistered = true
-        registerFortuneTellerSitSpotHandlers(sitSpot)
-        sitSpotFtStripFramesLeft = 15
-      }
-    } else if (sitSpotFtStripFramesLeft > 0) {
-      sitSpotFtStripFramesLeft -= 1
-      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
-      if (sitSpot !== null) {
-        stripSitSpotFortuneTellerProximityUi(sitSpot)
-      }
-    }
+    // Detectar que el composite del Creator Hub sentó al jugador en el Sit Spot del FT
+    detectFortuneTellerSatDown()
 
     const desiredIdleClip: WizardIdleClip =
       gameData.currentFortuneTellerId !== null ? WIZARD_CLIP_STAND_IDLE : WIZARD_CLIP_SIT_IDLE
