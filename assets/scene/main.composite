@@ -132,75 +132,12 @@
             "parent": 527
           }
         },
-        "517": {
-          "json": {
-            "position": {
-              "x": 8,
-              "y": 0.5,
-              "z": 3.9499998092651367
-            },
-            "rotation": {
-              "x": 0,
-              "y": 1,
-              "z": 0,
-              "w": 0
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            },
-            "parent": 0
-          }
-        },
-        "518": {
-          "json": {
-            "position": {
-              "x": 8,
-              "y": 0.5,
-              "z": 6.082486629486084
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            },
-            "rotation": {
-              "x": 0,
-              "y": 1,
-              "z": 0,
-              "w": 0
-            },
-            "parent": 0
-          }
-        },
         "521": {
           "json": {
             "position": {
-              "x": 0,
-              "y": 0.05000000074505806,
-              "z": -0.5199999809265137
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
-            },
-            "rotation": {
-              "x": 0,
-              "y": 1,
-              "z": 0,
-              "w": 0
-            },
-            "parent": 518
-          }
-        },
-        "522": {
-          "json": {
-            "position": {
-              "x": 0,
-              "y": 0.050000011920928955,
-              "z": -5.590000152587891
+              "x": 8,
+              "y": 0.550000011920929,
+              "z": 6.602486610412598
             },
             "rotation": {
               "x": 0,
@@ -213,7 +150,28 @@
               "y": 1,
               "z": 1
             },
-            "parent": 517
+            "parent": 0
+          }
+        },
+        "522": {
+          "json": {
+            "position": {
+              "x": 8,
+              "y": 0.550000011920929,
+              "z": 9.539999961853027
+            },
+            "rotation": {
+              "x": 0,
+              "y": 1,
+              "z": 0,
+              "w": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "parent": 0
           }
         },
         "524": {
@@ -342,18 +300,9 @@
         "protocolBuffer": "PBGltfContainer"
       },
       "data": {
-        "517": {
+        "521": {
           "json": {
-            "src": "assets/models/Fchair.glb",
-            "visibleMeshesCollisionMask": 0,
-            "invisibleMeshesCollisionMask": 3
-          }
-        },
-        "518": {
-          "json": {
-            "src": "assets/models/Fchair.glb",
-            "visibleMeshesCollisionMask": 0,
-            "invisibleMeshesCollisionMask": 3
+            "src": "assets/models/Fchair.glb"
           }
         },
         "522": {
@@ -427,16 +376,6 @@
         "516": {
           "json": {
             "value": "Spotlight"
-          }
-        },
-        "517": {
-          "json": {
-            "value": "Chair_Guest"
-          }
-        },
-        "518": {
-          "json": {
-            "value": "Chair_Fortune_Teller"
           }
         },
         "521": {
@@ -518,7 +457,8 @@
         "521": {
           "json": {
             "componentIds": [
-              2709697014
+              2709697014,
+              1041
             ]
           }
         },
@@ -621,7 +561,7 @@
         "serializationType": "map"
       },
       "data": {
-        "522": {
+        "521": {
           "json": {
             "gizmo": 1
           }
@@ -675,9 +615,9 @@
                 "open": true,
                 "children": [
                   528,
-                  517,
-                  518,
                   524,
+                  522,
+                  521,
                   527
                 ]
               },
@@ -696,20 +636,6 @@
               {
                 "entity": 516,
                 "children": []
-              },
-              {
-                "entity": 517,
-                "open": true,
-                "children": [
-                  522
-                ]
-              },
-              {
-                "entity": 518,
-                "open": true,
-                "children": [
-                  521
-                ]
               },
               {
                 "entity": 521,
@@ -768,12 +694,6 @@
           "json": {}
         },
         "516": {
-          "json": {}
-        },
-        "517": {
-          "json": {}
-        },
-        "518": {
           "json": {}
         },
         "521": {
