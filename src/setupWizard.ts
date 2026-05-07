@@ -10,7 +10,7 @@ import {
 import { Vector3 } from '@dcl/sdk/math'
 import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
-import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
+import { movePlayerTo } from '~system/RestrictedActions'
 import { gameData } from './gameState'
 import { fortuneMessageBus } from './fortuneSync'
 import {
@@ -287,7 +287,6 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
           },
           avatarTarget
         })
-        await triggerEmote({ predefinedEmote: 'sittingChair1' })
       } catch (_e) {
       } finally {
         sitSpotFtTeleportPending = false
@@ -310,7 +309,6 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
             z: FORTUNE_TELLER_CAMERA_TARGET.z
           }
         })
-        await triggerEmote({ predefinedEmote: 'sittingChair1' })
       } catch (_e) {}
     })
   }
