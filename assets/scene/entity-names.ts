@@ -5,8 +5,6 @@
  * Object containing all entity names in the scene for autocomplete support.
  */
 export enum EntityNames {
-  Chair_Fortune_Teller = "Chair_Fortune_Teller",
-  Chair_Guest = "Chair_Guest",
   Extras = "Extras",
   Floor___Pebble = "Floor - Pebble",
   Ftable_glb = "Ftable.glb",

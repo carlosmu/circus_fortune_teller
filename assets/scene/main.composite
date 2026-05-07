@@ -139,16 +139,16 @@
               "y": 0.550000011920929,
               "z": 6.602486610412598
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
-            },
-            "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
             },
             "parent": 0
           }
@@ -331,26 +331,6 @@
             "src": "assets/models/Ftable.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 3
-          }
-        }
-      }
-    },
-    {
-      "name": "core::MeshCollider",
-      "jsonSchema": {
-        "type": "object",
-        "properties": {},
-        "serializationType": "protocol-buffer",
-        "protocolBuffer": "PBMeshCollider"
-      },
-      "data": {
-        "521": {
-          "json": {
-            "collisionMask": 3,
-            "mesh": {
-              "$case": "box",
-              "box": {}
-            }
           }
         }
       }
@@ -563,7 +543,7 @@
       "data": {
         "521": {
           "json": {
-            "gizmo": 1
+            "gizmo": 0
           }
         }
       }

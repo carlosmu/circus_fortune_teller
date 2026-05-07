@@ -7,7 +7,7 @@ import {
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
-import { getEntityWorldPosition } from './worldTransform'
+import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { EntityNames } from '../assets/scene/entity-names'
@@ -25,6 +25,7 @@ export const GUEST_SPOT = engine.addEntity()
 
 /** Fallback si Sit Spot: Guest no existe en runtime. */
 const SIT_SPOT_GUEST_STATION = { x: 7.84, y: 0, z: 6.827048301696777 }
+const SIT_SPOT_LOCAL_FORWARD = Vector3.create(0, 0, 1)
 const AVATAR_LOOK_AHEAD_METERS = 2.5
 const GUEST_SEAT_MOVE_THRESHOLD = 2.5
 const GUEST_SEAT_GRACE_MS = 1500
@@ -96,13 +97,16 @@ function buildGuestSitMovePlayerToRequest(): {
   if (sit !== null) {
     const worldPos = getEntityWorldPosition(sit)
     if (worldPos) {
+      const worldRot = getEntityWorldRotation(sit)
+      // Copiamos la rotación del Sit Spot: el avatar mira en la misma dirección que la silla
+      const forward = worldRot ? Vector3.rotate(SIT_SPOT_LOCAL_FORWARD, worldRot) : SIT_SPOT_LOCAL_FORWARD
       return {
         newRelativePosition: { x: worldPos.x, y: worldPos.y, z: worldPos.z },
         cameraTarget,
         avatarTarget: {
-          x: worldPos.x,
+          x: worldPos.x + forward.x * AVATAR_LOOK_AHEAD_METERS,
           y: worldPos.y + 1,
-          z: worldPos.z + AVATAR_LOOK_AHEAD_METERS
+          z: worldPos.z + forward.z * AVATAR_LOOK_AHEAD_METERS
         }
       }
     }
