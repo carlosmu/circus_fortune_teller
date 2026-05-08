@@ -9,7 +9,7 @@
  */
 
 /** Vertical offset from the top of the viewport for all card.png panels. */
-export const CARD_VERTICAL_OFFSET = '80px'
+export const CARD_VERTICAL_OFFSET = '30px'
 
 /**
  * Fixed dimensions for the card.png frame.
