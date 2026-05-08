@@ -9,14 +9,14 @@
  */
 
 /** Vertical offset from the top of the viewport for all card.png panels. */
-export const CARD_VERTICAL_OFFSET = '30px'
+export const CARD_VERTICAL_OFFSET = '3vh'
 
 /**
  * Fixed dimensions for the card.png frame.
  * The source texture is 1024×1024; we display it at 512×512 (stretch in a
  * square matching the aspect ratio causes no distortion).
  */
-export const CARD_SIZE = { width: '512px' as const, height: '512px' as const }
+export const CARD_SIZE = { width: '40vh' as const, height: '40vh' as const }
 
 /** Background texture definition shared by every card panel. */
 export const CARD_BG = {
