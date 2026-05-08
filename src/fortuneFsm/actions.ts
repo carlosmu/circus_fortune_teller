@@ -73,7 +73,10 @@ export function guestPickCategory(category: FortuneCategory): void {
   fsmSession.selectedCategoryKey = category
   fsmSession.worldBanner = `Selected category: ${label}`
   const r = tryTransition('DECK_SELECTION')
-  if (r.ok) emit()
+  if (r.ok) {
+    if (fsmSession.isVirtualHost) fsmSession.virtualHostPendingAtMs = nowMs()
+    emit()
+  }
 }
 
 /** Host: deck → CARD_SELECTION */
@@ -99,7 +102,10 @@ export function guestPickCard(slot: FsmCardChoice, index: 0 | 1 | 2): void {
   fsmSession.hostFortunePickedAtMs = null
   fsmSession.selectedFortune = null
   const r = tryTransition('FORTUNE_SELECTION')
-  if (r.ok) emit()
+  if (r.ok) {
+    if (fsmSession.isVirtualHost) fsmSession.virtualHostPendingAtMs = nowMs()
+    emit()
+  }
 }
 
 /** Host: fortune A/B/C — temporizador breve (sceneConfig) hasta REVEAL */
@@ -148,6 +154,45 @@ export function fsmTickContinueIfReady(t: number): void {
   if (r.ok) emit()
 }
 
+const VIRTUAL_HOST_INIT_MS = 1000
+const VIRTUAL_HOST_DECK_MS = 1400
+const VIRTUAL_HOST_FORTUNE_MS = 1800
+
+/** Auto-pick host decisions when no human fortune teller. */
+export function fsmTickVirtualHost(t: number): void {
+  if (!fsmSession.active || !fsmSession.isVirtualHost) return
+  if (fsmSession.virtualHostPendingAtMs === null) return
+  const dt = t - fsmSession.virtualHostPendingAtMs
+
+  if (fsmSession.state === 'INIT' && dt >= VIRTUAL_HOST_INIT_MS) {
+    fsmSession.virtualHostPendingAtMs = null
+    const r = tryTransition('CATEGORY_SELECTION')
+    if (r.ok) emit()
+    return
+  }
+
+  if (fsmSession.state === 'DECK_SELECTION' && dt >= VIRTUAL_HOST_DECK_MS) {
+    fsmSession.virtualHostPendingAtMs = null
+    const decks: FsmDeck[] = ['Funny', 'Serious', 'Strange']
+    const deck = decks[Math.floor(Math.random() * decks.length)]!
+    fsmSession.selectedDeck = deck
+    const r = tryTransition('CARD_SELECTION', { cardFlipIndex: null })
+    if (r.ok) emit()
+    return
+  }
+
+  if (fsmSession.state === 'FORTUNE_SELECTION' && dt >= VIRTUAL_HOST_FORTUNE_MS) {
+    fsmSession.virtualHostPendingAtMs = null
+    const choices: FsmCardChoice[] = ['A', 'B', 'C']
+    const choice = choices[Math.floor(Math.random() * choices.length)]!
+    fsmSession.selectedFortune = choice
+    fsmSession.hostFortunePickedAtMs = nowMs()
+    fsmSession.fortuneGuestHint = 'reading'
+    emit()
+    return
+  }
+}
+
 /** Guest: another reading */
 export function guestContinueYes(): void {
   if (!debounceOk(nowMs(), FSM_DEBOUNCE_MS)) return
@@ -164,6 +209,7 @@ export function guestContinueYes(): void {
   fsmSession.revealEnteredAtMs = null
   fsmSession.fortuneGuestHint = 'idle'
   fsmSession.sessionFinishedMessage = null
+  fsmSession.virtualHostPendingAtMs = null
   const r = tryTransition('CATEGORY_SELECTION')
   if (r.ok) emit()
 }
@@ -177,8 +223,8 @@ export function guestContinueNo(): void {
   emitFsmSessionEnded('Your reading is finished')
 }
 
-/** Activate session at INIT (bridge). */
-export function fsmActivateSession(hostId: string, guestId: string, guestName: string | null): void {
+/** Activate session at INIT (bridge). Accepts null hostId for virtual-host mode. */
+export function fsmActivateSession(hostId: string | null, guestId: string, guestName: string | null): void {
   Object.assign(fsmSession, {
     active: true,
     hostId,
@@ -196,7 +242,9 @@ export function fsmActivateSession(hostId: string, guestId: string, guestName: s
     revealEnteredAtMs: null,
     usedCategories: [],
     cardFlipIndex: null,
-    sessionFinishedMessage: null
+    sessionFinishedMessage: null,
+    isVirtualHost: hostId === null,
+    virtualHostPendingAtMs: hostId === null ? nowMs() : null
   })
   emit()
 }

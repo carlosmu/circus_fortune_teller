@@ -43,6 +43,10 @@ export type FsmSession = {
   cardFlipIndex: number | null
   /** Finished reading global line. */
   sessionFinishedMessage: string | null
+  /** No human fortune teller: FSM auto-picks host decisions. */
+  isVirtualHost: boolean
+  /** When virtual host entered state needing auto-pick (ms). */
+  virtualHostPendingAtMs: number | null
 }
 
 export const FSM_DEBOUNCE_MS = 400

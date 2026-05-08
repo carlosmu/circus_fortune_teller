@@ -6,7 +6,8 @@ import {
   fsmActivateSession,
   fsmDeactivateSession,
   fsmTickContinueIfReady,
-  fsmTickRevealIfReady
+  fsmTickRevealIfReady,
+  fsmTickVirtualHost
 } from './actions'
 import { fsmSession } from './session'
 import { setupFortuneFsmSync } from './sync'
@@ -21,7 +22,6 @@ export function setupFortuneFsm(): void {
 
   fortuneMessageBus.on('guest-requested-fortune', (data) => {
     const hostId = gameData.currentFortuneTellerId
-    if (hostId === null) return
     if (fsmSession.active && fsmSession.guestId === data.guestId) return
     fsmActivateSession(hostId, data.guestId, data.guestName ?? null)
   })
@@ -39,6 +39,7 @@ export function setupFortuneFsm(): void {
 
   engine.addSystem(() => {
     const t = Date.now()
+    fsmTickVirtualHost(t)
     fsmTickRevealIfReady(t)
     fsmTickContinueIfReady(t)
   })

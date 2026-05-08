@@ -76,7 +76,7 @@ function emitGuestFortuneRequestFromChair() {
       roundSalt,
       sessionReadingIndex
     })
-    if (!USE_FORTUNE_FSM_FLOW || gameData.currentFortuneTellerId === null) {
+    if (!USE_FORTUNE_FSM_FLOW) {
       scheduleVirtualHostDelayThenOpenGuestCategories()
     }
   })

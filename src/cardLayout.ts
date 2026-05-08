@@ -9,14 +9,14 @@
  */
 
 /** Vertical offset from the top of the viewport for all card.png panels. */
-export const CARD_VERTICAL_OFFSET = '3vh'
+export const CARD_VERTICAL_OFFSET = '-5vh'
 
 /**
  * Fixed dimensions for the card.png frame.
  * The source texture is 1024×1024; we display it at 512×512 (stretch in a
  * square matching the aspect ratio causes no distortion).
  */
-export const CARD_SIZE = { width: '40vh' as const, height: '40vh' as const }
+export const CARD_SIZE = { width: '50vh' as const, height: '50vh' as const }
 
 /** Background texture definition shared by every card panel. */
 export const CARD_BG = {
@@ -38,4 +38,4 @@ export const CARD_CONTENT_HEIGHT = '86%' as const
  * Applied to the inner content column.  Both legacy and FSM systems use the
  * same value so every card.png panel positions its text identically.
  */
-export const CARD_CONTENT_VERTICAL_ADJUST = '2vh'
+export const CARD_CONTENT_VERTICAL_ADJUST = '0'

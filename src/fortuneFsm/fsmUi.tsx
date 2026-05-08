@@ -579,6 +579,7 @@ export function FortuneFsmLayer() {
   const uid = player?.userId ?? null
   /** Host = adivino en sesión; doble chequeo por si hostId del snapshot y gameData desincronizan. */
   const isHost =
+    !fsmSession.isVirtualHost &&
     uid !== null &&
     fsmSession.active &&
     uid !== fsmSession.guestId &&
