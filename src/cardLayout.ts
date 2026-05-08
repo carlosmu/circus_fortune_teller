@@ -38,4 +38,4 @@ export const CARD_CONTENT_HEIGHT = '86%' as const
  * Applied to the inner content column.  Both legacy and FSM systems use the
  * same value so every card.png panel positions its text identically.
  */
-export const CARD_CONTENT_VERTICAL_ADJUST = -80
+export const CARD_CONTENT_VERTICAL_ADJUST = '2vh'
