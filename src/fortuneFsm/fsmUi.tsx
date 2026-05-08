@@ -17,15 +17,19 @@ import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
 import { getFsmRevealFortuneText, getFsmRevealKindTitle } from './resolveRevealFortune'
 import { fsmSession } from './session'
 import type { FsmCardChoice, FsmDeck } from './types'
+import {
+  CARD_VERTICAL_OFFSET,
+  CARD_SIZE,
+  CARD_BG,
+  CARD_CONTENT_HEIGHT,
+  CARD_CONTENT_VERTICAL_ADJUST
+} from '../cardLayout'
 
-const CARD_OFFSET = '80px'
-const CARD_PANEL = { width: '480px' as const, height: '480px' as const }
-const CARD_BG = { texture: { src: 'assets/images/card.png' }, textureMode: 'stretch' as const }
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
 
 /**
  * Área útil sobre card.png: en X solo un hijo directo → {@link CARD_ROOT_COLUMN}.
- * margin.top desplaza el bloque sobre la carta.
+ * margin.top alinea el contenido con el centro óptico igual que en el sistema legacy (ui.tsx).
  */
 const CARD_CONTENT_LAYER = {
   positionType: 'absolute' as const,
@@ -35,8 +39,7 @@ const CARD_CONTENT_LAYER = {
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
   alignItems: 'center' as const,
-  padding: { top: '6%', right: '6%', bottom: '6%', left: '6%' } as const,
-  margin: { top: -20 } as const,
+  margin: { top: CARD_CONTENT_VERTICAL_ADJUST } as const,
   overflow: 'visible' as const
 }
 /**
@@ -53,12 +56,12 @@ const CARD_ROOT_COLUMN = {
 }
 
 /**
- * Altura como ui.tsx CARD_INNER_COLUMN (referencia para maxHeight % del cuerpo).
- * paddingTop + sin margin negativo: el marco de la carta “come” arriba; antes -80 subía demasiado el texto.
+ * Altura igual que CARD_CONTENT_HEIGHT compartido (referencia para maxHeight % del cuerpo).
+ * paddingTop: 10px para separar ligeramente el título del borde de la carta.
  */
 const REVEAL_INNER_COLUMN = {
   width: '100%' as const,
-  height: '86%' as const,
+  height: CARD_CONTENT_HEIGHT,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
   alignItems: 'center' as const,
@@ -140,32 +143,6 @@ const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
   { key: 'B', idx: 1 },
   { key: 'C', idx: 2 }
 ]
-
-/** Ocupa espacio en el flujo (no absolute) para no solaparse con la carta card.png debajo. */
-function WorldBanner({ text }: { text: string }) {
-  return (
-    <UiEntity
-      uiTransform={{
-        width: '100%',
-        flexShrink: 0,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: { top: 12, bottom: 20, left: 8, right: 8 }
-      }}
-    >
-      <Label
-        uiTransform={{ width: '92%', height: 'auto', minHeight: 28 }}
-        value={text}
-        textAlign={CARD_TEXT_ALIGN}
-        textWrap="wrap"
-        fontSize={20}
-        font="serif"
-        color={GOLD}
-      />
-    </UiEntity>
-  )
-}
 
 /** Lectura final sobre card.png (host, guest y espectadores con sesión activa). */
 function RevealFortuneOnCard() {
@@ -275,11 +252,11 @@ function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'fle
     >
       <UiEntity
         uiTransform={{
-          ...CARD_PANEL,
+          ...CARD_SIZE,
           flexDirection: 'column',
           justifyContent: 'flex-start',
           alignItems: 'center',
-          margin: { top: CARD_OFFSET },
+          margin: { top: CARD_VERTICAL_OFFSET },
           positionType: 'relative',
           overflow: 'visible'
         }}
@@ -617,22 +594,54 @@ export function FortuneFsmLayer() {
         height: '100%',
         positionType: 'absolute',
         position: { top: 0, left: 0 },
-        flexDirection: 'column',
         zIndex: 12
       }}
     >
-      {fsmSession.worldBanner && fsmSession.state !== 'REVEAL' && <WorldBanner text={fsmSession.worldBanner} />}
       {fsmSession.sessionFinishedMessage && <GlobalFinished text={fsmSession.sessionFinishedMessage} />}
+      {/*
+       * Wrapper absoluto para la carta: siempre empieza en top:0, sin importar
+       * que haya o no WorldBanner — así la carta nunca se desplaza verticalmente.
+       */}
       <UiEntity
         uiTransform={{
+          positionType: 'absolute',
+          position: { top: 0, left: 0 },
           width: '100%',
-          flex: 1,
-          minHeight: 0,
+          height: '100%',
           flexDirection: 'column',
           justifyContent: 'flex-start',
           alignItems: 'center'
         }}
       >
+        {/*
+         * WorldBanner absoluto con zIndex -1: pintado detrás de la carta (que no
+         * tiene zIndex propio). Se ve en el área transparente sobre el panel carta
+         * (0–80 px) sin empujar nada.
+         */}
+        {fsmSession.worldBanner && fsmSession.state !== 'REVEAL' && (
+          <UiEntity
+            uiTransform={{
+              width: '100%',
+              positionType: 'absolute',
+              position: { top: 0, left: 0 },
+              zIndex: -1,
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: { top: 12, bottom: 20, left: 8, right: 8 }
+            }}
+          >
+            <Label
+              uiTransform={{ width: '92%', height: 'auto', minHeight: 28 }}
+              value={fsmSession.worldBanner}
+              textAlign={CARD_TEXT_ALIGN}
+              textWrap="wrap"
+              fontSize={20}
+              font="serif"
+              color={GOLD}
+            />
+          </UiEntity>
+        )}
         {showRevealCard && <RevealFortuneOnCard />}
         {fsmSession.active && isHost && <HostPanel />}
         {fsmSession.active && isGuest && <GuestPanel />}

@@ -25,32 +25,25 @@ import { repeatPromptForSeed } from './repeatFortunePrompt'
 import { fsmSession } from './fortuneFsm/session'
 import { hashString, pickGuestMaxReadingsFarewellLine, pickThreeGuestCategoriesSeeded } from './revelationRng'
 import type { FortuneCategory, FortuneKind, RevelationPhase } from './types'
+import {
+  CARD_VERTICAL_OFFSET,
+  CARD_SIZE,
+  CARD_BG,
+  CARD_CONTENT_WIDTH,
+  CARD_CONTENT_HEIGHT,
+  CARD_CONTENT_VERTICAL_ADJUST
+} from './cardLayout'
 
 let waitingPanelTime = 0
 const WAITING_ALPHA_SPEED = 3
-/** Top margin for all card.png UI panels — matches fsmUi.tsx CARD_OFFSET so both systems align. */
-const CARD_UI_VERTICAL_OFFSET = '80px'
-/**
- * `card.png` es 1024×1024. Un solo tamaño fijo en px para todas las pantallas: el marco
- * no crece ni encoge entre estados, y stretch en un cuadrado igual al aspecto de la textura no deforma.
- */
-const CARD_PANEL_PX = { width: '512px' as const, height: '512px' as const }
-const CARD_TEXTURE_BACKGROUND = {
-  texture: { src: 'assets/images/card.png' },
-  textureMode: 'stretch' as const
-}
-
-/** Todo el contenido legible queda dentro del 75% central del panel carta. */
-const CARD_CONTENT_WIDTH = '70%' as const
 /** Altura explícita para que los % de hijos (p. ej. filas de botones) no colapsen a 0. */
 const CARD_INNER_COLUMN = {
   width: CARD_CONTENT_WIDTH,
-  height: '86%' as const,
+  height: CARD_CONTENT_HEIGHT,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
   alignItems: 'center' as const,
-  /** Ligero desplazamiento hacia abajo respecto al centro óptico de card.png */
-  margin: { top: -80 } as const
+  margin: { top: CARD_CONTENT_VERTICAL_ADJUST } as const
 }
 
 /**
@@ -487,15 +480,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <Label
@@ -530,15 +523,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
@@ -598,15 +591,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <Label
@@ -638,15 +631,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
@@ -687,14 +680,14 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET }
+              margin: { top: CARD_VERTICAL_OFFSET }
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <Label
@@ -724,15 +717,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
@@ -803,15 +796,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
@@ -885,15 +878,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
@@ -964,15 +957,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <Label
@@ -1047,15 +1040,15 @@ function uiComponent() {
         >
           <UiEntity
             uiTransform={{
-              ...CARD_PANEL_PX,
+              ...CARD_SIZE,
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               overflow: 'visible',
-              margin: { top: CARD_UI_VERTICAL_OFFSET },
+              margin: { top: CARD_VERTICAL_OFFSET },
               positionType: 'relative'
             }}
-            uiBackground={CARD_TEXTURE_BACKGROUND}
+            uiBackground={CARD_BG}
           >
             <UiEntity uiTransform={{ ...CARD_INNER_COLUMN }}>
               <UiEntity uiTransform={{ ...CARD_TIGHT_STACK }}>
