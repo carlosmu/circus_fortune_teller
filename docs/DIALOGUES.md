@@ -26,7 +26,6 @@
 17. [FSM Flow — Spectator & Global](#17-fsm-flow--spectator--global)
 18. [Player Role Labels (3D)](#18-player-role-labels-3d)
 19. [3D Fortune Overlay](#19-3d-fortune-overlay)
-20. [Leaderboard](#20-leaderboard)
 
 ---
 
@@ -511,51 +510,8 @@ Beware of a sudden change in your romantic path…
 
 ---
 
-## 20. Leaderboard
-
-> Text shown on the in-world leaderboard panel.
-
-### Sections
-
-**🏆 TOP VISITORS**
-```
-----------  🏆 TOP VISITORS   ----------
-Rnk   Name                        Days
-🥇    {player name}               {days}
-🥈    {player name}               {days}
-🥉    {player name}               {days}
-...
-```
-
-**🔥 BEST STREAKS**
-```
-----------  🔥 BEST STREAKS   ----------
-Rnk   Name                        Streak
-🥇    {player name}               {streak}
-🥈    {player name}               {streak}
-🥉    {player name}               {streak}
-```
-
-**👥 CROWDED DAYS**
-```
-----------  👥 CROWDED DAYS   ----------
-Rnk   Date                        Visits
-🥇    {date}                      {visits}
-🥈    {date}                      {visits}
-🥉    {date}                      {visits}
-```
-
-**👤 YOU** (when player data is available)
-```
-👤 YOU
-{player name}
-Days: {n} | Streak: {n}
-Rank: #{n}
-```
-
----
-
-## Appendix — Button & Interaction Text
+> *Last updated: May 2026*  
+> *Source: src/ui.tsx, src/fortuneFsm/fsmUi.tsx, src/revelationRng.ts, src/fortuneTellerGuestStatusUi.tsx, src/fortune3DText.ts, src/playerRoleLabels.ts, src/setupWizard.ts, src/setupGuestSpot.ts*
 
 | Context                    | Button / Action       |
 |----------------------------|-----------------------|
@@ -573,4 +529,4 @@ Rank: #{n}
 ---
 
 > *Last updated: May 2026*  
-> *Source: src/ui.tsx, src/fortuneFsm/fsmUi.tsx, src/revelationRng.ts, src/fortuneTellerGuestStatusUi.tsx, src/fortune3DText.ts, src/playerRoleLabels.ts, src/leaderboard3D.ts, src/setupWizard.ts, src/setupGuestSpot.ts*
+> *Source: src/ui.tsx, src/fortuneFsm/fsmUi.tsx, src/revelationRng.ts, src/fortuneTellerGuestStatusUi.tsx, src/fortune3DText.ts, src/playerRoleLabels.ts, src/setupWizard.ts, src/setupGuestSpot.ts*
