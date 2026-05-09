@@ -1,8 +1,5 @@
 import { engine } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
-import { setupInteractionSystem } from './interactionSystem'
-import { setupFortuneTellerSystem } from './fortuneTellerSystem'
-import { setupFortuneUiSystem } from './fortuneUiSystem'
 import { setupFortuneSync } from './fortuneSync'
 import { setupFortuneFsm } from './fortuneFsm/setup'
 import { setupGuestSpot } from './setupGuestSpot'
@@ -57,9 +54,6 @@ export function main() {
   setupGuestSpot()
   setupPlayerRoleLabels()
   setupWizard()
-  setupInteractionSystem()
-  setupFortuneTellerSystem()
-  setupFortuneUiSystem()
 }
 
 

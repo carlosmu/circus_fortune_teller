@@ -573,4 +573,4 @@ Rank: #{n}
 ---
 
 > *Last updated: May 2026*  
-> *Source: src/ui.tsx, src/fortuneFsm/fsmUi.tsx, src/repeatFortunePrompt.ts, src/revelationRng.ts, src/fortuneTellerSystem.ts, src/fortuneTellerGuestStatusUi.tsx, src/fortune3DText.ts, src/playerRoleLabels.ts, src/leaderboard3D.ts, src/setupWizard.ts, src/setupGuestSpot.ts*
+> *Source: src/ui.tsx, src/fortuneFsm/fsmUi.tsx, src/revelationRng.ts, src/fortuneTellerGuestStatusUi.tsx, src/fortune3DText.ts, src/playerRoleLabels.ts, src/leaderboard3D.ts, src/setupWizard.ts, src/setupGuestSpot.ts*

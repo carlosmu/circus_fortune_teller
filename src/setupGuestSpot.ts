@@ -17,9 +17,7 @@ import {
   GUEST_MAX_READINGS_PER_SEAT,
   GUEST_READING_IDLE_TIMEOUT_MS
 } from './fortuneSync'
-import { scheduleVirtualHostDelayThenOpenGuestCategories } from './fortuneTellerSystem'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
-import { USE_FORTUNE_FSM_FLOW } from './sceneConfig'
 
 export const GUEST_SPOT = engine.addEntity()
 
@@ -76,9 +74,6 @@ function emitGuestFortuneRequestFromChair() {
       roundSalt,
       sessionReadingIndex
     })
-    if (!USE_FORTUNE_FSM_FLOW) {
-      scheduleVirtualHostDelayThenOpenGuestCategories()
-    }
   })
 }
 

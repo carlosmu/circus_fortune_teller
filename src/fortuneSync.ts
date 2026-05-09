@@ -2,13 +2,11 @@ import { engine, AudioSource, Transform } from '@dcl/sdk/ecs'
 import { MessageBus } from '@dcl/sdk/message-bus'
 import { Vector3 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
-import { FORTUNES } from './fortunes'
 import { gameData } from './gameState'
-import { hideFortune3DTextImmediate, showFortune3DText } from './fortune3DText'
+import { hideFortune3DTextImmediate } from './fortune3DText'
 import { FORTUNE_TELLER_POSITION } from './scene'
-import { SHOW_3D_FORTUNE } from './sceneConfig'
 import { startRevealFortuneCinematic, stopOrbitCinematic } from './cinematicCamera'
-import type { FortuneCategory, RevelationPhase } from './types'
+import type { FortuneCategory } from './types'
 
 /** MessageBus to sync fortune state across all players in the scene */
 export const fortuneMessageBus = new MessageBus()
@@ -24,14 +22,6 @@ export function touchGuestReadingInteractionDeadline(): void {
   if (gameData.gameState === 'OCUPADO' && gameData.currentGuestId !== null) {
     gameData.guestLastInteractionAtMs = Date.now()
   }
-}
-
-/** Fortune index in FORTUNES instead of full text to stay under MessageBus size limit. */
-export type ShowFortuneMessage = {
-  fortuneIndex: number
-  category: FortuneCategory
-  guestId: string | null
-  guestName: string | null
 }
 
 export type GuestRequestedMessage = {
@@ -50,13 +40,6 @@ export type GuestReadingIdleKickMessage = {
 /** El invitado eligió “No” a otra fortuna; el cliente local usa esto para limpiar flags del Sit Spot. */
 export type GuestChairDeclineMoreMessage = {
   guestId: string
-}
-
-export type RevelationPhaseUpdateMessage = {
-  phase: RevelationPhase
-  pendingGuestCategory?: FortuneCategory | null
-  suggestedCategory?: FortuneCategory | null
-  rejectedCategoryThisTurn?: FortuneCategory | null
 }
 
 export type GuestSeatMessage = {
@@ -143,38 +126,6 @@ export function setupFortuneSync() {
     }
   })
 
-  fortuneMessageBus.on('revelation-phase-update', (data: RevelationPhaseUpdateMessage) => {
-    if (data.phase === 'guest_learn_more' || data.phase === 'guest_farewell_max_readings') {
-      if (gameData.gameState === 'MOSTRANDO_FORTUNA') {
-        gameData.revelationPhase = data.phase
-      }
-      if (data.suggestedCategory !== undefined) gameData.suggestedCategory = data.suggestedCategory
-      if (data.rejectedCategoryThisTurn !== undefined) {
-        gameData.rejectedCategoryThisTurn = data.rejectedCategoryThisTurn
-      }
-      return
-    }
-    gameData.revelationPhase = data.phase
-    if (data.pendingGuestCategory !== undefined) {
-      gameData.pendingGuestCategory = data.pendingGuestCategory
-      if (
-        data.phase === 'ft_chooses_kind' &&
-        data.pendingGuestCategory !== null &&
-        !gameData.previouslySelectedCategories.includes(data.pendingGuestCategory)
-      ) {
-        gameData.previouslySelectedCategories = [
-          ...gameData.previouslySelectedCategories,
-          data.pendingGuestCategory
-        ]
-      }
-    }
-    if (data.suggestedCategory !== undefined) gameData.suggestedCategory = data.suggestedCategory
-    if (data.rejectedCategoryThisTurn !== undefined) {
-      gameData.rejectedCategoryThisTurn = data.rejectedCategoryThisTurn
-    }
-    touchGuestReadingInteractionDeadline()
-  })
-
   fortuneMessageBus.on('guest-seat-update', (data: GuestSeatMessage) => {
     if (data.seatUserId !== previousGuestSeatUserId) {
       gameData.guestReadingsUsedThisSeat = 0
@@ -217,31 +168,6 @@ export function setupFortuneSync() {
     }
   })
 
-  fortuneMessageBus.on('show-fortune', (data: ShowFortuneMessage) => {
-    console.log(
-      `[FortuneSync] show-fortune received guestId=${data.guestId ?? 'null'} category=${data.category}`
-    )
-    const fortune =
-      data.fortuneIndex >= 0 && data.fortuneIndex < FORTUNES.length
-        ? FORTUNES[data.fortuneIndex]
-        : null
-    if (fortune) {
-      gameData.currentFortune = { text: fortune.text, category: fortune.category, deck: fortune.deck, type: fortune.type }
-      gameData.currentGuestId = data.guestId
-      gameData.currentGuestName = data.guestName
-      gameData.gameState = 'MOSTRANDO_FORTUNA'
-      gameData.revelationPhase = 'fortune_display'
-      gameData.pendingGuestCategory = null
-      gameData.suggestedCategory = null
-      gameData.rejectedCategoryThisTurn = null
-      gameData.guestLastInteractionAtMs = null
-      playRevealSound()
-      if (SHOW_3D_FORTUNE) {
-        showFortune3DText({ text: fortune.text, category: fortune.category, deck: fortune.deck, type: fortune.type })
-      }
-    }
-  })
-
   fortuneMessageBus.on('hide-fortune', (_data: unknown) => {
     hideFortune3DTextImmediate()
     const localUserId = getPlayer()?.userId ?? null
@@ -277,21 +203,11 @@ export function setupFortuneSync() {
       gameData.currentFortuneTellerName =
         data.fortuneTellerId != null ? (data.fortuneTellerName ?? gameData.currentFortuneTellerName) : null
       if (data.fortuneTellerId == null) {
-        const revelPhase = gameData.revelationPhase
         gameData.fortuneTellerSessionEndsAtMs = null
         gameData.fortuneTellerReadingsDone = 0
         gameData.fortuneTellerMaxReadings = 3
         gameData.fortuneTellerReleaseAtMs = null
         gameData.fortuneTellerTimeRemainingSec = 0
-
-        if (gameData.gameState === 'OCUPADO' && gameData.currentGuestId !== null) {
-          if (revelPhase === 'ft_asks_topic') {
-            gameData.pendingGuestCategory = null
-            fortuneMessageBus.emit('revelation-fallback-auto', {})
-          } else if (revelPhase === 'ft_chooses_kind' && gameData.pendingGuestCategory !== null) {
-            fortuneMessageBus.emit('revelation-fallback-auto', {})
-          }
-        }
       } else {
         gameData.fortuneTellerSessionEndsAtMs = data.fortuneTellerSessionEndsAtMs ?? gameData.fortuneTellerSessionEndsAtMs
         gameData.fortuneTellerReadingsDone = data.fortuneTellerReadingsDone ?? gameData.fortuneTellerReadingsDone
