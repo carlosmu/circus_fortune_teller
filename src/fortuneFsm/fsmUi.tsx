@@ -24,6 +24,7 @@ import {
   CARD_CONTENT_HEIGHT,
   CARD_CONTENT_VERTICAL_ADJUST
 } from '../cardLayout'
+import { InfoBanner } from '../infoBanner'
 
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
 
@@ -209,32 +210,6 @@ function SpectatorContinueWaitPanel() {
         height={120}
       />
     </HostCardShell>
-  )
-}
-
-function GlobalFinished({ text }: { text: string }) {
-  return (
-    <UiEntity
-      uiTransform={{
-        width: '100%',
-        height: '100%',
-        positionType: 'absolute',
-        position: { top: 0, left: 0 },
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 20
-      }}
-    >
-      <Label
-        uiTransform={{ width: '80%', height: 'auto' }}
-        value={text}
-        textAlign={CARD_TEXT_ALIGN}
-        textWrap="wrap"
-        fontSize={24}
-        font="serif"
-        color={GOLD}
-      />
-    </UiEntity>
   )
 }
 
@@ -598,7 +573,7 @@ export function FortuneFsmLayer() {
         zIndex: 12
       }}
     >
-      {fsmSession.sessionFinishedMessage && <GlobalFinished text={fsmSession.sessionFinishedMessage} />}
+      <InfoBanner text={fsmSession.sessionFinishedMessage} />
       {/*
        * Wrapper absoluto para la carta: siempre empieza en top:0, sin importar
        * que haya o no WorldBanner — así la carta nunca se desplaza verticalmente.
@@ -614,35 +589,6 @@ export function FortuneFsmLayer() {
           alignItems: 'center'
         }}
       >
-        {/*
-         * WorldBanner absoluto con zIndex -1: pintado detrás de la carta (que no
-         * tiene zIndex propio). Se ve en el área transparente sobre el panel carta
-         * (0–80 px) sin empujar nada.
-         */}
-        {fsmSession.worldBanner && fsmSession.state !== 'REVEAL' && (
-          <UiEntity
-            uiTransform={{
-              width: '100%',
-              positionType: 'absolute',
-              position: { top: 0, left: 0 },
-              zIndex: -1,
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: { top: 12, bottom: 20, left: 8, right: 8 }
-            }}
-          >
-            <Label
-              uiTransform={{ width: '92%', height: 'auto', minHeight: 28 }}
-              value={fsmSession.worldBanner}
-              textAlign={CARD_TEXT_ALIGN}
-              textWrap="wrap"
-              fontSize={20}
-              font="serif"
-              color={GOLD}
-            />
-          </UiEntity>
-        )}
         {showRevealCard && <RevealFortuneOnCard />}
         {fsmSession.active && isHost && <HostPanel />}
         {fsmSession.active && isGuest && <GuestPanel />}

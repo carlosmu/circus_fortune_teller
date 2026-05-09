@@ -32,7 +32,6 @@ const REVEAL_TO_CONTINUE_MS = FORTUNE_DISPLAY_DURATION * 1000
 
 function emitFsmSessionEnded(message: string): void {
   const gid = fsmSession.guestId
-  fsmSession.worldBanner = null
   fsmSession.sessionFinishedMessage = message
   const r = tryTransition('RESET')
   if (!r.ok) return
@@ -71,7 +70,6 @@ export function guestPickCategory(category: FortuneCategory): void {
   fsmSession.usedCategories = [...fsmSession.usedCategories, category]
   fsmSession.selectedCategory = label
   fsmSession.selectedCategoryKey = category
-  fsmSession.worldBanner = `Selected category: ${label}`
   const r = tryTransition('DECK_SELECTION')
   if (r.ok) {
     if (fsmSession.isVirtualHost) fsmSession.virtualHostPendingAtMs = nowMs()
@@ -203,7 +201,6 @@ export function guestContinueYes(): void {
   fsmSession.selectedDeck = null
   fsmSession.selectedCardType = null
   fsmSession.selectedFortune = null
-  fsmSession.worldBanner = null
   fsmSession.cardFlipIndex = null
   fsmSession.hostFortunePickedAtMs = null
   fsmSession.revealEnteredAtMs = null
@@ -236,7 +233,6 @@ export function fsmActivateSession(hostId: string | null, guestId: string, guest
     selectedDeck: null,
     selectedCardType: null,
     selectedFortune: null,
-    worldBanner: null,
     fortuneGuestHint: 'idle' as const,
     hostFortunePickedAtMs: null,
     revealEnteredAtMs: null,

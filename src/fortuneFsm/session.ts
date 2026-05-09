@@ -12,7 +12,6 @@ export function createInitialSession(): FsmSession {
     selectedDeck: null,
     selectedCardType: null,
     selectedFortune: null,
-    worldBanner: null,
     fortuneGuestHint: 'idle',
     hostFortunePickedAtMs: null,
     revealEnteredAtMs: null,

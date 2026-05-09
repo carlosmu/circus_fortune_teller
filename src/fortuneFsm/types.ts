@@ -29,8 +29,6 @@ export type FsmSession = {
   selectedCardType: FsmCardChoice | null
   /** Host-chosen fortune key A/B/C → mapped copy at reveal. */
   selectedFortune: FsmCardChoice | null
-  /** Línea superior p. ej. "Selected category: Love" */
-  worldBanner: string | null
   /** Guest copy during FORTUNE_SELECTION + delay before REVEAL. */
   fortuneGuestHint: 'reading' | 'clear' | 'idle'
   /** When host confirmed A/B/C (ms) for 2s delay before REVEAL. */
