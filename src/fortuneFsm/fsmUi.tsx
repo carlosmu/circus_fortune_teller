@@ -573,7 +573,7 @@ export function FortuneFsmLayer() {
         zIndex: 12
       }}
     >
-      <InfoBanner text={fsmSession.sessionFinishedMessage} />
+      <InfoBanner text={fsmSession.sessionFinishedMessage} expiresAtMs={fsmSession.sessionFinishedExpiresAtMs ?? undefined} />
       {/*
        * Wrapper absoluto para la carta: siempre empieza en top:0, sin importar
        * que haya o no WorldBanner — así la carta nunca se desplaza verticalmente.

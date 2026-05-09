@@ -18,6 +18,7 @@ export function createInitialSession(): FsmSession {
     usedCategories: [],
     cardFlipIndex: null,
     sessionFinishedMessage: null,
+    sessionFinishedExpiresAtMs: null,
     isVirtualHost: false,
     virtualHostPendingAtMs: null
   }

@@ -33,6 +33,7 @@ const REVEAL_TO_CONTINUE_MS = FORTUNE_DISPLAY_DURATION * 1000
 function emitFsmSessionEnded(message: string): void {
   const gid = fsmSession.guestId
   fsmSession.sessionFinishedMessage = message
+  fsmSession.sessionFinishedExpiresAtMs = nowMs() + 4500
   const r = tryTransition('RESET')
   if (!r.ok) return
   fsmSession.active = false
@@ -206,6 +207,7 @@ export function guestContinueYes(): void {
   fsmSession.revealEnteredAtMs = null
   fsmSession.fortuneGuestHint = 'idle'
   fsmSession.sessionFinishedMessage = null
+  fsmSession.sessionFinishedExpiresAtMs = null
   fsmSession.virtualHostPendingAtMs = null
   const r = tryTransition('CATEGORY_SELECTION')
   if (r.ok) emit()
@@ -239,6 +241,7 @@ export function fsmActivateSession(hostId: string | null, guestId: string, guest
     usedCategories: [],
     cardFlipIndex: null,
     sessionFinishedMessage: null,
+    sessionFinishedExpiresAtMs: null,
     isVirtualHost: hostId === null,
     virtualHostPendingAtMs: hostId === null ? nowMs() : null
   })

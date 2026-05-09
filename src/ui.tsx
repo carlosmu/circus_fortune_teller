@@ -82,7 +82,7 @@ function uiComponent() {
         </UiEntity>
 
         <FortuneFsmLayer />
-        <InfoBanner text={showCenterBanner ? gameData.centerBannerText : null} />
+        <InfoBanner text={showCenterBanner ? gameData.centerBannerText : null} expiresAtMs={gameData.centerBannerUntilMs} />
       </UiEntity>
     </UiEntity>
   )
