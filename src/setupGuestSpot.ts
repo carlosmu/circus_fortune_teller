@@ -4,6 +4,7 @@ import {
   PointerEvents,
   pointerEventsSystem,
   InputAction,
+  InputModifier,
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
@@ -192,8 +193,26 @@ function guestSitSpotClickCallback() {
     } finally {
       sitSpotGuestTeleportPending = false
     }
+    // Bloquear movimiento del guest mientras está sentado
+    InputModifier.createOrReplace(engine.PlayerEntity, {
+      mode: InputModifier.Mode.Standard({ disableAll: true })
+    })
     emitGuestFortuneRequestFromChair()
   })
+}
+
+/** Restaura el movimiento del guest local. */
+function unblockGuestInput(): void {
+  if (!InputModifier.has(engine.PlayerEntity)) return
+  InputModifier.getMutable(engine.PlayerEntity).mode = {
+    $case: 'standard',
+    standard: {
+      disableWalk: false,
+      disableRun: false,
+      disableJump: false,
+      disableEmote: false
+    }
+  }
 }
 
 export function setupGuestSpot() {
@@ -204,12 +223,14 @@ export function setupGuestSpot() {
   fortuneMessageBus.on('guest-reading-idle-kick', (data: { guestId: string }) => {
     if (getPlayer()?.userId === data.guestId) {
       guestJoinedViaSitSpot = false
+      unblockGuestInput()
     }
   })
 
   fortuneMessageBus.on('guest-chair-decline-more', (data: { guestId: string }) => {
     if (getPlayer()?.userId === data.guestId) {
       guestJoinedViaSitSpot = false
+      unblockGuestInput()
     }
   })
 
@@ -259,6 +280,7 @@ export function setupGuestSpot() {
     } else if (!guestMaxReadingsDisplaceDispatched) {
       guestMaxReadingsDisplaceDispatched = true
       guestJoinedViaSitSpot = false
+      unblockGuestInput()
       fortuneMessageBus.emit('guest-seat-update', {
         seatUserId: null,
         seatUserName: null
@@ -278,6 +300,7 @@ export function setupGuestSpot() {
       const station = getGuestSitStationXZ()
       if (horizontalDistance(pos, station) > GUEST_SEAT_MOVE_THRESHOLD) {
         guestJoinedViaSitSpot = false
+        unblockGuestInput()
         fortuneMessageBus.emit('guest-seat-update', {
           seatUserId: null,
           seatUserName: null

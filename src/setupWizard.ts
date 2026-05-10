@@ -5,6 +5,7 @@ import {
   PointerEvents,
   pointerEventsSystem,
   InputAction,
+  InputModifier,
   executeTask
 } from '@dcl/sdk/ecs'
 import { getEntityWorldPosition } from './worldTransform'
@@ -154,6 +155,18 @@ function clearFortuneTellerAndShowWizard() {
   fortuneTellerJoinedViaSitSpot = false
   sitSpotFtTeleportPending = false
   stopOrbitCinematic()
+  // Restaurar movimiento del FT al soltar el rol
+  if (InputModifier.has(engine.PlayerEntity)) {
+    InputModifier.getMutable(engine.PlayerEntity).mode = {
+      $case: 'standard',
+      standard: {
+        disableWalk: false,
+        disableRun: false,
+        disableJump: false,
+        disableEmote: false
+      }
+    }
+  }
   fortuneMessageBus.emit('set-fortune-teller', {
     fortuneTellerId: null,
     fortuneTellerName: null,
@@ -313,6 +326,10 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       } finally {
         sitSpotFtTeleportPending = false
       }
+      // Bloquear movimiento del FT mientras está en el puesto
+      InputModifier.createOrReplace(engine.PlayerEntity, {
+        mode: InputModifier.Mode.Standard({ disableAll: true })
+      })
       startHostCinematicCamera(hostEntryPathStart, () => {})
     })
   } else {
@@ -332,6 +349,10 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
           }
         })
       } catch (_e) {}
+      // Bloquear movimiento del FT mientras está en el puesto
+      InputModifier.createOrReplace(engine.PlayerEntity, {
+        mode: InputModifier.Mode.Standard({ disableAll: true })
+      })
     })
   }
 }
