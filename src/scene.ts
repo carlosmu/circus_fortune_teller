@@ -1,7 +1,6 @@
 import { engine, GltfContainer, Transform, VisibilityComponent, AudioSource, Animator } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
 
-export const TABLE = engine.addEntity()
 export const WIZARD = engine.addEntity()
 /**
  * Collider legacy (host_collider.glb). Oculto: el rol se toma por Sit Spot + trigger GLB.
@@ -25,13 +24,6 @@ export const FORTUNE_TELLER_CAMERA_TARGET = Vector3.create(8, 1, 8)
 export const CHAIR_FORTUNE_TELLER_POSITION = Vector3.create(8, 0, 4.75)
 
 export function setupScene() {
-  // TABLE ENTITY (referenciado por cámara/interacción)
-  Transform.create(TABLE, {
-    position: Vector3.create(8, 0, 8)
-  })
-  GltfContainer.create(TABLE, {
-    src: 'assets/models/Ftable.glb'
-  })
 
   // WIZARD (hidden when local player is fortune teller)
   Transform.create(WIZARD, {

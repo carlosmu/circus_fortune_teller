@@ -302,21 +302,21 @@
       "data": {
         "521": {
           "json": {
-            "src": "assets/models/Fchair.glb",
+            "src": "assets/models/chair.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 1
           }
         },
         "522": {
           "json": {
-            "src": "assets/models/Fchair.glb",
+            "src": "assets/models/chair.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 1
           }
         },
         "524": {
           "json": {
-            "src": "assets/models/Ftellerstent.glb",
+            "src": "assets/models/tent.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 3
           }
@@ -330,7 +330,7 @@
         },
         "527": {
           "json": {
-            "src": "assets/models/Ftable.glb",
+            "src": "assets/models/table.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 3
           }
@@ -372,7 +372,7 @@
         },
         "524": {
           "json": {
-            "value": "Ftellerstent.glb"
+            "value": "tent.glb"
           }
         },
         "526": {
@@ -382,7 +382,7 @@
         },
         "527": {
           "json": {
-            "value": "Ftable.glb"
+            "value": "table.glb"
           }
         },
         "528": {
