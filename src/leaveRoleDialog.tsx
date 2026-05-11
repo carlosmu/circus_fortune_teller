@@ -52,6 +52,8 @@ const GOLD = Color4.create(212 / 255, 175 / 255, 55 / 255, 1)
 const BTN_YES = Color4.create(0.15, 0.45, 0.15, 1)
 const BTN_NO = Color4.create(0.45, 0.1, 0.1, 1)
 const WHITE = Color4.create(1, 1, 1, 1)
+/** Mismo `borderRadius` que el panel del `InfoBanner`. */
+const BTN_BORDER_RADIUS = 12
 
 export function LeaveRoleDialog() {
   if (!dialogState.visible) return null
@@ -112,7 +114,7 @@ export function LeaveRoleDialog() {
           }}
         >
           <UiEntity
-            uiTransform={{ width: 160, height: 52, margin: { right: 20 } }}
+            uiTransform={{ width: 160, height: 52, margin: { right: 20 }, borderRadius: BTN_BORDER_RADIUS }}
             uiBackground={{ color: BTN_YES }}
             onMouseDown={handleYes}
           >
@@ -127,7 +129,7 @@ export function LeaveRoleDialog() {
           </UiEntity>
 
           <UiEntity
-            uiTransform={{ width: 160, height: 52 }}
+            uiTransform={{ width: 160, height: 52, borderRadius: BTN_BORDER_RADIUS }}
             uiBackground={{ color: BTN_NO }}
             onMouseDown={handleNo}
           >
