@@ -7,10 +7,10 @@
 export enum EntityNames {
   Extras = "Extras",
   Floor___Pebble = "Floor - Pebble",
-  Ftable_glb = "table.glb",
-  Ftellerstent_glb = "tent.glb",
   Music = "Music",
   Sit_Spot__Fortune_Teller = "Sit Spot: Fortune_Teller",
   Sit_Spot__Guest = "Sit Spot: Guest",
   Spotlight = "Spotlight",
+  table_glb = "table.glb",
+  tent_glb = "tent.glb",
 } 

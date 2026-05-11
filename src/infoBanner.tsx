@@ -6,9 +6,8 @@ const BANNER_TEXT = Color4.create(1, 1, 1, 1)
 const FADE_DURATION_MS = 500
 
 /**
- * Reusable info banner: centered in X, positioned at the bottom of the screen,
- * with a purple background and rounded corners. Fades out smoothly before disappearing.
- * Used for scene-level announcements (guest joining, FT leaving, session finished, etc.).
+ * Reusable info banner: centrado en X e Y sobre el viewport, fondo violeta y bordes redondeados.
+ * Desvanece antes de desaparecer. Anuncios de escena (guest, FT, sesión terminada, etc.).
  */
 export function InfoBanner({ text, expiresAtMs }: { text: string | null; expiresAtMs?: number }) {
   if (!text) return null
@@ -35,7 +34,7 @@ export function InfoBanner({ text, expiresAtMs }: { text: string | null; expires
         positionType: 'absolute',
         position: { top: 0, left: 0 },
         flexDirection: 'column',
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         alignItems: 'center',
         zIndex: 20
       }}
@@ -43,8 +42,8 @@ export function InfoBanner({ text, expiresAtMs }: { text: string | null; expires
       <UiEntity
         uiTransform={{
           width: 'auto',
+          maxWidth: '90%',
           height: 'auto',
-          margin: { bottom: '12vh' },
           padding: { top: 14, bottom: 14, left: 20, right: 20 },
           borderRadius: 12
         }}

@@ -8,6 +8,10 @@ const TEXT = Color4.White()
 const TIMER_LABEL = 'Time:'
 const FILLED_READING_SLOT = '♥'
 const EMPTY_READING_SLOT = '-'
+const FT_CRYSTAL_ICON_SRC = 'assets/images/icon-crystal-ball.png'
+const GUEST_ICON_SRC = 'assets/images/icon-bust-in-silhouette.png'
+/** Tamaño en layout UI para ambos iconos. */
+const STATUS_ICON_SIZE = 22
 
 /**
  * Barra fija arriba al centro: Fortune Teller y Guest (reactivo: lee gameData cada frame de UI).
@@ -22,7 +26,7 @@ export function FortuneTellerGuestStatusBar() {
   const timeSec = Math.max(0, Math.ceil(gameData.fortuneTellerTimeRemainingSec))
   const filledCards = hasActiveFortuneTeller ? Math.min(3, gameData.fortuneTellerReadingsDone) : 0
   const cards = `${FILLED_READING_SLOT.repeat(filledCards)}${EMPTY_READING_SLOT.repeat(3 - filledCards)}`
-  const ftStatusLine = hasActiveFortuneTeller
+  const ftStatusText = hasActiveFortuneTeller
     ? `Fortune Teller: ${ftLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: [${cards}]`
     : `Fortune Teller: ${ftLabel}`
   const guestReadingsFilled = hasSeatedGuest
@@ -48,17 +52,19 @@ export function FortuneTellerGuestStatusBar() {
   return (
     <UiEntity
       uiTransform={{
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
+        width: 620,
+        height: 72,
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        alignSelf: 'center',
         margin: { top: '1.5%' }
       }}
     >
       <UiEntity
         uiTransform={{
-          width: 620,
-          height: 60,
+          width: '100%',
+          height: '100%',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
@@ -66,22 +72,67 @@ export function FortuneTellerGuestStatusBar() {
         }}
         uiBackground={{ color: BG }}
       >
-        <Label
-          uiTransform={{ width: 600, height: 22 }}
-          value={ftStatusLine}
-          textAlign="middle-center"
-          fontSize={16}
-          font="sans-serif"
-          color={TEXT}
-        />
-        <Label
-          uiTransform={{ width: 600, height: 22 }}
-          value={guestStatusLine}
-          textAlign="middle-center"
-          fontSize={16}
-          font="sans-serif"
-          color={TEXT}
-        />
+        <UiEntity
+          uiTransform={{
+            width: 600,
+            height: 24,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: STATUS_ICON_SIZE,
+              height: STATUS_ICON_SIZE,
+              margin: { right: 8 }
+            }}
+            uiBackground={{
+              color: Color4.White(),
+              texture: { src: FT_CRYSTAL_ICON_SRC },
+              textureMode: 'stretch'
+            }}
+          />
+          <Label
+            uiTransform={{ width: 600 - STATUS_ICON_SIZE - 8, height: 24 }}
+            value={ftStatusText}
+            textAlign="middle-left"
+            fontSize={16}
+            font="sans-serif"
+            color={TEXT}
+          />
+        </UiEntity>
+        <UiEntity
+          uiTransform={{
+            width: 600,
+            height: 24,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            margin: { top: 2 }
+          }}
+        >
+          <UiEntity
+            uiTransform={{
+              width: STATUS_ICON_SIZE,
+              height: STATUS_ICON_SIZE,
+              margin: { right: 8 }
+            }}
+            uiBackground={{
+              color: Color4.White(),
+              texture: { src: GUEST_ICON_SRC },
+              textureMode: 'stretch'
+            }}
+          />
+          <Label
+            uiTransform={{ width: 600 - STATUS_ICON_SIZE - 8, height: 24 }}
+            value={guestStatusLine}
+            textAlign="middle-left"
+            fontSize={16}
+            font="sans-serif"
+            color={TEXT}
+          />
+        </UiEntity>
       </UiEntity>
     </UiEntity>
   )

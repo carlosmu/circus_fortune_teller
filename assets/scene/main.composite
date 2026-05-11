@@ -543,7 +543,7 @@
         "serializationType": "map"
       },
       "data": {
-        "521": {
+        "0": {
           "json": {
             "gizmo": 0
           }
