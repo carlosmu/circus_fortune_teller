@@ -145,8 +145,11 @@ const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
   { key: 'C', idx: 2 }
 ]
 
-/** Lectura final sobre card.png (host, guest y espectadores con sesión activa). */
-function RevealFortuneOnCard() {
+/**
+ * Contenido de la revelación (sin card.png): host/invitado lo incrustan en su mismo {@link HostCardShell}
+ * para no desmontar la textura al pasar de FORTUNE_SELECTION a REVEAL.
+ */
+function RevealFortuneCardContent() {
   const name = fsmSession.guestName?.trim() || 'Guest'
   const choice = fsmSession.selectedFortune
   const kindTitle = getFsmRevealKindTitle(choice)
@@ -158,43 +161,50 @@ function RevealFortuneOnCard() {
    * para que el Label del cuerpo con maxHeight: '68%' no quede en 0 px.
    */
   return (
-    <HostCardShell>
-      <UiEntity uiTransform={{ ...REVEAL_INNER_COLUMN }}>
-        <UiEntity uiTransform={{ ...REVEAL_TIGHT_STACK }}>
-          <UiEntity
-            uiTransform={{
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <Label
-              uiTransform={{ width: 'auto', height: 'auto' }}
-              value={kindTitle || '—'}
-              textAlign="middle-center"
-              textWrap="wrap"
-              fontSize={18}
-              font="serif"
-              color={GOLD}
-            />
-          </UiEntity>
+    <UiEntity uiTransform={{ ...REVEAL_INNER_COLUMN }}>
+      <UiEntity uiTransform={{ ...REVEAL_TIGHT_STACK }}>
+        <UiEntity
+          uiTransform={{
+            width: '100%',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        >
           <Label
-            uiTransform={{
-              width: '100%',
-              height: 'auto',
-              maxHeight: '68%',
-              margin: { top: 8 }
-            }}
-            value={fortuneText}
+            uiTransform={{ width: 'auto', height: 'auto' }}
+            value={kindTitle || '—'}
             textAlign="middle-center"
             textWrap="wrap"
-            fontSize={22}
+            fontSize={18}
             font="serif"
-            color={Color4.create(0.95, 0.95, 0.95, 1)}
+            color={GOLD}
           />
         </UiEntity>
+        <Label
+          uiTransform={{
+            width: '100%',
+            height: 'auto',
+            maxHeight: '68%',
+            margin: { top: 8 }
+          }}
+          value={fortuneText}
+          textAlign="middle-center"
+          textWrap="wrap"
+          fontSize={22}
+          font="serif"
+          color={Color4.create(0.95, 0.95, 0.95, 1)}
+        />
       </UiEntity>
+    </UiEntity>
+  )
+}
+
+/** Espectadores (y cualquier rol sin panel propio en REVEAL): carta + contenido. */
+function RevealFortuneOnCard() {
+  return (
+    <HostCardShell>
+      <RevealFortuneCardContent />
     </HostCardShell>
   )
 }
@@ -372,6 +382,14 @@ function HostPanel() {
     )
   }
 
+  if (st === 'REVEAL') {
+    return (
+      <HostCardShell>
+        <RevealFortuneCardContent />
+      </HostCardShell>
+    )
+  }
+
   if (st === 'CONTINUE_DECISION') {
     return (
       <HostCardShell>
@@ -518,6 +536,14 @@ function GuestPanel() {
     )
   }
 
+  if (st === 'REVEAL') {
+    return (
+      <GuestCardShell>
+        <RevealFortuneCardContent />
+      </GuestCardShell>
+    )
+  }
+
   if (st === 'CONTINUE_DECISION') {
     return (
       <GuestCardShell>
@@ -589,7 +615,7 @@ export function FortuneFsmLayer() {
           alignItems: 'center'
         }}
       >
-        {showRevealCard && <RevealFortuneOnCard />}
+        {showRevealCard && !isHost && !isGuest && <RevealFortuneOnCard />}
         {fsmSession.active && isHost && <HostPanel />}
         {fsmSession.active && isGuest && <GuestPanel />}
         {fsmSession.active &&
