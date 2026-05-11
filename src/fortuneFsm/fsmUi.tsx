@@ -24,9 +24,9 @@ import {
   CARD_CONTENT_HEIGHT,
   CARD_CONTENT_VERTICAL_ADJUST
 } from '../cardLayout'
-import { InfoBanner } from '../infoBanner'
 
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
+const SESSION_FINISHED_FADE_MS = 500
 
 /**
  * Área útil sobre card.png: en X solo un hijo directo → {@link CARD_ROOT_COLUMN}.
@@ -207,6 +207,35 @@ function RevealFortuneOnCard() {
       <RevealFortuneCardContent />
     </HostCardShell>
   )
+}
+
+/**
+ * Despedida / "Your reading is finished" sobre card.png (misma secuencia que el flujo en carta;
+ * evita superponerse al InfoBanner / otros diálogos del mundo).
+ */
+function SessionFinishedOnCard({ uid }: { uid: string | null }) {
+  const msg = fsmSession.sessionFinishedMessage
+  if (!msg || msg.length === 0) return null
+
+  const expires = fsmSession.sessionFinishedExpiresAtMs
+  const now = Date.now()
+  let alpha = 1
+  if (expires != null) {
+    const remaining = expires - now
+    if (remaining <= 0) return null
+    if (remaining < SESSION_FINISHED_FADE_MS) {
+      alpha = remaining / SESSION_FINISHED_FADE_MS
+    }
+  }
+
+  const textColor = Color4.create(0.95, 0.95, 0.95, alpha)
+  const inner = (
+    <CenteredLabelRow value={msg} fontSize={20} color={textColor} height={120} marginTop={8} />
+  )
+  if (uid !== null && uid === fsmSession.guestId) {
+    return <GuestCardShell>{inner}</GuestCardShell>
+  }
+  return <HostCardShell>{inner}</HostCardShell>
 }
 
 /** Espectadores: misma idea que `showSpectatorLearnMoreWait` en ui.tsx legacy. */
@@ -588,6 +617,10 @@ export function FortuneFsmLayer() {
   const isGuest = uid !== null && uid === fsmSession.guestId
 
   const showRevealCard = fsmSession.active && fsmSession.state === 'REVEAL'
+  const showSessionFinishedOnCard =
+    !fsmSession.active &&
+    fsmSession.sessionFinishedMessage !== null &&
+    fsmSession.sessionFinishedMessage.length > 0
 
   return (
     <UiEntity
@@ -599,7 +632,6 @@ export function FortuneFsmLayer() {
         zIndex: 12
       }}
     >
-      <InfoBanner text={fsmSession.sessionFinishedMessage} expiresAtMs={fsmSession.sessionFinishedExpiresAtMs ?? undefined} />
       {/*
        * Wrapper absoluto para la carta: siempre empieza en top:0, sin importar
        * que haya o no WorldBanner — así la carta nunca se desplaza verticalmente.
@@ -623,6 +655,7 @@ export function FortuneFsmLayer() {
           uid !== null &&
           !isHost &&
           !isGuest && <SpectatorContinueWaitPanel />}
+        {showSessionFinishedOnCard && <SessionFinishedOnCard uid={uid} />}
       </UiEntity>
     </UiEntity>
   )
