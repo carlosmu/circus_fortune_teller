@@ -242,6 +242,7 @@ export function setupGuestSpot() {
     if (getPlayer()?.userId === data.guestId) {
       guestJoinedViaSitSpot = false
       unblockGuestInput()
+      displaceGuestSeatOccupantToRandomArea()
     }
   })
 

@@ -39,7 +39,17 @@ function emitFsmSessionEnded(message: string): void {
   fsmSession.active = false
   emit()
   fortuneMessageBus.emit('hide-fortune', {})
-  if (gid) fortuneMessageBus.emit('guest-chair-decline-more', { guestId: gid })
+  if (gid) {
+    const guestBannerName = (fsmSession.guestName ?? 'Someone').trim() || 'Someone'
+    const bannerUntil = nowMs() + 2200
+    fortuneMessageBus.emit('guest-seat-update', {
+      seatUserId: null,
+      seatUserName: null,
+      centerBannerText: `${guestBannerName} is no longer the Guest`,
+      centerBannerUntilMs: bannerUntil
+    })
+    fortuneMessageBus.emit('guest-chair-decline-more', { guestId: gid })
+  }
   executeTask(async () => {
     await delayMs(4500)
     hardResetSession()
