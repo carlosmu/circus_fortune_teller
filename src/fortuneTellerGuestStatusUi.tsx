@@ -14,6 +14,8 @@ const FT_CRYSTAL_ICON_SRC = 'assets/images/icon-crystal-ball.png'
 const GUEST_ICON_SRC = 'assets/images/icon-bust-in-silhouette.png'
 /** Tamaño en layout UI para ambos iconos. */
 const STATUS_ICON_SIZE = 22
+/** Ancho útil del texto al lado del icono (fila 460px − icono − margen). Evita wrap raro que parecía “[]”. */
+const STATUS_TEXT_INNER_WIDTH = 460 - STATUS_ICON_SIZE - 8
 
 /**
  * Barra inferior centrada: Fortune Teller y Guest (lee gameData cada frame de UI).
@@ -30,7 +32,7 @@ export function FortuneTellerGuestStatusBar() {
   const filledCards = hasActiveFortuneTeller ? Math.min(3, gameData.fortuneTellerReadingsDone) : 0
   const cards = `${FILLED_READING_SLOT.repeat(filledCards)}${EMPTY_READING_SLOT.repeat(3 - filledCards)}`
   const ftStatusText = hasActiveFortuneTeller
-    ? `Fortune Teller: ${ftLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: [${cards}]`
+    ? `Fortune Teller: ${ftLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: ${cards}`
     : `Fortune Teller: ${ftLabel}`
   const guestReadingsFilled = hasSeatedGuest
     ? Math.min(GUEST_MAX_READINGS_PER_SEAT, gameData.guestReadingsUsedThisSeat)
@@ -47,9 +49,9 @@ export function FortuneTellerGuestStatusBar() {
       : null
   const guestStatusLine =
     hasSeatedGuest && guestCountdownSec !== null
-      ? `Guest: ${guestLabel} | ${TIMER_LABEL} ${guestCountdownSec}s | Readings: [${guestCards}]`
+      ? `Guest: ${guestLabel} | ${TIMER_LABEL} ${guestCountdownSec}s | Readings: ${guestCards}`
       : hasSeatedGuest
-        ? `Guest: ${guestLabel} | Readings: [${guestCards}]`
+        ? `Guest: ${guestLabel} | Readings: ${guestCards}`
         : `Guest: ${guestLabel}`
 
   return (
@@ -108,7 +110,7 @@ export function FortuneTellerGuestStatusBar() {
             }}
           />
           <Label
-            uiTransform={{ width: 600 - STATUS_ICON_SIZE - 8, height: 24 }}
+            uiTransform={{ width: STATUS_TEXT_INNER_WIDTH, height: 24 }}
             value={ftStatusText}
             textAlign="middle-left"
             fontSize={16}
@@ -139,7 +141,7 @@ export function FortuneTellerGuestStatusBar() {
             }}
           />
           <Label
-            uiTransform={{ width: 600 - STATUS_ICON_SIZE - 8, height: 24 }}
+            uiTransform={{ width: STATUS_TEXT_INNER_WIDTH, height: 24 }}
             value={guestStatusLine}
             textAlign="middle-left"
             fontSize={16}

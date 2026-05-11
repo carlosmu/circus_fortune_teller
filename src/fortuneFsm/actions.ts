@@ -220,7 +220,22 @@ export function guestContinueYes(): void {
   fsmSession.sessionFinishedExpiresAtMs = null
   fsmSession.virtualHostPendingAtMs = null
   const r = tryTransition('CATEGORY_SELECTION')
-  if (r.ok) emit()
+  if (!r.ok) return
+  const nextReading = gameData.guestReadingsUsedThisSeat + 1
+  if (nextReading <= GUEST_MAX_READINGS_PER_SEAT && fsmSession.guestId !== null) {
+    const guestName =
+      fsmSession.guestName?.trim() ||
+      gameData.currentGuestName?.trim() ||
+      gameData.guestSeatUserName?.trim() ||
+      'Visitor'
+    fortuneMessageBus.emit('guest-requested-fortune', {
+      guestId: fsmSession.guestId,
+      guestName,
+      roundSalt: nowMs(),
+      sessionReadingIndex: nextReading
+    })
+  }
+  emit()
 }
 
 /** Guest: done → RESET (release via MessageBus + bridge) */
