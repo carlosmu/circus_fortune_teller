@@ -20,6 +20,7 @@ import {
 } from './scene'
 import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 import { EntityNames } from '../assets/scene/entity-names'
+import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
 /**
@@ -328,7 +329,11 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       }
       // Bloquear movimiento del FT mientras está en el puesto
       InputModifier.createOrReplace(engine.PlayerEntity, {
-        mode: InputModifier.Mode.Standard({ disableAll: true })
+        mode: InputModifier.Mode.Standard({
+        disableWalk: true,
+        disableRun: true,
+        disableJump: true
+      })
       })
       startHostCinematicCamera(hostEntryPathStart, () => {})
     })
@@ -351,7 +356,11 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       } catch (_e) {}
       // Bloquear movimiento del FT mientras está en el puesto
       InputModifier.createOrReplace(engine.PlayerEntity, {
-        mode: InputModifier.Mode.Standard({ disableAll: true })
+        mode: InputModifier.Mode.Standard({
+        disableWalk: true,
+        disableRun: true,
+        disableJump: true
+      })
       })
     })
   }
@@ -489,12 +498,47 @@ export function setupWizard() {
 
     const pos = Transform.get(engine.PlayerEntity).position
     const current = { x: pos.x, y: pos.y, z: pos.z }
-    if (!playerStillAtFortuneTellerStation(current)) {
+    if (!playerStillAtFortuneTellerStation(current) && !isLeaveRoleDialogVisible()) {
       const wasSitSpotFt = fortuneTellerJoinedViaSitSpot
-      clearFortuneTellerAndShowWizard()
-      if (wasSitSpotFt) {
-        scheduleNudgeAwayFromFortuneTellerChair()
-      }
+      showLeaveRoleDialog(
+        'Fortune Teller',
+        () => {
+          clearFortuneTellerAndShowWizard()
+          if (wasSitSpotFt) {
+            scheduleNudgeAwayFromFortuneTellerChair()
+          }
+        },
+        () => {
+          fortuneTellerBecameAtMs = Date.now()
+          sitSpotFtTeleportPending = true
+          const ftSeatPos = getFortuneTellerSeatPosition()
+          executeTask(async () => {
+            try {
+              await movePlayerTo({
+                newRelativePosition: { x: ftSeatPos.x, y: ftSeatPos.y, z: ftSeatPos.z },
+                cameraTarget: {
+                  x: FORTUNE_TELLER_CAMERA_TARGET.x,
+                  y: FORTUNE_TELLER_CAMERA_TARGET.y,
+                  z: FORTUNE_TELLER_CAMERA_TARGET.z
+                }
+              })
+              if (fortuneTellerJoinedViaSitSpot) {
+                await triggerEmote({ predefinedEmote: 'sittingChair1' })
+              }
+            } catch (_e) {
+            } finally {
+              sitSpotFtTeleportPending = false
+            }
+            InputModifier.createOrReplace(engine.PlayerEntity, {
+              mode: InputModifier.Mode.Standard({
+        disableWalk: true,
+        disableRun: true,
+        disableJump: true
+      })
+            })
+          })
+        }
+      )
     }
   })
 }

@@ -7,6 +7,7 @@ import { FortuneFsmLayer } from './fortuneFsm/fsmUi'
 import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
 import { cinematicBarAlpha } from './cinematicCamera'
 import { InfoBanner } from './infoBanner'
+import { LeaveRoleDialog } from './leaveRoleDialog'
 
 export function setupUi() {
   ReactEcsRenderer.setUiRenderer(uiComponent)
@@ -84,6 +85,7 @@ function uiComponent() {
         <FortuneFsmLayer />
         <InfoBanner text={showCenterBanner ? gameData.centerBannerText : null} expiresAtMs={gameData.centerBannerUntilMs} />
       </UiEntity>
+      <LeaveRoleDialog />
     </UiEntity>
   )
 }

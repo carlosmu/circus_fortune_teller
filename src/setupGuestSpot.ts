@@ -19,6 +19,7 @@ import {
   GUEST_READING_IDLE_TIMEOUT_MS
 } from './fortuneSync'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
+import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
 
 export const GUEST_SPOT = engine.addEntity()
 
@@ -26,7 +27,13 @@ export const GUEST_SPOT = engine.addEntity()
 const SIT_SPOT_GUEST_STATION = { x: 7.84, y: 0, z: 6.827048301696777 }
 const SIT_SPOT_LOCAL_FORWARD = Vector3.create(0, 0, 1)
 const AVATAR_LOOK_AHEAD_METERS = 2.5
-const GUEST_SEAT_MOVE_THRESHOLD = 2.5
+/**
+ * Threshold pequeño: Q (stand up) es 100% client-side y no genera InputAction. La forma de
+ * detectarlo es el desplazamiento que produce salir del sit-emote. Umbral bajo (10 cm) para
+ * que el diálogo salga en cuanto el cliente ajusta la pose al levantarse; GUEST_SEAT_GRACE_MS
+ * evita falsos positivos durante el movePlayerTo inicial.
+ */
+const GUEST_SEAT_MOVE_THRESHOLD = 0.001
 const GUEST_SEAT_GRACE_MS = 1500
 
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
@@ -195,7 +202,11 @@ function guestSitSpotClickCallback() {
     }
     // Bloquear movimiento del guest mientras está sentado
     InputModifier.createOrReplace(engine.PlayerEntity, {
-      mode: InputModifier.Mode.Standard({ disableAll: true })
+      mode: InputModifier.Mode.Standard({
+        disableWalk: true,
+        disableRun: true,
+        disableJump: true
+      })
     })
     emitGuestFortuneRequestFromChair()
   })
@@ -288,23 +299,50 @@ export function setupGuestSpot() {
       displaceGuestSeatOccupantToRandomArea()
     }
 
+    // Q (stand up) es 100% client-side y no se puede capturar como InputAction. La detección
+    // se hace por desplazamiento de posición con un threshold pequeño: al pulsar Q el avatar
+    // sale del sit-emote y se desplaza levemente, lo que ya cruza el umbral.
     if (
-      gameData.gameState === 'LIBRE' &&
       localUserId !== null &&
       localUserId === gameData.guestSeatUserId &&
       !sitSpotGuestTeleportPending &&
       Date.now() - guestSatAtMs >= GUEST_SEAT_GRACE_MS &&
-      Transform.has(engine.PlayerEntity)
+      Transform.has(engine.PlayerEntity) &&
+      !isLeaveRoleDialogVisible()
     ) {
       const pos = Transform.get(engine.PlayerEntity).position
       const station = getGuestSitStationXZ()
       if (horizontalDistance(pos, station) > GUEST_SEAT_MOVE_THRESHOLD) {
-        guestJoinedViaSitSpot = false
-        unblockGuestInput()
-        fortuneMessageBus.emit('guest-seat-update', {
-          seatUserId: null,
-          seatUserName: null
-        })
+        showLeaveRoleDialog(
+          'Guest',
+          () => {
+            guestJoinedViaSitSpot = false
+            unblockGuestInput()
+            fortuneMessageBus.emit('hide-fortune', {})
+            fortuneMessageBus.emit('guest-seat-update', { seatUserId: null, seatUserName: null })
+            displaceGuestSeatOccupantToRandomArea()
+          },
+          () => {
+            guestSatAtMs = Date.now()
+            sitSpotGuestTeleportPending = true
+            executeTask(async () => {
+              try {
+                await movePlayerTo(buildGuestSitMovePlayerToRequest())
+                await triggerEmote({ predefinedEmote: 'sittingChair2' })
+              } catch (_e) {
+              } finally {
+                sitSpotGuestTeleportPending = false
+              }
+              InputModifier.createOrReplace(engine.PlayerEntity, {
+                mode: InputModifier.Mode.Standard({
+                  disableWalk: true,
+                  disableRun: true,
+                  disableJump: true
+                })
+              })
+            })
+          }
+        )
       }
     }
   })
