@@ -1,8 +1,10 @@
 import { engine, Transform, VirtualCamera, MainCamera } from '@dcl/sdk/ecs'
 import { Vector3, Quaternion } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
-import { TABLE } from './scene'
+import { CINEMATIC_TABLE_FALLBACK } from './scene'
 import { gameData } from './gameState'
+import { EntityNames } from '../assets/scene/entity-names'
+import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
 
 type Vec3 = { x: number; y: number; z: number }
 
@@ -25,7 +27,7 @@ export const HOST_PIVOT_CINEMATIC_CONFIG = {
   lookTargetY: 1.8,
   duration: 2.8,
   /**
-   * Z local del pivote bajo TABLE (misma idea que el guest “prolijo”): desplaza el centro del arco
+   * Z local del pivote bajo `table.glb` (Creator Hub): desplaza el centro del arco
    * y suele dejar el encuadre final más centrado sobre mesa/FT.
    */
   pivotOffsetZ: 0
@@ -72,6 +74,22 @@ let guestPivotCamEnt: ReturnType<typeof engine.addEntity> | null = null
 let guestPivotElapsed = 0
 let guestArcYawStart = 0
 let guestArcYawEnd = 0
+
+/**
+ * Alinea el pivote cinemático con la mesa del Creator Hub **sin** parentear el rig bajo `table.glb`.
+ * Colgar VirtualCamera/pivotes como hijos del GLB del composite puede romper el render del subárbol.
+ */
+function syncCinematicTableFallbackFromHub(): void {
+  if (!Transform.has(CINEMATIC_TABLE_FALLBACK)) return
+  const tableEnt = engine.getEntityOrNullByName(EntityNames.table_glb)
+  if (tableEnt === null || !Transform.has(tableEnt)) return
+  const wp = getEntityWorldPosition(tableEnt)
+  const wr = getEntityWorldRotation(tableEnt)
+  if (!wp || !wr) return
+  const m = Transform.getMutable(CINEMATIC_TABLE_FALLBACK)
+  m.position = Vector3.create(wp.x, wp.y, wp.z)
+  m.rotation = Quaternion.create(wr.x, wr.y, wr.z, wr.w)
+}
 
 function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v))
@@ -132,7 +150,7 @@ function ensureHostPivotRig(): void {
   Transform.create(pivot, {
     position: Vector3.create(0, 0, cfg.pivotOffsetZ),
     rotation: Quaternion.fromEulerDegrees(0, 0, 0),
-    parent: TABLE
+    parent: CINEMATIC_TABLE_FALLBACK
   })
 
   Transform.create(cam, {
@@ -190,7 +208,7 @@ function ensureGuestPivotRig(): void {
   Transform.create(pivot, {
     position: Vector3.create(0, 0, cfg.pivotOffsetZ),
     rotation: Quaternion.fromEulerDegrees(0, 0, 0),
-    parent: TABLE
+    parent: CINEMATIC_TABLE_FALLBACK
   })
 
   Transform.create(cam, {
@@ -256,6 +274,8 @@ export function stopOrbitCinematic(): void {
 
 export function setupCinematicCamera(): void {
   engine.addSystem((dt: number) => {
+    syncCinematicTableFallbackFromHub()
+
     if (cinematicActive) {
       cinematicBarAlpha = Math.min(1, cinematicBarAlpha + dt / CINEMATIC_CONFIG.barsFadeIn)
     } else if (cinematicBarAlpha > 0) {

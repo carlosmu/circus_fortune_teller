@@ -2,6 +2,13 @@ import { engine, GltfContainer, Transform, VisibilityComponent, AudioSource, Ani
 import { Vector3 } from '@dcl/sdk/math'
 
 export const WIZARD = engine.addEntity()
+
+/**
+ * Pivote world-space para la cinemática: `cinematicCamera` copia aquí posición/rotación world de
+ * `table.glb` (Creator Hub) cada frame. Los arcos **no** se cuelgan del GLB para no romper el render.
+ */
+export const CINEMATIC_TABLE_FALLBACK = engine.addEntity()
+
 /**
  * Collider legacy (host_collider.glb). Oculto: el rol se toma por Sit Spot + trigger GLB.
  *
@@ -43,14 +50,10 @@ export function setupScene() {
   })
   VisibilityComponent.create(WIZARD, { visible: true })
 
-  // FORTUNE TELLER COLLIDER (host_collider.glb): desactivado temporalmente — ver TODO arriba
-  Transform.create(FORTUNE_TELLER_COLLIDER, {
-    position: WIZARD_POSITION
+  Transform.create(CINEMATIC_TABLE_FALLBACK, {
+    position: Vector3.create(8, 0, 8)
   })
-  GltfContainer.create(FORTUNE_TELLER_COLLIDER, {
-    src: 'assets/models/host_collider.glb'
-  })
-  VisibilityComponent.create(FORTUNE_TELLER_COLLIDER, { visible: false })
+
   // Background music: global loop
   Transform.create(BACKGROUND_MUSIC, { position: Vector3.create(8, 0, 8) })
   AudioSource.create(BACKGROUND_MUSIC, {
