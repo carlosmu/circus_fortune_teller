@@ -4,7 +4,7 @@ import { gameData } from './gameState'
 import { GUEST_MAX_READINGS_PER_SEAT, GUEST_READING_IDLE_TIMEOUT_MS } from './fortuneSync'
 
 /** Mismo fondo y radio que el panel del `InfoBanner` (`BANNER_BG` + `borderRadius: 12`). */
-const STATUS_PANEL_BG = Color4.create(0.35, 0.08, 0.55, 0.92)
+const STATUS_PANEL_BG = Color4.create(0.35, 0.08, 0.55, 1)
 const STATUS_PANEL_BORDER_RADIUS = 12
 const TEXT = Color4.White()
 const TIMER_LABEL = 'Time:'
@@ -22,8 +22,8 @@ const STATUS_ICON_SIZE = 22
 export function FortuneTellerGuestStatusBar() {
   const ftPlayerName = gameData.currentFortuneTellerName
   const guestPlayerName = gameData.guestSeatUserName ?? gameData.currentGuestName
-  const ftLabel = ftPlayerName ?? 'Free'
-  const guestLabel = guestPlayerName ?? 'Free'
+  const ftLabel = ftPlayerName ?? 'Waiting'
+  const guestLabel = guestPlayerName ?? 'Waiting'
   const hasActiveFortuneTeller = gameData.currentFortuneTellerId !== null
   const hasSeatedGuest = gameData.guestSeatUserId !== null
   const timeSec = Math.max(0, Math.ceil(gameData.fortuneTellerTimeRemainingSec))

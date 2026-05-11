@@ -1,7 +1,7 @@
 import ReactEcs, { UiEntity, Label } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 
-const BANNER_BG = Color4.create(0.35, 0.08, 0.55, 0.92)
+const BANNER_BG = Color4.create(0.35, 0.08, 0.55, 1)
 const BANNER_TEXT = Color4.create(1, 1, 1, 1)
 const FADE_DURATION_MS = 500
 
