@@ -330,10 +330,10 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       // Bloquear movimiento del FT mientras está en el puesto
       InputModifier.createOrReplace(engine.PlayerEntity, {
         mode: InputModifier.Mode.Standard({
-        disableWalk: true,
-        disableRun: true,
-        disableJump: true
-      })
+          disableWalk: true,
+          disableRun: true,
+          disableJump: true
+        })
       })
       startHostCinematicCamera(hostEntryPathStart, () => {})
     })
@@ -357,10 +357,10 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
       // Bloquear movimiento del FT mientras está en el puesto
       InputModifier.createOrReplace(engine.PlayerEntity, {
         mode: InputModifier.Mode.Standard({
-        disableWalk: true,
-        disableRun: true,
-        disableJump: true
-      })
+          disableWalk: true,
+          disableRun: true,
+          disableJump: true
+        })
       })
     })
   }
@@ -503,6 +503,8 @@ export function setupWizard() {
       showLeaveRoleDialog(
         'Fortune Teller',
         () => {
+          // Cancela lectura / FSM en curso; luego se libera el rol FT y el banner (clearFortuneTeller…).
+          fortuneMessageBus.emit('hide-fortune', {})
           clearFortuneTellerAndShowWizard()
           if (wasSitSpotFt) {
             scheduleNudgeAwayFromFortuneTellerChair()
@@ -531,10 +533,10 @@ export function setupWizard() {
             }
             InputModifier.createOrReplace(engine.PlayerEntity, {
               mode: InputModifier.Mode.Standard({
-        disableWalk: true,
-        disableRun: true,
-        disableJump: true
-      })
+                disableWalk: true,
+                disableRun: true,
+                disableJump: true
+              })
             })
           })
         }

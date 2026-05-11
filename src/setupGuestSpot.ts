@@ -316,11 +316,23 @@ export function setupGuestSpot() {
         showLeaveRoleDialog(
           'Guest',
           () => {
+            const guestName = (gameData.guestSeatUserName ?? getPlayer()?.name ?? 'Someone').trim() || 'Someone'
+            const now = Date.now()
             guestJoinedViaSitSpot = false
+            sitSpotGuestTeleportPending = true
             unblockGuestInput()
+            // Limpieza local inmediata para evitar re-disparo del diálogo mientras sincroniza el bus.
+            gameData.guestSeatUserId = null
+            gameData.guestSeatUserName = null
             fortuneMessageBus.emit('hide-fortune', {})
-            fortuneMessageBus.emit('guest-seat-update', { seatUserId: null, seatUserName: null })
+            fortuneMessageBus.emit('guest-seat-update', {
+              seatUserId: null,
+              seatUserName: null,
+              centerBannerText: `${guestName} is no longer the Guest`,
+              centerBannerUntilMs: now + 2200
+            })
             displaceGuestSeatOccupantToRandomArea()
+            sitSpotGuestTeleportPending = false
           },
           () => {
             guestSatAtMs = Date.now()
