@@ -3,7 +3,9 @@ import { Color4 } from '@dcl/sdk/math'
 import { gameData } from './gameState'
 import { GUEST_MAX_READINGS_PER_SEAT, GUEST_READING_IDLE_TIMEOUT_MS } from './fortuneSync'
 
-const BG = Color4.create(0.05, 0.05, 0.08, 0.82)
+/** Mismo fondo y radio que el panel del `InfoBanner` (`BANNER_BG` + `borderRadius: 12`). */
+const STATUS_PANEL_BG = Color4.create(0.35, 0.08, 0.55, 0.92)
+const STATUS_PANEL_BORDER_RADIUS = 12
 const TEXT = Color4.White()
 const TIMER_LABEL = 'Time:'
 const FILLED_READING_SLOT = '♥'
@@ -14,7 +16,8 @@ const GUEST_ICON_SRC = 'assets/images/icon-bust-in-silhouette.png'
 const STATUS_ICON_SIZE = 22
 
 /**
- * Barra fija arriba al centro: Fortune Teller y Guest (reactivo: lee gameData cada frame de UI).
+ * Barra inferior centrada: Fortune Teller y Guest (lee gameData cada frame de UI).
+ * zIndex 15: por encima de la capa FSM (z 12) a pantalla completa para no quedar tapada.
  */
 export function FortuneTellerGuestStatusBar() {
   const ftPlayerName = gameData.currentFortuneTellerName
@@ -52,15 +55,25 @@ export function FortuneTellerGuestStatusBar() {
   return (
     <UiEntity
       uiTransform={{
-        width: 620,
-        height: 72,
+        width: '100%',
+        positionType: 'absolute',
+        position: { left: 0, bottom: 0 },
+        margin: { bottom: '1.5vh' },
         flexDirection: 'column',
-        justifyContent: 'flex-start',
+        justifyContent: 'flex-end',
         alignItems: 'center',
-        alignSelf: 'center',
-        margin: { top: '1.5%' }
+        zIndex: 15
       }}
     >
+      <UiEntity
+        uiTransform={{
+          width: 480,
+          height: 72,
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center'
+        }}
+      >
       <UiEntity
         uiTransform={{
           width: '100%',
@@ -68,13 +81,14 @@ export function FortuneTellerGuestStatusBar() {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: { top: 8, bottom: 8, left: 16, right: 16 }
+          padding: { top: 8, bottom: 8, left: 16, right: 16 },
+          borderRadius: STATUS_PANEL_BORDER_RADIUS
         }}
-        uiBackground={{ color: BG }}
+        uiBackground={{ color: STATUS_PANEL_BG }}
       >
         <UiEntity
           uiTransform={{
-            width: 600,
+            width: 460,
             height: 24,
             flexDirection: 'row',
             justifyContent: 'center',
@@ -104,7 +118,7 @@ export function FortuneTellerGuestStatusBar() {
         </UiEntity>
         <UiEntity
           uiTransform={{
-            width: 600,
+            width: 460,
             height: 24,
             flexDirection: 'row',
             justifyContent: 'center',
@@ -133,6 +147,7 @@ export function FortuneTellerGuestStatusBar() {
             color={TEXT}
           />
         </UiEntity>
+      </UiEntity>
       </UiEntity>
     </UiEntity>
   )

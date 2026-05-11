@@ -64,8 +64,6 @@ function uiComponent() {
           zIndex: 10
         }}
       >
-        <FortuneTellerGuestStatusBar />
-
         <UiEntity
           uiTransform={{
             width: '40%',
@@ -84,6 +82,7 @@ function uiComponent() {
 
         <FortuneFsmLayer />
         <InfoBanner text={showCenterBanner ? gameData.centerBannerText : null} expiresAtMs={gameData.centerBannerUntilMs} />
+        <FortuneTellerGuestStatusBar />
       </UiEntity>
       <LeaveRoleDialog />
     </UiEntity>
