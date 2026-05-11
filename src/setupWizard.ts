@@ -22,12 +22,12 @@ import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } fr
 import { EntityNames } from '../assets/scene/entity-names'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
 
-const FORTUNE_TELLER_MOVE_THRESHOLD = 0.5
+const FORTUNE_TELLER_MOVE_THRESHOLD = 0.001
 /**
  * Solo radio horizontal alrededor del Sit Spot: Fortune_Teller. Antes se usaba min(dist silla, dist mago) ≤ 2.5 m,
  * así que podías ir a la mesa y seguir siendo FT. Ahora solo cuenta la silla: al levantarte sales del radio enseguida.
  */
-const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.75
+const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.001
 /** Tras soltar el rol por dejar la silla, empuja al jugador al menos esta distancia desde el sit (XZ). */
 const FORTUNE_TELLER_LEAVE_NUDGE_METERS = 2.5
 /** Fallback si Sit Spot: Fortune_Teller no existe en runtime. */
