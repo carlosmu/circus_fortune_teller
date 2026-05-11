@@ -233,9 +233,9 @@ function SessionFinishedOnCard({ uid }: { uid: string | null }) {
     <CenteredLabelRow value={msg} fontSize={20} color={textColor} height={120} marginTop={8} />
   )
   if (uid !== null && uid === fsmSession.guestId) {
-    return <GuestCardShell>{inner}</GuestCardShell>
+    return <GuestCardShell contentAlpha={alpha}>{inner}</GuestCardShell>
   }
-  return <HostCardShell>{inner}</HostCardShell>
+  return <HostCardShell contentAlpha={alpha}>{inner}</HostCardShell>
 }
 
 /** Espectadores: misma idea que `showSpectatorLearnMoreWait` en ui.tsx legacy. */
@@ -252,8 +252,17 @@ function SpectatorContinueWaitPanel() {
   )
 }
 
-function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start' }) {
+function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start'; contentAlpha?: number }) {
   const justify = props.contentJustify ?? 'center'
+  const a = props.contentAlpha ?? 1
+  const cardBg =
+    a >= 1
+      ? CARD_BG
+      : {
+          texture: CARD_BG.texture,
+          textureMode: CARD_BG.textureMode,
+          color: Color4.create(1, 1, 1, a)
+        }
   return (
     <UiEntity
       uiTransform={{
@@ -274,7 +283,7 @@ function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'fle
           positionType: 'relative',
           overflow: 'visible'
         }}
-        uiBackground={CARD_BG}
+        uiBackground={cardBg}
       >
         <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER, justifyContent: justify }}>
           <UiEntity uiTransform={{ ...CARD_ROOT_COLUMN, justifyContent: justify }}>
@@ -286,8 +295,12 @@ function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'fle
   )
 }
 
-function GuestCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start' }) {
-  return <HostCardShell contentJustify={props.contentJustify}>{props.children}</HostCardShell>
+function GuestCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start'; contentAlpha?: number }) {
+  return (
+    <HostCardShell contentJustify={props.contentJustify} contentAlpha={props.contentAlpha}>
+      {props.children}
+    </HostCardShell>
+  )
 }
 
 function HostPanel() {
