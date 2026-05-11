@@ -1,7 +1,6 @@
 import {
   engine,
   Transform,
-  PointerEvents,
   pointerEventsSystem,
   InputAction,
   InputModifier,
@@ -20,6 +19,7 @@ import {
 } from './fortuneSync'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
+import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
 export const GUEST_SPOT = engine.addEntity()
 
@@ -37,9 +37,6 @@ const GUEST_SEAT_MOVE_THRESHOLD = 0.001
 const GUEST_SEAT_GRACE_MS = 1500
 
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
-
-/** InteractionType.PROXIMITY: solo queremos clic con cursor, no prompt "E". */
-const POINTER_INTERACTION_PROXIMITY = 1
 
 let guestSitSpotRegistered = false
 let sitSpotGuestStripFramesLeft = 0
@@ -126,20 +123,7 @@ function buildGuestSitMovePlayerToRequest(): {
 }
 
 function stripSitSpotGuestProximityUi(entity: ReturnType<typeof engine.addEntity>): void {
-  if (!PointerEvents.has(entity)) return
-  const m = PointerEvents.getMutable(entity)
-  m.pointerEvents = m.pointerEvents.filter(
-    (e) => (e.interactionType ?? 0) !== POINTER_INTERACTION_PROXIMITY
-  )
-  for (const entry of m.pointerEvents) {
-    const info = entry.eventInfo
-    if (!info) continue
-    const ht = info.hoverText?.trim() ?? ''
-    if (ht === 'Sit Here') {
-      info.showFeedback = false
-      info.showHighlight = false
-    }
-  }
+  stripBuiltInSitSpotPointerUi(entity)
 }
 
 function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEntity>): void {

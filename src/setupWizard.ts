@@ -2,7 +2,6 @@ import {
   engine,
   Animator,
   Transform,
-  PointerEvents,
   pointerEventsSystem,
   InputAction,
   InputModifier,
@@ -21,6 +20,7 @@ import {
 import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 import { EntityNames } from '../assets/scene/entity-names'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
+import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.001
 /**
@@ -210,28 +210,9 @@ function releaseFortuneTellerBySessionRules(): void {
   moveFortuneTellerToRandomArea()
 }
 
-/** InteractionType.PROXIMITY: el cliente suele mostrar "E" / interacción por tecla; solo queremos clic. */
-const POINTER_INTERACTION_PROXIMITY = 1
-
-/**
- * Quita interacciones PROXIMITY (prompt "E") y silencia el hint legacy "Sit Here" del asset;
- * no toca la entrada del script con "Become The Fortune Teller".
- */
+/** Quita prompts E / “Sit Here” del composite en runtime (ver `sitSpotPointerStrip.ts`). */
 function stripSitSpotFortuneTellerProximityUi(entity: ReturnType<typeof engine.addEntity>): void {
-  if (!PointerEvents.has(entity)) return
-  const m = PointerEvents.getMutable(entity)
-  m.pointerEvents = m.pointerEvents.filter(
-    (e) => (e.interactionType ?? 0) !== POINTER_INTERACTION_PROXIMITY
-  )
-  for (const entry of m.pointerEvents) {
-    const info = entry.eventInfo
-    if (!info) continue
-    const ht = info.hoverText?.trim() ?? ''
-    if (ht === 'Sit Here') {
-      info.showFeedback = false
-      info.showHighlight = false
-    }
-  }
+  stripBuiltInSitSpotPointerUi(entity)
 }
 
 /** Clic (cursor) en el Sit Spot del composite → mismo flujo que el collider del wizard. */
