@@ -8,6 +8,7 @@ import { FortuneTellerGuestStatusBar } from './fortuneTellerGuestStatusUi'
 import { cinematicBarAlpha } from './cinematicCamera'
 import { InfoBanner } from './infoBanner'
 import { LeaveRoleDialog } from './leaveRoleDialog'
+import { WelcomeIntroPanel } from './welcomeIntroPanel'
 
 export function setupUi() {
   ReactEcsRenderer.setUiRenderer(uiComponent)
@@ -80,6 +81,7 @@ function uiComponent() {
           />
         </UiEntity>
 
+        <WelcomeIntroPanel />
         <FortuneFsmLayer />
         <InfoBanner text={showCenterBanner ? gameData.centerBannerText : null} expiresAtMs={gameData.centerBannerUntilMs} />
         <FortuneTellerGuestStatusBar />

@@ -1,7 +1,9 @@
 import ReactEcs, { UiEntity, Label } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 
-const BANNER_BG = Color4.create(0.35, 0.08, 0.55, 1)
+/** Fondo violeta compartido con otros paneles (p. ej. bienvenida). */
+export const INFO_BANNER_BG = Color4.create(0.35, 0.08, 0.55, 1)
+const BANNER_BG = INFO_BANNER_BG
 const BANNER_TEXT = Color4.create(1, 1, 1, 1)
 const FADE_DURATION_MS = 500
 
