@@ -6,9 +6,9 @@ import { gameData } from './gameState'
 import { fsmSession } from './fortuneFsm/session'
 import {
   CARD_VERTICAL_OFFSET,
-  CARD_SIZE,
   CARD_CONTENT_LAYER,
-  CARD_ROOT_COLUMN
+  CARD_ROOT_COLUMN,
+  getCardSize
 } from './cardLayout'
 
 const WELCOME_BG = {
@@ -86,7 +86,7 @@ export function WelcomeIntroPanel() {
       }}
     >
       {/*
-       * Misma jerarquía que HostCardShell (fsmUi): marco CARD_SIZE + CARD_VERTICAL_OFFSET,
+       * Misma jerarquía que HostCardShell (fsmUi): marco getCardSize() + CARD_VERTICAL_OFFSET,
        * textura stretch, contenido absoluto en CARD_CONTENT_LAYER → CARD_ROOT_COLUMN (centro X/Y).
        */}
       <UiEntity
@@ -100,7 +100,7 @@ export function WelcomeIntroPanel() {
       >
         <UiEntity
           uiTransform={{
-            ...CARD_SIZE,
+            ...getCardSize(),
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',

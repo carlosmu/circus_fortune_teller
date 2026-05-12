@@ -1,9 +1,12 @@
+import { isMobile } from '@dcl/sdk/platform'
+
 /**
  * Shared card.png layout constants.
  * Imported by both `ui.tsx` (legacy) and `fortuneFsm/fsmUi.tsx` (FSM) so all
  * card panels share the same dimensions, offset, and content positioning.
  *
- * Pixel values below match the former `vh` layout at **1920×1080** (1vh = 10.8px).
+ * Desktop pixel values below match the former `vh` layout at **1920×1080** (1vh = 10.8px).
+ * Mobile keeps the card texture responsive at 50vh × 50vh.
  *
  * ═══════════════════════════════════════════════════════════════════════════
  *  To resize the card or adjust its vertical position, edit ONLY this file.
@@ -11,13 +14,20 @@
  */
 
 /** Vertical offset from the top of the viewport for all card.png panels (−5vh @ 1080p ≈ −54px). */
-export const CARD_VERTICAL_OFFSET = -54
+export const CARD_VERTICAL_OFFSET = -104
 
 /**
- * Fixed dimensions for the card.png frame (50vh × 50vh @ 1080p ≈ 540×540px).
- * The source texture is 1024×1024; it is stretched to this square.
+ * Card frame size shared by card.png and welcome.png.
+ * Desktop: fixed 540×540px (former 50vh @ 1080p).
+ * Mobile: 50vh × 50vh. UI background textures do not provide intrinsic width for `auto`,
+ * so using auto can collapse the frame and hide both card.png and welcome.png.
  */
-export const CARD_SIZE = { width: 540 as const, height: 540 as const }
+export function getCardSize() {
+  const mobile = isMobile()
+  return mobile
+    ? { width: 540 as const, height: 540 as const }
+    : { width: 540 as const, height: 540 as const }
+}
 
 /** Background texture definition shared by every card panel. */
 export const CARD_BG = {
@@ -39,7 +49,7 @@ export const CARD_CONTENT_HEIGHT = '86%' as const
  * Applied to the inner content column.  Both legacy and FSM systems use the
  * same value so every card.png panel positions its text identically.
  */
-export const CARD_CONTENT_VERTICAL_ADJUST = '0'
+export const CARD_CONTENT_VERTICAL_ADJUST = 0
 
 /**
  * Área útil sobre la textura de carta (card.png / welcome.png): un solo hijo directo → {@link CARD_ROOT_COLUMN}.

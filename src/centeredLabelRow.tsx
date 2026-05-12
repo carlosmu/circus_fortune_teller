@@ -1,7 +1,8 @@
 import ReactEcs, { Label, UiEntity } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 
-const TEXT_ALIGN: 'middle-center' = 'middle-center'
+type CenteredLabelTextAlign = 'middle-center' | 'top-center'
+const TEXT_ALIGN: CenteredLabelTextAlign = 'middle-center'
 
 /**
  * Labels centrados en X/Y dentro del padre: Yoga/DCL suele colapsar el ancho del Label con height 'auto';
@@ -11,6 +12,7 @@ export function CenteredLabelRow({
   value,
   fontSize,
   color,
+  textAlign = TEXT_ALIGN,
   height = 80,
   marginTop = 0,
   marginBottom = 0
@@ -18,6 +20,7 @@ export function CenteredLabelRow({
   value: string
   fontSize: number
   color: Color4
+  textAlign?: CenteredLabelTextAlign
   height?: number
   marginTop?: number
   marginBottom?: number
@@ -37,7 +40,7 @@ export function CenteredLabelRow({
       <Label
         uiTransform={{ width: '100%', height: '100%' }}
         value={value}
-        textAlign={TEXT_ALIGN}
+        textAlign={textAlign}
         textWrap="wrap"
         fontSize={fontSize}
         font="serif"
