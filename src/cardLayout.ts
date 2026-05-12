@@ -3,20 +3,21 @@
  * Imported by both `ui.tsx` (legacy) and `fortuneFsm/fsmUi.tsx` (FSM) so all
  * card panels share the same dimensions, offset, and content positioning.
  *
+ * Pixel values below match the former `vh` layout at **1920×1080** (1vh = 10.8px).
+ *
  * ═══════════════════════════════════════════════════════════════════════════
  *  To resize the card or adjust its vertical position, edit ONLY this file.
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-/** Vertical offset from the top of the viewport for all card.png panels. */
-export const CARD_VERTICAL_OFFSET = '-5vh'
+/** Vertical offset from the top of the viewport for all card.png panels (−5vh @ 1080p ≈ −54px). */
+export const CARD_VERTICAL_OFFSET = -54
 
 /**
- * Fixed dimensions for the card.png frame.
- * The source texture is 1024×1024; we display it at 512×512 (stretch in a
- * square matching the aspect ratio causes no distortion).
+ * Fixed dimensions for the card.png frame (50vh × 50vh @ 1080p ≈ 540×540px).
+ * The source texture is 1024×1024; it is stretched to this square.
  */
-export const CARD_SIZE = { width: '50vh' as const, height: '50vh' as const }
+export const CARD_SIZE = { width: 540 as const, height: 540 as const }
 
 /** Background texture definition shared by every card panel. */
 export const CARD_BG = {

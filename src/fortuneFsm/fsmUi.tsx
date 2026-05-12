@@ -61,16 +61,21 @@ const CARD_CONTROL_ROW = {
   justifyContent: 'center' as const,
   alignItems: 'center' as const
 }
-const BTN_ROW_HEIGHT = 56
+const BTN_ROW_HEIGHT = 64
 const BTN = { color: Color4.create(0.15, 0.12, 0.05, 0.9) }
 const GOLD = Color4.create(212 / 255, 175 / 255, 55 / 255, 1)
+
+/** Tamaño único de fuente para todo el texto sobre card.png en el flujo FSM (host, guest, revelación, botones). */
+const CARD_UI_FONT_SIZE = 22
+/** Misma caja de texto para "Reading starts…" y mensaje de sesión terminada (mismo font + misma altura de fila). */
+const CARD_READING_BOOKEND_ROW_HEIGHT = 120
 
 const CARD_TEXT_ALIGN: 'middle-center' = 'middle-center'
 
 /** Pregunta fija en CONTINUE_DECISION (invitado + host); el legacy sigue usando `repeatFortunePrompt.ts`. */
 const FSM_CONTINUE_PROMPT = 'Do you want another reading?'
-/** Una línea ~font 20: evita hueco grande bajo la pregunta antes de botones / texto host. */
-const FSM_CONTINUE_PROMPT_ROW_HEIGHT = 44
+/** Altura de fila acorde a {@link CARD_UI_FONT_SIZE} (una línea de pregunta antes de Sí/No / texto host). */
+const FSM_CONTINUE_PROMPT_ROW_HEIGHT = 52
 
 const DECKS: FsmDeck[] = ['Funny', 'Serious', 'Strange']
 const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
@@ -110,7 +115,7 @@ function RevealFortuneCardContent() {
             value={kindTitle || '—'}
             textAlign="middle-center"
             textWrap="wrap"
-            fontSize={18}
+            fontSize={CARD_UI_FONT_SIZE}
             font="serif"
             color={GOLD}
           />
@@ -125,7 +130,7 @@ function RevealFortuneCardContent() {
           value={fortuneText}
           textAlign="middle-center"
           textWrap="wrap"
-          fontSize={22}
+          fontSize={CARD_UI_FONT_SIZE}
           font="serif"
           color={Color4.create(0.95, 0.95, 0.95, 1)}
         />
@@ -164,7 +169,7 @@ function SessionFinishedOnCard({ uid }: { uid: string | null }) {
 
   const textColor = Color4.create(0.95, 0.95, 0.95, alpha)
   const inner = (
-    <CenteredLabelRow value={msg} fontSize={20} color={textColor} height={120} marginTop={8} />
+    <CenteredLabelRow value={msg} fontSize={CARD_UI_FONT_SIZE} color={textColor} height={CARD_READING_BOOKEND_ROW_HEIGHT} />
   )
   if (uid !== null && uid === fsmSession.guestId) {
     return <GuestCardShell contentAlpha={alpha}>{inner}</GuestCardShell>
@@ -178,7 +183,7 @@ function SpectatorContinueWaitPanel() {
     <HostCardShell>
       <CenteredLabelRow
         value="The guest decides whether to hear another reading..."
-        fontSize={18}
+        fontSize={CARD_UI_FONT_SIZE}
         color={Color4.create(0.95, 0.95, 0.95, 1)}
         height={120}
       />
@@ -245,7 +250,7 @@ function HostPanel() {
     return (
       <HostCardShell>
         {/* FIX: CenteredLabelRow garantiza width:100% con altura fija → textAlign middle-center funciona */}
-        <CenteredLabelRow value="Ask the Guest:" fontSize={20} color={GOLD} height={40} />
+        <CenteredLabelRow value="Ask the Guest:" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
           <UiEntity
             uiTransform={{ width: '72%', height: 52 }}
@@ -256,7 +261,7 @@ function HostPanel() {
               uiTransform={{ width: '100%', height: '100%' }}
               value="What do you want to know?"
               textAlign={CARD_TEXT_ALIGN}
-              fontSize={18}
+              fontSize={CARD_UI_FONT_SIZE}
               font="serif"
             />
           </UiEntity>
@@ -271,7 +276,7 @@ function HostPanel() {
         {/* FIX */}
         <CenteredLabelRow
           value="The Guest is choosing a focus for the reading."
-          fontSize={20}
+          fontSize={CARD_UI_FONT_SIZE}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
           height={120}
         />
@@ -283,7 +288,7 @@ function HostPanel() {
     return (
       <HostCardShell>
         {/* FIX */}
-        <CenteredLabelRow value="Fortune Teller clicks one deck" fontSize={20} color={GOLD} height={56} />
+        <CenteredLabelRow value="Fortune Teller clicks one deck" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={56} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 18 }, height: BTN_ROW_HEIGHT }}>
           {DECKS.map((d, i) => (
             <UiEntity
@@ -296,7 +301,7 @@ function HostPanel() {
                 uiTransform={{ width: '100%', height: '100%' }}
                 value={d}
                 textAlign={CARD_TEXT_ALIGN}
-                fontSize={16}
+                fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
               />
             </UiEntity>
@@ -312,7 +317,7 @@ function HostPanel() {
         {/* FIX */}
         <CenteredLabelRow
           value="Guest will pick a card."
-          fontSize={22}
+          fontSize={CARD_UI_FONT_SIZE}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
           height={80}
         />
@@ -326,9 +331,9 @@ function HostPanel() {
         {/* FIX */}
         <CenteredLabelRow
           value={`Guest chose card ${fsmSession.selectedCardType}. Fortune Teller, pick a meaning:`}
-          fontSize={20}
+          fontSize={CARD_UI_FONT_SIZE}
           color={GOLD}
-          height={56}
+          height={88}
         />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           {(
@@ -348,7 +353,7 @@ function HostPanel() {
                 uiTransform={{ width: '100%', height: '100%' }}
                 value={label}
                 textAlign={CARD_TEXT_ALIGN}
-                fontSize={16}
+                fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
               />
             </UiEntity>
@@ -369,12 +374,12 @@ function HostPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <HostCardShell>
-        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={20} color={GOLD} height={FSM_CONTINUE_PROMPT_ROW_HEIGHT} />
+        <CenteredLabelRow value={FSM_CONTINUE_PROMPT} fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={FSM_CONTINUE_PROMPT_ROW_HEIGHT} />
         <CenteredLabelRow
           value="Ask the guest. They will choose Yes or No."
-          fontSize={18}
+          fontSize={CARD_UI_FONT_SIZE}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
-          height={56}
+          height={72}
         />
       </HostCardShell>
     )
@@ -392,9 +397,9 @@ function GuestPanel() {
         {/* FIX: antes height:'auto' colapsaba el ancho → texto no centraba en X */}
         <CenteredLabelRow
           value="Reading starts…"
-          fontSize={22}
+          fontSize={CARD_UI_FONT_SIZE}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
-          height={80}
+          height={CARD_READING_BOOKEND_ROW_HEIGHT}
         />
       </GuestCardShell>
     )
@@ -403,11 +408,10 @@ function GuestPanel() {
   if (st === 'CATEGORY_SELECTION') {
     const offer = getFsmCategoryOffer(fsmSession.guestId, fsmSession.usedCategories)
     const btnWidth = offer.length === 1 ? '72%' : offer.length === 2 ? '44%' : '29%'
-    const fontSz = offer.length >= 3 ? 14 : 16
     return (
       <GuestCardShell>
         {/* FIX */}
-        <CenteredLabelRow value="What do you want to know?" fontSize={20} color={GOLD} height={44} />
+        <CenteredLabelRow value="What do you want to know?" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           {offer.map((cat: FortuneCategory, i: number) => (
             <UiEntity
@@ -420,7 +424,7 @@ function GuestPanel() {
                 uiTransform={{ width: '100%', height: '100%' }}
                 value={FSM_CATEGORY_LABELS[cat]}
                 textAlign={CARD_TEXT_ALIGN}
-                fontSize={fontSz}
+                fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
                 color={Color4.White()}
               />
@@ -441,7 +445,7 @@ function GuestPanel() {
               ? `The reading will focus on ${topic}. The Fortune Teller is choosing the deck…`
               : 'The Fortune Teller is choosing the deck…'
           }
-          fontSize={20}
+          fontSize={CARD_UI_FONT_SIZE}
           color={GOLD}
           height={100}
         />
@@ -453,7 +457,7 @@ function GuestPanel() {
     return (
       <GuestCardShell>
         {/* FIX */}
-        <CenteredLabelRow value="Choose a card." fontSize={18} color={GOLD} height={36} marginBottom={12} />
+        <CenteredLabelRow value="Choose a card." fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={48} marginBottom={12} />
         <UiEntity
           uiTransform={{
             ...CARD_CONTROL_ROW,
@@ -482,7 +486,7 @@ function GuestPanel() {
                     uiTransform={{ width: '100%', height: '100%' }}
                     value={key}
                     textAlign={CARD_TEXT_ALIGN}
-                    fontSize={28}
+                    fontSize={CARD_UI_FONT_SIZE}
                     font="serif"
                     color={Color4.create(1, 1, 1, 0.9)}
                   />
@@ -505,7 +509,7 @@ function GuestPanel() {
         {/* FIX */}
         <CenteredLabelRow
           value={hint}
-          fontSize={22}
+          fontSize={CARD_UI_FONT_SIZE}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
           height={80}
         />
@@ -526,16 +530,16 @@ function GuestPanel() {
       <GuestCardShell>
         <CenteredLabelRow
           value={FSM_CONTINUE_PROMPT}
-          fontSize={20}
+          fontSize={CARD_UI_FONT_SIZE}
           color={GOLD}
           height={FSM_CONTINUE_PROMPT_ROW_HEIGHT}
         />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 8 }, height: BTN_ROW_HEIGHT }}>
           <UiEntity uiTransform={{ width: '44%', height: '100%', margin: { right: 12 } }} uiBackground={BTN} onMouseDown={() => guestContinueYes()}>
-            <Label uiTransform={{ width: '100%', height: '100%' }} value="Yes" textAlign={CARD_TEXT_ALIGN} fontSize={18} font="serif" />
+            <Label uiTransform={{ width: '100%', height: '100%' }} value="Yes" textAlign={CARD_TEXT_ALIGN} fontSize={CARD_UI_FONT_SIZE} font="serif" />
           </UiEntity>
           <UiEntity uiTransform={{ width: '44%', height: '100%' }} uiBackground={BTN} onMouseDown={() => guestContinueNo()}>
-            <Label uiTransform={{ width: '100%', height: '100%' }} value="No" textAlign={CARD_TEXT_ALIGN} fontSize={18} font="serif" />
+            <Label uiTransform={{ width: '100%', height: '100%' }} value="No" textAlign={CARD_TEXT_ALIGN} fontSize={CARD_UI_FONT_SIZE} font="serif" />
           </UiEntity>
         </UiEntity>
       </GuestCardShell>

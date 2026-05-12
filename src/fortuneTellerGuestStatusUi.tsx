@@ -60,7 +60,7 @@ export function FortuneTellerGuestStatusBar() {
         width: '100%',
         positionType: 'absolute',
         position: { left: 0, bottom: 0 },
-        margin: { bottom: '1.5vh' },
+        margin: { bottom: 16 }, // 1.5vh @ 1080p ≈ 16px
         flexDirection: 'column',
         justifyContent: 'flex-end',
         alignItems: 'center',
