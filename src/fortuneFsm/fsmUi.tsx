@@ -2,7 +2,7 @@ import ReactEcs, { Label, UiEntity } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from '../gameState'
-import { SHOW_UI_FORTUNE, USE_FORTUNE_FSM_FLOW } from '../sceneConfig'
+import { FORTUNE_DISPLAY_DURATION, SHOW_UI_FORTUNE, USE_FORTUNE_FSM_FLOW } from '../sceneConfig'
 import {
   guestContinueNo,
   guestContinueYes,
@@ -34,6 +34,9 @@ const CATEGORY_BTN_BG = {
   textureMode: CARD_BG.textureMode
 }
 const SESSION_FINISHED_FADE_MS = 500
+const REVEAL_TEXT_FADE_IN_MS = SESSION_FINISHED_FADE_MS
+const REVEAL_TEXT_FADE_OUT_MS = SESSION_FINISHED_FADE_MS
+const REVEAL_TEXT_VISIBLE_MS = FORTUNE_DISPLAY_DURATION * 1000
 
 /**
  * Altura igual que CARD_CONTENT_HEIGHT compartido (referencia para maxHeight % del cuerpo).
@@ -103,6 +106,16 @@ function RevealFortuneCardContent() {
   const kindTitle = getFsmRevealKindTitle(choice)
   const body = getFsmRevealFortuneText(fsmSession)
   const fortuneText = `${name}, ${body}`
+  const revealElapsedMs = fsmSession.revealEnteredAtMs === null ? null : Date.now() - fsmSession.revealEnteredAtMs
+  const fadeInAlpha =
+    revealElapsedMs === null ? 1 : Math.min(1, Math.max(0, revealElapsedMs / REVEAL_TEXT_FADE_IN_MS))
+  const fadeOutAlpha =
+    revealElapsedMs === null
+      ? 1
+      : Math.min(1, Math.max(0, (REVEAL_TEXT_VISIBLE_MS - revealElapsedMs) / REVEAL_TEXT_FADE_OUT_MS))
+  const revealTextAlpha = Math.min(fadeInAlpha, fadeOutAlpha)
+  const revealTitleColor = Color4.create(GOLD.r, GOLD.g, GOLD.b, GOLD.a * revealTextAlpha)
+  const revealBodyColor = Color4.create(CARD_WHITE.r, CARD_WHITE.g, CARD_WHITE.b, CARD_WHITE.a * revealTextAlpha)
 
   /**
    * Misma jerarquía que ui.tsx cuando `isVisible` (fortuna legacy): REVEAL_INNER_COLUMN da altura % fija
@@ -126,7 +139,7 @@ function RevealFortuneCardContent() {
             textWrap="wrap"
             fontSize={CARD_UI_FONT_SIZE}
             font="serif"
-            color={GOLD}
+            color={revealTitleColor}
           />
         </UiEntity>
         <Label
@@ -141,7 +154,7 @@ function RevealFortuneCardContent() {
           textWrap="wrap"
           fontSize={CARD_UI_FONT_SIZE}
           font="serif"
-          color={Color4.create(0.95, 0.95, 0.95, 1)}
+          color={revealBodyColor}
         />
       </UiEntity>
     </UiEntity>
