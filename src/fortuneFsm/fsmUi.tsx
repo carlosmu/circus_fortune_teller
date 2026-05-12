@@ -28,6 +28,11 @@ import {
 import { CenteredLabelRow } from '../centeredLabelRow'
 
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
+/** Fondo de los botones de categoría (Love, Money, Luck, …) en CATEGORY_SELECTION. */
+const CATEGORY_BTN_BG = {
+  texture: { src: 'assets/images/button.png' },
+  textureMode: CARD_BG.textureMode
+}
 const SESSION_FINISHED_FADE_MS = 500
 
 /**
@@ -408,7 +413,7 @@ function GuestPanel() {
             <UiEntity
               key={cat}
               uiTransform={{ width: btnWidth, height: '100%', margin: { left: i === 0 ? 0 : 8 } }}
-              uiBackground={BTN}
+              uiBackground={CATEGORY_BTN_BG}
               onMouseDown={() => guestPickCategory(cat)}
             >
               <Label
@@ -417,6 +422,7 @@ function GuestPanel() {
                 textAlign={CARD_TEXT_ALIGN}
                 fontSize={fontSz}
                 font="serif"
+                color={Color4.White()}
               />
             </UiEntity>
           ))}
