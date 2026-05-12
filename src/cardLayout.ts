@@ -39,3 +39,31 @@ export const CARD_CONTENT_HEIGHT = '86%' as const
  * same value so every card.png panel positions its text identically.
  */
 export const CARD_CONTENT_VERTICAL_ADJUST = '0'
+
+/**
+ * Área útil sobre la textura de carta (card.png / welcome.png): un solo hijo directo → {@link CARD_ROOT_COLUMN}.
+ * margin.top alinea el contenido con el centro óptico (mismo criterio que FSM y legacy).
+ */
+export const CARD_CONTENT_LAYER = {
+  positionType: 'absolute' as const,
+  position: { top: 0, left: 0 } as const,
+  width: '100%' as const,
+  height: '100%' as const,
+  flexDirection: 'column' as const,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+  margin: { top: CARD_CONTENT_VERTICAL_ADJUST } as const,
+  overflow: 'visible' as const
+}
+
+/**
+ * Hijo de CARD_CONTENT_LAYER: columna en Y; alignItems stretch + Labels width 100% → textAlign middle-center en X.
+ * height 100%: evita que hijos con maxHeight en % colapsen a 0 en Yoga.
+ */
+export const CARD_ROOT_COLUMN = {
+  width: '75%' as const,
+  height: '100%' as const,
+  flexDirection: 'column' as const,
+  justifyContent: 'center' as const,
+  alignItems: 'stretch' as const
+}

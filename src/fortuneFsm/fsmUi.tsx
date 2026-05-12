@@ -22,39 +22,13 @@ import {
   CARD_SIZE,
   CARD_BG,
   CARD_CONTENT_HEIGHT,
-  CARD_CONTENT_VERTICAL_ADJUST
+  CARD_CONTENT_LAYER,
+  CARD_ROOT_COLUMN
 } from '../cardLayout'
+import { CenteredLabelRow } from '../centeredLabelRow'
 
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
 const SESSION_FINISHED_FADE_MS = 500
-
-/**
- * Área útil sobre card.png: en X solo un hijo directo → {@link CARD_ROOT_COLUMN}.
- * margin.top alinea el contenido con el centro óptico igual que en el sistema legacy (ui.tsx).
- */
-const CARD_CONTENT_LAYER = {
-  positionType: 'absolute' as const,
-  position: { top: 0, left: 0 } as const,
-  width: '100%' as const,
-  height: '100%' as const,
-  flexDirection: 'column' as const,
-  justifyContent: 'center' as const,
-  alignItems: 'center' as const,
-  margin: { top: CARD_CONTENT_VERTICAL_ADJUST } as const,
-  overflow: 'visible' as const
-}
-/**
- * Único hijo de CARD_CONTENT_LAYER: apila bloques en Y. alignItems stretch para que cada Label
- * con width 100% ocupe todo el ancho y textAlign middle-center se aplique al rectángulo completo.
- * height 100%: si es 'auto', hijos con maxHeight en % (p. ej. revelación) colapsan a altura 0 en Yoga.
- */
-const CARD_ROOT_COLUMN = {
-  width: '75%' as const,
-  height: '100%' as const,
-  flexDirection: 'column' as const,
-  justifyContent: 'center' as const,
-  alignItems: 'stretch' as const
-}
 
 /**
  * Altura igual que CARD_CONTENT_HEIGHT compartido (referencia para maxHeight % del cuerpo).
@@ -92,51 +66,6 @@ const CARD_TEXT_ALIGN: 'middle-center' = 'middle-center'
 const FSM_CONTINUE_PROMPT = 'Do you want another reading?'
 /** Una línea ~font 20: evita hueco grande bajo la pregunta antes de botones / texto host. */
 const FSM_CONTINUE_PROMPT_ROW_HEIGHT = 44
-
-/**
- * Wrapper para Labels "sueltos" que necesitan centrarse en X.
- * Yoga/DCL SDK colapsa el ancho del Label cuando height es 'auto';
- * este UiEntity fuerza width:100% con tamaño fijo y hace el centrado via flexbox.
- */
-function CenteredLabelRow({
-  value,
-  fontSize,
-  color,
-  height = 80,
-  marginTop = 0,
-  marginBottom = 0
-}: {
-  value: string
-  fontSize: number
-  color: Color4
-  height?: number
-  marginTop?: number
-  marginBottom?: number
-}) {
-  return (
-    <UiEntity
-      uiTransform={{
-        width: '100%',
-        height,
-        minHeight: height,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: { top: marginTop, bottom: marginBottom }
-      }}
-    >
-      <Label
-        uiTransform={{ width: '100%', height: '100%' }}
-        value={value}
-        textAlign={CARD_TEXT_ALIGN}
-        textWrap="wrap"
-        fontSize={fontSize}
-        font="serif"
-        color={color}
-      />
-    </UiEntity>
-  )
-}
 
 const DECKS: FsmDeck[] = ['Funny', 'Serious', 'Strange']
 const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [

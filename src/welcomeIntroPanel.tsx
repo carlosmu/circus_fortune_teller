@@ -1,16 +1,27 @@
-import ReactEcs, { UiEntity, Label } from '@dcl/sdk/react-ecs'
+import ReactEcs, { UiEntity } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
+import { CenteredLabelRow } from './centeredLabelRow'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
-import { INFO_BANNER_BG } from './infoBanner'
 import { fsmSession } from './fortuneFsm/session'
+import {
+  CARD_VERTICAL_OFFSET,
+  CARD_SIZE,
+  CARD_CONTENT_LAYER,
+  CARD_ROOT_COLUMN
+} from './cardLayout'
 
-const PANEL_W = 480
-const PANEL_H = 200
-const BORDER_RADIUS = 12
+const WELCOME_BG = {
+  texture: { src: 'assets/images/welcome.png' },
+  textureMode: 'stretch' as const
+}
+
 const TITLE_FONT = 32
 const SUB_FONT = 22
 const TEXT_WHITE = Color4.White()
+/** Alturas fijas para que el centrado X/Y del Label funcione (ver CenteredLabelRow). */
+const WELCOME_TITLE_ROW_H = 56
+const WELCOME_SUB_ROW_H = 48
 
 /** Tras haberse sentado alguna vez: volver a mostrar el cartel si no hay lectura y el jugador no está en silla durante este tiempo. */
 const INTRO_IDLE_RESHOW_MS = 22_000
@@ -75,39 +86,48 @@ export function WelcomeIntroPanel() {
       }}
     >
       {/*
-       * Misma columna que la carta FSM: flex-start + centrado en X; margen superior explícito.
+       * Misma jerarquía que HostCardShell (fsmUi): marco CARD_SIZE + CARD_VERTICAL_OFFSET,
+       * textura stretch, contenido absoluto en CARD_CONTENT_LAYER → CARD_ROOT_COLUMN (centro X/Y).
        */}
       <UiEntity
         uiTransform={{
-          width: PANEL_W,
-          height: PANEL_H,
-          margin: { top: '5vh' },
+          width: '100%',
+          height: '100%',
           flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: { top: 20, bottom: 20, left: 24, right: 24 },
-          borderRadius: BORDER_RADIUS
+          justifyContent: 'flex-start',
+          alignItems: 'center'
         }}
-        uiBackground={{ color: INFO_BANNER_BG }}
       >
-        <Label
-          uiTransform={{ width: '100%', height: 'auto', margin: { bottom: 12 } }}
-          value="THE FORTUNE TELLER"
-          textAlign="middle-center"
-          textWrap="wrap"
-          fontSize={TITLE_FONT}
-          font="serif"
-          color={TEXT_WHITE}
-        />
-        <Label
-          uiTransform={{ width: '100%', height: 'auto' }}
-          value="Choose a chair to begin"
-          textAlign="middle-center"
-          textWrap="wrap"
-          fontSize={SUB_FONT}
-          font="serif"
-          color={TEXT_WHITE}
-        />
+        <UiEntity
+          uiTransform={{
+            ...CARD_SIZE,
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            margin: { top: CARD_VERTICAL_OFFSET },
+            positionType: 'relative',
+            overflow: 'visible'
+          }}
+          uiBackground={WELCOME_BG}
+        >
+          <UiEntity uiTransform={{ ...CARD_CONTENT_LAYER }}>
+            <UiEntity uiTransform={{ ...CARD_ROOT_COLUMN }}>
+              <CenteredLabelRow
+                value="THE FORTUNE TELLER"
+                fontSize={TITLE_FONT}
+                color={TEXT_WHITE}
+                height={WELCOME_TITLE_ROW_H}
+                marginBottom={12}
+              />
+              <CenteredLabelRow
+                value="Choose a chair to begin"
+                fontSize={SUB_FONT}
+                color={TEXT_WHITE}
+                height={WELCOME_SUB_ROW_H}
+              />
+            </UiEntity>
+          </UiEntity>
+        </UiEntity>
       </UiEntity>
     </UiEntity>
   )
