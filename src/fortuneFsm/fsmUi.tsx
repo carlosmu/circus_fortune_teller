@@ -213,6 +213,94 @@ function SpectatorContinueWaitPanel() {
   )
 }
 
+function SpectatorPanel() {
+  const st = fsmSession.state
+
+  if (st === 'INIT') {
+    return (
+      <HostCardShell>
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="Reading starts..."
+          fontSize={CARD_UI_FONT_SIZE}
+          color={GOLD}
+          height={CARD_READING_BOOKEND_ROW_HEIGHT}
+        />
+      </HostCardShell>
+    )
+  }
+
+  if (st === 'CATEGORY_SELECTION') {
+    return (
+      <HostCardShell>
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="The guest is choosing a focus for the reading..."
+          fontSize={CARD_UI_FONT_SIZE}
+          color={CARD_WHITE}
+          height={120}
+        />
+      </HostCardShell>
+    )
+  }
+
+  if (st === 'DECK_SELECTION') {
+    return (
+      <HostCardShell>
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="The Fortune Teller is choosing a deck..."
+          fontSize={CARD_UI_FONT_SIZE}
+          color={GOLD}
+          height={100}
+        />
+      </HostCardShell>
+    )
+  }
+
+  if (st === 'CARD_SELECTION') {
+    return (
+      <HostCardShell>
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="The guest is choosing a card..."
+          fontSize={CARD_UI_FONT_SIZE}
+          color={CARD_WHITE}
+          height={80}
+        />
+      </HostCardShell>
+    )
+  }
+
+  if (st === 'FORTUNE_SELECTION') {
+    const hint =
+      fsmSession.fortuneGuestHint === 'clear'
+        ? 'It is becoming clear...'
+        : 'Reading the cards...'
+    return (
+      <HostCardShell>
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value={hint}
+          fontSize={CARD_UI_FONT_SIZE}
+          color={GOLD}
+          height={80}
+        />
+      </HostCardShell>
+    )
+  }
+
+  if (st === 'REVEAL') {
+    return <RevealFortuneOnCard />
+  }
+
+  if (st === 'CONTINUE_DECISION') {
+    return <SpectatorContinueWaitPanel />
+  }
+
+  return null
+}
+
 function HostCardShell(props: { children?: any; contentJustify?: 'center' | 'flex-start'; contentAlpha?: number }) {
   const justify = props.contentJustify ?? 'flex-start'
   const a = props.contentAlpha ?? 1
@@ -621,7 +709,6 @@ export function FortuneFsmLayer() {
     (uid === fsmSession.hostId || uid === gameData.currentFortuneTellerId)
   const isGuest = uid !== null && uid === fsmSession.guestId
 
-  const showRevealCard = fsmSession.active && fsmSession.state === 'REVEAL'
   const showSessionFinishedOnCard =
     !fsmSession.active &&
     fsmSession.sessionFinishedMessage !== null &&
@@ -652,14 +739,9 @@ export function FortuneFsmLayer() {
           alignItems: 'center'
         }}
       >
-        {showRevealCard && !isHost && !isGuest && <RevealFortuneOnCard />}
         {fsmSession.active && isHost && <HostPanel />}
         {fsmSession.active && isGuest && <GuestPanel />}
-        {fsmSession.active &&
-          fsmSession.state === 'CONTINUE_DECISION' &&
-          uid !== null &&
-          !isHost &&
-          !isGuest && <SpectatorContinueWaitPanel />}
+        {fsmSession.active && !isHost && !isGuest && <SpectatorPanel />}
         {showSessionFinishedOnCard && <SessionFinishedOnCard uid={uid} />}
       </UiEntity>
     </UiEntity>
