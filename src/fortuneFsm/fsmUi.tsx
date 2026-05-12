@@ -69,6 +69,7 @@ const YES_NO_BUTTON_HEIGHT = 48
 const BUTTON_BORDER_RADIUS = 12
 const GOLD = Color4.create(212 / 255, 175 / 255, 55 / 255, 1)
 const WHITE = Color4.create(1, 1, 1, 1)
+const CARD_WHITE = Color4.create(0.95, 0.95, 0.95, 1)
 
 /** Tamaño único de fuente para todo el texto sobre card.png en el flujo FSM (host, guest, revelación, botones). */
 const CARD_UI_FONT_SIZE = 22
@@ -277,6 +278,7 @@ function HostPanel() {
               textAlign={CARD_TEXT_ALIGN}
               fontSize={CARD_UI_FONT_SIZE}
               font="serif"
+              color={CARD_WHITE}
             />
           </UiEntity>
         </UiEntity>
@@ -317,6 +319,7 @@ function HostPanel() {
                 textAlign={CARD_TEXT_ALIGN}
                 fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
+                color={GOLD}
               />
             </UiEntity>
           ))}
@@ -369,6 +372,7 @@ function HostPanel() {
                 textAlign={CARD_TEXT_ALIGN}
                 fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
+                color={GOLD}
               />
             </UiEntity>
           ))}
@@ -388,11 +392,11 @@ function HostPanel() {
   if (st === 'CONTINUE_DECISION') {
     return (
       <HostCardShell>
-        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value={FSM_CONTINUE_PROMPT} fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={FSM_CONTINUE_PROMPT_ROW_HEIGHT} />
+        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value={FSM_CONTINUE_PROMPT} fontSize={CARD_UI_FONT_SIZE} color={CARD_WHITE} height={FSM_CONTINUE_PROMPT_ROW_HEIGHT} />
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
           value="Ask the guest. They will choose Yes or No."
           fontSize={CARD_UI_FONT_SIZE}
-          color={Color4.create(0.95, 0.95, 0.95, 1)}
+          color={CARD_WHITE}
           height={72}
         />
       </HostCardShell>
@@ -412,7 +416,7 @@ function GuestPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
           value="Reading starts…"
           fontSize={CARD_UI_FONT_SIZE}
-          color={Color4.create(0.95, 0.95, 0.95, 1)}
+          color={GOLD}
           height={CARD_READING_BOOKEND_ROW_HEIGHT}
         />
       </GuestCardShell>
@@ -425,7 +429,7 @@ function GuestPanel() {
     return (
       <GuestCardShell>
         {/* FIX */}
-        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="What do you want to know?" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
+        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="What do you want to know?" fontSize={CARD_UI_FONT_SIZE} color={CARD_WHITE} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           {offer.map((cat: FortuneCategory, i: number) => (
             <UiEntity
@@ -456,7 +460,7 @@ function GuestPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
           value={
             topic
-              ? `The reading will focus on ${topic}. The Fortune Teller is choosing the deck…`
+              ? `The Fortune Teller is choosing the deck…`
               : 'The Fortune Teller is choosing the deck…'
           }
           fontSize={CARD_UI_FONT_SIZE}
@@ -471,7 +475,7 @@ function GuestPanel() {
     return (
       <GuestCardShell>
         {/* FIX */}
-        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Choose a card." fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={48} marginBottom={12} />
+        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Choose a card." fontSize={CARD_UI_FONT_SIZE} color={CARD_WHITE} height={48} marginBottom={12} />
         <UiEntity
           uiTransform={{
             ...CARD_CONTROL_ROW,
@@ -524,7 +528,7 @@ function GuestPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
           value={hint}
           fontSize={CARD_UI_FONT_SIZE}
-          color={Color4.create(0.95, 0.95, 0.95, 1)}
+          color={GOLD}
           height={80}
         />
       </GuestCardShell>
@@ -545,7 +549,7 @@ function GuestPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
           value={FSM_CONTINUE_PROMPT}
           fontSize={CARD_UI_FONT_SIZE}
-          color={GOLD}
+          color={CARD_WHITE}
           height={FSM_CONTINUE_PROMPT_ROW_HEIGHT}
         />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 8 }, height: YES_NO_BUTTON_HEIGHT }}>

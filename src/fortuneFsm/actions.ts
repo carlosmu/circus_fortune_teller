@@ -163,8 +163,8 @@ export function fsmTickContinueIfReady(t: number): void {
   if (r.ok) emit()
 }
 
-const VIRTUAL_HOST_INIT_MS = 1000
-const VIRTUAL_HOST_DECK_MS = 1400
+const VIRTUAL_HOST_INIT_MS = 2000
+const VIRTUAL_HOST_DECK_MS = 3000
 const VIRTUAL_HOST_FORTUNE_MS = 1800
 
 /** Auto-pick host decisions when no human fortune teller. */

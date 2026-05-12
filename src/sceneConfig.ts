@@ -20,12 +20,12 @@ export const USE_FORTUNE_FSM_FLOW = true
 
 /**
  * FSM: tras el host elige significado (A/B/C), ms hasta el mensaje “se aclara” para el invitado.
- * Antes: 2000. Valores bajos = revelación más inmediata.
+ * Mantener al menos 2s para que la pantalla “Reading the cards…” pueda leerse.
  */
-export const FSM_REVEAL_READING_PHASE_MS = 450
+export const FSM_REVEAL_READING_PHASE_MS = 2000
 
 /**
  * FSM: ms desde la elección del host hasta entrar en REVEAL (texto en carta).
- * Debe ser mayor que {@link FSM_REVEAL_READING_PHASE_MS}. Antes: 2800.
+ * Debe ser mayor que {@link FSM_REVEAL_READING_PHASE_MS}; deja otros 2s para “It is becoming clear…”.
  */
-export const FSM_REVEAL_SHOW_AT_MS = 750
+export const FSM_REVEAL_SHOW_AT_MS = 4000
