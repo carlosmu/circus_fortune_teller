@@ -6,10 +6,10 @@ import { FORTUNE_TELLER_CAMERA_TARGET } from './scene'
  * Rectángulo XZ al salir de la silla de invitado (idle, tope de lecturas, o “No” a más fortuna).
  * Alineado con `moveFortuneTellerToRandomArea` / `FORTUNE_TELLER_RANDOM_*` en setupWizard.ts.
  */
-const GUEST_SEAT_DISPLACE_RANDOM_MIN_X = 3
-const GUEST_SEAT_DISPLACE_RANDOM_MAX_X = 13
-const GUEST_SEAT_DISPLACE_RANDOM_MIN_Z = 7
-const GUEST_SEAT_DISPLACE_RANDOM_MAX_Z = 12
+const GUEST_SEAT_DISPLACE_RANDOM_MIN_X = 5
+const GUEST_SEAT_DISPLACE_RANDOM_MAX_X = 11
+const GUEST_SEAT_DISPLACE_RANDOM_MIN_Z = 9
+const GUEST_SEAT_DISPLACE_RANDOM_MAX_Z = 11
 
 function randomInRange(min: number, max: number): number {
   return min + Math.random() * (max - min)

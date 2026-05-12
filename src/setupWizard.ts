@@ -40,10 +40,10 @@ const WIZARD_MOVE_OFFSET_X = 0
 const WIZARD_MOVE_OFFSET_Z = -1.65
 const WIZARD_MOVE_SPEED = 6
 const FORTUNE_TELLER_SESSION_INITIAL_MS = 60000
-const FORTUNE_TELLER_RANDOM_MIN_X = 3
-const FORTUNE_TELLER_RANDOM_MAX_X = 13
-const FORTUNE_TELLER_RANDOM_MIN_Z = 7
-const FORTUNE_TELLER_RANDOM_MAX_Z = 12
+const FORTUNE_TELLER_RANDOM_MIN_X = 5
+const FORTUNE_TELLER_RANDOM_MAX_X = 11
+const FORTUNE_TELLER_RANDOM_MIN_Z = 9
+const FORTUNE_TELLER_RANDOM_MAX_Z = 11
 let fortuneTellerSitSpotRegistered = false
 let sitSpotFtStripFramesLeft = 0
 /** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
