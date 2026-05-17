@@ -26,7 +26,7 @@ export function getCardSize() {
   const mobile = isMobile()
   return mobile
     ? { width: 540 as const, height: 540 as const }
-    : { width: 540 as const, height: 540 as const }
+    : { width: 600 as const, height: 600 as const }
 }
 
 /** Background texture definition shared by every card panel. */
