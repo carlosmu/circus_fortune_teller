@@ -1,4 +1,4 @@
-import { engine, PointerEvents, InputAction } from '@dcl/sdk/ecs'
+import { engine, PointerEvents } from '@dcl/sdk/ecs'
 
 /** `InteractionType.PROXIMITY` — prompt de interacción por proximidad / tecla cercana. */
 const INTERACTION_PROXIMITY = 1
@@ -10,8 +10,6 @@ function stripPointerEventsForSitSpot(entity: ReturnType<typeof engine.addEntity
     if ((e.interactionType ?? 0) === INTERACTION_PROXIMITY) return false
     const info = e.eventInfo
     if (!info) return true
-    const btn = info.button
-    if (btn === InputAction.IA_PRIMARY || btn === InputAction.IA_SECONDARY) return false
     const ht = info.hoverText?.trim() ?? ''
     if (ht === 'Sit Here') return false
     return true

@@ -5,6 +5,9 @@ import {
   pointerEventsSystem,
   InputAction,
   InputModifier,
+  PointerEvents,
+  PointerEventType,
+  inputSystem,
   executeTask
 } from '@dcl/sdk/ecs'
 import { getEntityWorldPosition } from './worldTransform'
@@ -45,7 +48,7 @@ const FORTUNE_TELLER_RANDOM_MAX_X = 11
 const FORTUNE_TELLER_RANDOM_MIN_Z = 9
 const FORTUNE_TELLER_RANDOM_MAX_Z = 11
 let fortuneTellerSitSpotRegistered = false
-let sitSpotFtStripFramesLeft = 0
+let fortuneTellerSitSpotEntity: ReturnType<typeof engine.addEntity> | null = null
 /** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
 let fortuneTellerJoinedViaSitSpot = false
 /** Mientras movePlayerTo/emote del Sit Spot no terminaron, no aplicar la regla de alejamiento. */
@@ -235,6 +238,20 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
     },
     onInteract
   )
+  // Añadir entrada IA_PRIMARY para que E también muestre el hint y pueda detectarse
+  const pe = PointerEvents.getMutableOrNull(entity)
+  if (pe) {
+    pe.pointerEvents.push({
+      eventType: PointerEventType.PET_DOWN,
+      eventInfo: {
+        button: InputAction.IA_PRIMARY,
+        hoverText: '',
+        maxDistance: 8,
+        showFeedback: false,
+        showHighlight: false
+      }
+    })
+  }
   stripSitSpotFortuneTellerProximityUi(entity)
 }
 
@@ -412,14 +429,13 @@ export function setupWizard() {
       const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
       if (sitSpot !== null) {
         fortuneTellerSitSpotRegistered = true
+        fortuneTellerSitSpotEntity = sitSpot
         registerFortuneTellerSitSpotHandlers(sitSpot)
-        sitSpotFtStripFramesLeft = 15
       }
-    } else if (sitSpotFtStripFramesLeft > 0) {
-      sitSpotFtStripFramesLeft -= 1
-      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Fortune_Teller)
-      if (sitSpot !== null) {
-        stripSitSpotFortuneTellerProximityUi(sitSpot)
+    } else if (fortuneTellerSitSpotEntity !== null) {
+      stripSitSpotFortuneTellerProximityUi(fortuneTellerSitSpotEntity)
+      if (inputSystem.isTriggered(InputAction.IA_PRIMARY, PointerEventType.PET_DOWN, fortuneTellerSitSpotEntity)) {
+        fortuneTellerClickCallback({ fromSitSpot: true })
       }
     }
 

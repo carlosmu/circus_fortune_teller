@@ -604,7 +604,7 @@
         "serializationType": "map"
       },
       "data": {
-        "513": {
+        "522": {
           "json": {
             "gizmo": 1
           }
@@ -2426,41 +2426,6 @@
                     "name": "Mark as free"
                   }
                 ]
-              },
-              {
-                "type": "on_input_action",
-                "conditions": [
-                  {
-                    "id": 8,
-                    "type": "when_state_is",
-                    "value": "Free"
-                  }
-                ],
-                "operation": "and",
-                "actions": [
-                  {
-                    "id": 7,
-                    "name": "Sit Here"
-                  }
-                ],
-                "basicViewId": "trigger-when-clicked"
-              },
-              {
-                "type": "on_input_action",
-                "conditions": [
-                  {
-                    "id": 8,
-                    "type": "when_state_is",
-                    "value": "Taken"
-                  }
-                ],
-                "operation": "and",
-                "actions": [
-                  {
-                    "id": 7,
-                    "name": "Show text"
-                  }
-                ]
               }
             ]
           }
@@ -2482,41 +2447,6 @@
                   {
                     "id": 9,
                     "name": "Mark as free"
-                  }
-                ]
-              },
-              {
-                "type": "on_input_action",
-                "conditions": [
-                  {
-                    "id": 10,
-                    "type": "when_state_is",
-                    "value": "Free"
-                  }
-                ],
-                "operation": "and",
-                "actions": [
-                  {
-                    "id": 9,
-                    "name": "Sit Here"
-                  }
-                ],
-                "basicViewId": "trigger-when-clicked"
-              },
-              {
-                "type": "on_input_action",
-                "conditions": [
-                  {
-                    "id": 10,
-                    "type": "when_state_is",
-                    "value": "Taken"
-                  }
-                ],
-                "operation": "and",
-                "actions": [
-                  {
-                    "id": 9,
-                    "name": "Show text"
                   }
                 ]
               }

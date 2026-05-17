@@ -4,6 +4,9 @@ import {
   pointerEventsSystem,
   InputAction,
   InputModifier,
+  PointerEvents,
+  PointerEventType,
+  inputSystem,
   executeTask
 } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
@@ -39,7 +42,7 @@ const GUEST_SEAT_GRACE_MS = 1500
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
 
 let guestSitSpotRegistered = false
-let sitSpotGuestStripFramesLeft = 0
+let guestSitSpotEntity: ReturnType<typeof engine.addEntity> | null = null
 let guestJoinedViaSitSpot = false
 let sitSpotGuestTeleportPending = false
 let guestSatAtMs = 0
@@ -144,6 +147,20 @@ function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEn
     },
     guestSitSpotClickCallback
   )
+  // Añadir entrada IA_PRIMARY para que E también muestre el hint y pueda detectarse
+  const pe = PointerEvents.getMutableOrNull(entity)
+  if (pe) {
+    pe.pointerEvents.push({
+      eventType: PointerEventType.PET_DOWN,
+      eventInfo: {
+        button: InputAction.IA_PRIMARY,
+        hoverText: '',
+        maxDistance: 8,
+        showFeedback: false,
+        showHighlight: false
+      }
+    })
+  }
   stripSitSpotGuestProximityUi(entity)
 }
 
@@ -235,14 +252,13 @@ export function setupGuestSpot() {
       const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
       if (sitSpot !== null) {
         guestSitSpotRegistered = true
+        guestSitSpotEntity = sitSpot
         applyGuestSitSpotPointerIfNeeded(sitSpot)
-        sitSpotGuestStripFramesLeft = 15
       }
-    } else if (sitSpotGuestStripFramesLeft > 0) {
-      sitSpotGuestStripFramesLeft -= 1
-      const sitSpot = engine.getEntityOrNullByName(EntityNames.Sit_Spot__Guest)
-      if (sitSpot !== null) {
-        stripSitSpotGuestProximityUi(sitSpot)
+    } else if (guestSitSpotEntity !== null) {
+      stripSitSpotGuestProximityUi(guestSitSpotEntity)
+      if (inputSystem.isTriggered(InputAction.IA_PRIMARY, PointerEventType.PET_DOWN, guestSitSpotEntity)) {
+        guestSitSpotClickCallback()
       }
     }
 
