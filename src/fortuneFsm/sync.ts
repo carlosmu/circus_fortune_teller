@@ -1,6 +1,7 @@
 import { fortuneMessageBus } from '../fortuneSync'
 import type { FsmSession } from './types'
-import { restoreSessionFromPayload } from './session'
+import { fsmSession, restoreSessionFromPayload } from './session'
+import { fireStateEnter } from './machine'
 
 let listenerRegistered = false
 
@@ -13,6 +14,10 @@ export function setupFortuneFsmSync(): void {
   if (listenerRegistered) return
   listenerRegistered = true
   fortuneMessageBus.on('fortune-fsm-session', (payload: FsmSession) => {
+    const prevState = fsmSession.state
     restoreSessionFromPayload(payload)
+    if (prevState !== fsmSession.state) {
+      fireStateEnter(fsmSession.state)
+    }
   })
 }

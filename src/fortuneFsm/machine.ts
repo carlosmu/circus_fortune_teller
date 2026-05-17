@@ -38,9 +38,24 @@ export function debounceOk(now: number, ms: number): boolean {
   return true
 }
 
+type StateEnterCallback = (state: FsmState) => void
+const stateEnterCallbacks: StateEnterCallback[] = []
+let lastFiredState: FsmState | null = null
+
+export function onStateEnter(cb: StateEnterCallback): void {
+  stateEnterCallbacks.push(cb)
+}
+
+export function fireStateEnter(state: FsmState): void {
+  if (state === lastFiredState) return
+  lastFiredState = state
+  for (const cb of stateEnterCallbacks) cb(state)
+}
+
 export function tryTransition(to: FsmState, extra?: Partial<FsmSession>): TransitionResult {
   const gate = canGoTo(to)
   if (!gate.ok) return gate
   commitState(to, extra)
+  fireStateEnter(to)
   return { ok: true, next: to }
 }

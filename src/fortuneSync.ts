@@ -6,6 +6,7 @@ import { gameData } from './gameState'
 import { hideFortune3DTextImmediate } from './fortune3DText'
 import { FORTUNE_TELLER_POSITION } from './scene'
 import { startRevealFortuneCinematic, stopOrbitCinematic } from './cinematicCamera'
+import { onStateEnter } from './fortuneFsm/machine'
 import type { FortuneCategory } from './types'
 
 /** MessageBus to sync fortune state across all players in the scene */
@@ -60,14 +61,14 @@ export type FortuneTellerSessionUpdateMessage = {
   centerBannerUntilMs?: number
 }
 
-const REVEAL_SOUND_FILENAME = 'Into_the_Depths.mp3'
+const REVEAL_SOUND_FILENAME = 'magic_reveal.mp3'
 const REVEAL_SOUND_PATH = 'assets/audio/' + encodeURIComponent(REVEAL_SOUND_FILENAME)
 
 const SOUND_CLEANUP_DELAY = 8
 
 let pendingSoundCleanup: { entity: ReturnType<typeof engine.addEntity>; elapsed: number } | null = null
 
-function playRevealSound() {
+export function playRevealSound() {
   if (pendingSoundCleanup) {
     engine.removeEntity(pendingSoundCleanup.entity)
     pendingSoundCleanup = null
@@ -98,6 +99,9 @@ function soundCleanupSystem(dt: number) {
  */
 export function setupFortuneSync() {
   engine.addSystem(soundCleanupSystem)
+  onStateEnter((state) => {
+    if (state === 'REVEAL') playRevealSound()
+  })
   fortuneMessageBus.on('guest-requested-fortune', (data: GuestRequestedMessage) => {
     if (
       data.sessionReadingIndex < 1 ||
