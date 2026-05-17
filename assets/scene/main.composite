@@ -90,6 +90,48 @@
         "serializationType": "transform"
       },
       "data": {
+        "512": {
+          "json": {
+            "position": {
+              "x": 8,
+              "y": 0.5,
+              "z": 8.25
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 1.350000023841858,
+              "y": 1.350000023841858,
+              "z": 1.350000023841858
+            },
+            "parent": 0
+          }
+        },
+        "513": {
+          "json": {
+            "position": {
+              "x": 8,
+              "y": 0,
+              "z": 8
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "parent": 0
+          }
+        },
         "515": {
           "json": {
             "position": {
@@ -178,19 +220,19 @@
           "json": {
             "position": {
               "x": 8,
-              "y": -0.5838142037391663,
+              "y": 0,
               "z": 8
-            },
-            "scale": {
-              "x": 1.899999976158142,
-              "y": 1.899999976158142,
-              "z": 1.899999976158142
             },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
             },
             "parent": 0
           }
@@ -300,6 +342,20 @@
         "protocolBuffer": "PBGltfContainer"
       },
       "data": {
+        "512": {
+          "json": {
+            "src": "assets/models/floatcarpet.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
+        "513": {
+          "json": {
+            "src": "assets/models/carpetcandles.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
         "521": {
           "json": {
             "src": "assets/models/chair.glb",
@@ -350,6 +406,16 @@
         "serializationType": "map"
       },
       "data": {
+        "512": {
+          "json": {
+            "value": "floatcarpet.glb"
+          }
+        },
+        "513": {
+          "json": {
+            "value": "carpetcandles.glb"
+          }
+        },
         "515": {
           "json": {
             "value": "Music"
@@ -538,9 +604,9 @@
         "serializationType": "map"
       },
       "data": {
-        "524": {
+        "513": {
           "json": {
-            "gizmo": 0
+            "gizmo": 1
           }
         }
       }
@@ -595,7 +661,9 @@
                   527,
                   522,
                   521,
-                  528
+                  528,
+                  512,
+                  513
                 ]
               },
               {
@@ -642,6 +710,14 @@
                   515,
                   526
                 ]
+              },
+              {
+                "entity": 512,
+                "children": []
+              },
+              {
+                "entity": 513,
+                "children": []
               }
             ]
           }
@@ -665,6 +741,12 @@
         "serializationType": "map"
       },
       "data": {
+        "512": {
+          "json": {}
+        },
+        "513": {
+          "json": {}
+        },
         "515": {
           "json": {}
         },
@@ -1597,22 +1679,19 @@
             "thumbnail": "assets/images/thumbnail.png",
             "categories": [],
             "author": "SDK",
-            "email": "",
             "tags": [],
             "layout": {
+              "base": {
+                "x": 0,
+                "y": 0
+              },
               "parcels": [
                 {
                   "x": 0,
                   "y": 0
                 }
-              ],
-              "base": {
-                "x": 0,
-                "y": 0
-              }
+              ]
             },
-            "silenceVoiceChat": false,
-            "disablePortableExperiences": false,
             "spawnPoints": [
               {
                 "name": "spawn1",
@@ -1647,11 +1726,7 @@
                 }
               }
             ],
-            "skyboxConfig": {
-              "fixedTime": 41820
-            },
-            "creator": "",
-            "disableNearbyVoiceChat": false
+            "skyboxConfig": {}
           }
         }
       }

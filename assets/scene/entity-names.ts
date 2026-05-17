@@ -11,6 +11,8 @@ export enum EntityNames {
   Sit_Spot__Fortune_Teller = "Sit Spot: Fortune_Teller",
   Sit_Spot__Guest = "Sit Spot: Guest",
   Spotlight = "Spotlight",
+  carpetcandles_glb = "carpetcandles.glb",
+  floatcarpet_glb = "floatcarpet.glb",
   table_glb = "table.glb",
   tent_glb = "tent.glb",
 } 
