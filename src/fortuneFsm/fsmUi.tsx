@@ -21,7 +21,6 @@ import type { FsmCardChoice, FsmDeck } from './types'
 import {
   CARD_VERTICAL_OFFSET,
   CARD_BG,
-  CARD_CONTENT_HEIGHT,
   CARD_CONTENT_LAYER,
   CARD_ROOT_COLUMN,
   getCardSize
@@ -49,25 +48,9 @@ const REVEAL_TEXT_FADE_IN_MS = SESSION_FINISHED_FADE_MS
 const REVEAL_TEXT_FADE_OUT_MS = SESSION_FINISHED_FADE_MS
 const REVEAL_TEXT_VISIBLE_MS = FORTUNE_DISPLAY_DURATION * 1000
 
-/**
- * Altura igual que CARD_CONTENT_HEIGHT compartido (referencia para maxHeight % del cuerpo).
- * paddingTop: 10px para separar ligeramente el título del borde de la carta.
- */
-const REVEAL_INNER_COLUMN = {
-  width: '100%' as const,
-  height: CARD_CONTENT_HEIGHT,
-  flexDirection: 'column' as const,
-  justifyContent: 'flex-start' as const,
-  alignItems: 'center' as const,
-  padding: { top: 10, left: 0, right: 0, bottom: 0 } as const,
-  margin: { top: 0 } as const
-}
-const REVEAL_TIGHT_STACK = {
-  width: '100%' as const,
-  flexDirection: 'column' as const,
-  justifyContent: 'flex-start' as const,
-  alignItems: 'stretch' as const
-}
+/** Filas reveal: mismo patrón que CONTINUE_DECISION (CenteredLabelRow + CARD_LABEL_TEXT_ALIGN). */
+const REVEAL_TITLE_ROW_HEIGHT = 40
+const REVEAL_BODY_ROW_HEIGHT = 280
 /** Una fila de controles (ej. A/B/C o Sí/No): un solo elemento en el eje Y del root. */
 const CARD_CONTROL_ROW = {
   width: '100%' as const,
@@ -128,46 +111,22 @@ function RevealFortuneCardContent() {
   const revealTitleColor = Color4.create(GOLD.r, GOLD.g, GOLD.b, GOLD.a * revealTextAlpha)
   const revealBodyColor = Color4.create(CARD_WHITE.r, CARD_WHITE.g, CARD_WHITE.b, CARD_WHITE.a * revealTextAlpha)
 
-  /**
-   * Misma jerarquía que ui.tsx cuando `isVisible` (fortuna legacy): REVEAL_INNER_COLUMN da altura % fija
-   * para que el Label del cuerpo con maxHeight: '68%' no quede en 0 px.
-   */
   return (
-    <UiEntity uiTransform={{ ...REVEAL_INNER_COLUMN }}>
-      <UiEntity uiTransform={{ ...REVEAL_TIGHT_STACK }}>
-        <UiEntity
-          uiTransform={{
-            width: '100%',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-        >
-          <Label
-            uiTransform={{ width: 'auto', height: 'auto' }}
-            value={kindTitle || '—'}
-            textAlign="middle-center"
-            textWrap="wrap"
-            fontSize={CARD_UI_FONT_SIZE}
-            font="serif"
-            color={revealTitleColor}
-          />
-        </UiEntity>
-        <Label
-          uiTransform={{
-            width: '100%',
-            height: 'auto',
-            maxHeight: '68%',
-            margin: { top: 8 }
-          }}
-          value={fortuneText}
-          textAlign="middle-center"
-          textWrap="wrap"
-          fontSize={CARD_UI_FONT_SIZE}
-          font="serif"
-          color={revealBodyColor}
-        />
-      </UiEntity>
+    <UiEntity uiTransform={{ width: '100%', flexDirection: 'column', alignItems: 'stretch' }}>
+      <CenteredLabelRow
+        textAlign={CARD_LABEL_TEXT_ALIGN}
+        value={kindTitle || '—'}
+        fontSize={CARD_UI_FONT_SIZE}
+        color={revealTitleColor}
+        height={REVEAL_TITLE_ROW_HEIGHT}
+      />
+      <CenteredLabelRow
+        textAlign={CARD_LABEL_TEXT_ALIGN}
+        value={fortuneText}
+        fontSize={CARD_UI_FONT_SIZE}
+        color={revealBodyColor}
+        height={REVEAL_BODY_ROW_HEIGHT}
+      />
     </UiEntity>
   )
 }
