@@ -153,6 +153,28 @@ export function fsmTickContinueIfReady(t: number): void {
   if (!fsmSession.active || fsmSession.state !== 'REVEAL') return
   if (fsmSession.revealEnteredAtMs === null) return
   if (t - fsmSession.revealEnteredAtMs < REVEAL_TO_CONTINUE_MS) return
+
+  // Only the host client increments readings done (once per completed REVEAL)
+  const localUserId = getPlayer()?.userId ?? null
+  const isHost = fsmSession.isVirtualHost || (localUserId !== null && localUserId === fsmSession.hostId)
+  if (isHost) {
+    gameData.fortuneTellerReadingsDone = Math.min(
+      gameData.fortuneTellerMaxReadings,
+      gameData.fortuneTellerReadingsDone + 1
+    )
+    if (gameData.fortuneTellerReadingsDone >= gameData.fortuneTellerMaxReadings) {
+      // Schedule FT release after farewell message (4500ms) + buffer
+      gameData.fortuneTellerReleaseAtMs = nowMs() + 5500
+    }
+    fortuneMessageBus.emit('fortune-teller-session-update', {
+      fortuneTellerId: gameData.currentFortuneTellerId,
+      fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
+      fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
+      fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
+      fortuneTellerReleaseAtMs: gameData.fortuneTellerReleaseAtMs
+    })
+  }
+
   if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) {
     emitFsmSessionEnded(
       pickGuestMaxReadingsFarewellLine(fsmSession.guestId ?? '', gameData.revelationRoundSalt)
