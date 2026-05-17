@@ -90,7 +90,7 @@ const CARD_UI_FONT_SIZE = 22
 /** Misma caja de texto para "Reading starts…" y mensaje de sesión terminada (mismo font + misma altura de fila). */
 const CARD_READING_BOOKEND_ROW_HEIGHT = 120
 /** Punto de arranque vertical común para todo el contenido del FSM sobre card.png. */
-const CARD_CONTENT_START_OFFSET = 200
+const CARD_CONTENT_START_OFFSET = 225
 
 const CARD_TEXT_ALIGN: 'middle-center' = 'middle-center'
 const CARD_LABEL_TEXT_ALIGN: 'top-center' = 'top-center'

@@ -32,7 +32,9 @@ export function FortuneTellerGuestStatusBar() {
   const hasSeatedGuest = gameData.guestSeatUserId !== null
   const timeSec = Math.max(0, Math.ceil(gameData.fortuneTellerTimeRemainingSec))
   const ftMaxReadings = gameData.fortuneTellerMaxReadings
-  const filledCards = hasActiveFortuneTeller ? Math.min(ftMaxReadings, gameData.fortuneTellerReadingsDone) : 0
+  const filledCards = hasActiveFortuneTeller && gameData.currentGuestId !== null
+    ? Math.min(ftMaxReadings, gameData.currentIteration)
+    : 0
   const cards = `${FILLED_READING_SLOT.repeat(filledCards)}${EMPTY_READING_SLOT.repeat(ftMaxReadings - filledCards)}`
   const ftStatusText = hasActiveFortuneTeller
     ? `Fortune Teller: ${ftLabel} | ${TIMER_LABEL} ${timeSec}s | Readings: ${cards}`
