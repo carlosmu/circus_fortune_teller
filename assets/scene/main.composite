@@ -744,6 +744,54 @@
         "protocolBuffer": "PBPointerEvents"
       },
       "data": {
+        "517": {
+          "json": {
+            "pointerEvents": [
+              {
+                "eventType": 1,
+                "eventInfo": {
+                  "button": 0,
+                  "hoverText": "Funny",
+                  "maxDistance": 10,
+                  "showFeedback": true,
+                  "showHighlight": true
+                }
+              }
+            ]
+          }
+        },
+        "518": {
+          "json": {
+            "pointerEvents": [
+              {
+                "eventType": 1,
+                "eventInfo": {
+                  "button": 0,
+                  "hoverText": "Serious ",
+                  "maxDistance": 10,
+                  "showFeedback": true,
+                  "showHighlight": true
+                }
+              }
+            ]
+          }
+        },
+        "519": {
+          "json": {
+            "pointerEvents": [
+              {
+                "eventType": 1,
+                "eventInfo": {
+                  "button": 0,
+                  "hoverText": "Strange",
+                  "maxDistance": 10,
+                  "showFeedback": true,
+                  "showHighlight": true
+                }
+              }
+            ]
+          }
+        },
         "521": {
           "json": {
             "pointerEvents": []
@@ -901,7 +949,7 @@
         "serializationType": "map"
       },
       "data": {
-        "518": {
+        "519": {
           "json": {
             "gizmo": 2
           }

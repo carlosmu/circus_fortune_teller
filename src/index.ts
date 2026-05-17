@@ -4,6 +4,7 @@ import { setupFortuneSync } from './fortuneSync'
 import { setupFortuneFsm } from './fortuneFsm/setup'
 import { setupGuestSpot } from './setupGuestSpot'
 import { setupWizard } from './setupWizard'
+import { setupDeckCards } from './setupDeckCards'
 import { setupUi } from './ui'
 import { setupScene } from './scene'
 import { setupPlayerRoleLabels } from './playerRoleLabels'
@@ -22,6 +23,7 @@ export function main() {
   setupGuestSpot()
   setupPlayerRoleLabels()
   setupWizard()
+  setupDeckCards()
 }
 
 
