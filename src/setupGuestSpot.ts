@@ -18,7 +18,8 @@ import { gameData } from './gameState'
 import {
   fortuneMessageBus,
   GUEST_MAX_READINGS_PER_SEAT,
-  GUEST_READING_IDLE_TIMEOUT_MS
+  GUEST_READING_IDLE_TIMEOUT_MS,
+  playButtonClick
 } from './fortuneSync'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
@@ -165,6 +166,7 @@ function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEn
 }
 
 function guestSitSpotClickCallback() {
+  playButtonClick()
   const localUserId = getPlayer()?.userId ?? null
   if (!localUserId) return
   if (localUserId === gameData.currentFortuneTellerId) return

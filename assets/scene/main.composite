@@ -97,16 +97,16 @@
               "y": 0.5,
               "z": 8.25
             },
+            "scale": {
+              "x": 1.350000023841858,
+              "y": 1.350000023841858,
+              "z": 1.350000023841858
+            },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
-            },
-            "scale": {
-              "x": 1.350000023841858,
-              "y": 1.350000023841858,
-              "z": 1.350000023841858
             },
             "parent": 0
           }
@@ -118,16 +118,37 @@
               "y": 0,
               "z": 8
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
             },
+            "parent": 0
+          }
+        },
+        "514": {
+          "json": {
+            "position": {
+              "x": 7.932568550109863,
+              "y": 1.5251171588897705,
+              "z": 7.75
+            },
             "scale": {
-              "x": 1,
+              "x": 0.9999998807907104,
               "y": 1,
-              "z": 1
+              "z": 0.9999998807907104
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0.9659258127212524,
+              "z": 0.258819043636322,
+              "w": 0
             },
             "parent": 0
           }
@@ -157,8 +178,8 @@
           "json": {
             "position": {
               "x": -0.06743144989013672,
-              "y": 0.9675548076629639,
-              "z": -0.25
+              "y": 2.217554807662964,
+              "z": 0.5
             },
             "scale": {
               "x": 0.9999999403953552,
@@ -167,11 +188,95 @@
             },
             "rotation": {
               "x": 0,
-              "y": 0.9659258127212524,
-              "z": 0.258819043636322,
+              "y": 0.7071067690849304,
+              "z": 0.7071067690849304,
               "w": 0
             },
             "parent": 527
+          }
+        },
+        "517": {
+          "json": {
+            "position": {
+              "x": 7.75,
+              "y": 1.25,
+              "z": 7.170000076293945
+            },
+            "rotation": {
+              "x": 0,
+              "y": -0.7933533191680908,
+              "z": 0,
+              "w": 0.6087614297866821
+            },
+            "scale": {
+              "x": 0.15000000596046448,
+              "y": 0.15000000596046448,
+              "z": 0.15000000596046448
+            },
+            "parent": 0
+          }
+        },
+        "518": {
+          "json": {
+            "position": {
+              "x": 8,
+              "y": 1.25,
+              "z": 7.239999771118164
+            },
+            "rotation": {
+              "x": 0,
+              "y": -0.7071067690849304,
+              "z": 0,
+              "w": 0.7071067690849304
+            },
+            "scale": {
+              "x": 0.15000000596046448,
+              "y": 0.15000000596046448,
+              "z": 0.15000000596046448
+            },
+            "parent": 0
+          }
+        },
+        "519": {
+          "json": {
+            "position": {
+              "x": 8.25,
+              "y": 1.25,
+              "z": 7.167461395263672
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0.6679397225379944,
+              "z": 0,
+              "w": -0.7442153692245483
+            },
+            "scale": {
+              "x": 0.15000000596046448,
+              "y": 0.15000000596046448,
+              "z": 0.15000000596046448
+            },
+            "parent": 0
+          }
+        },
+        "520": {
+          "json": {
+            "position": {
+              "x": 8.264843940734863,
+              "y": 1.2799999713897705,
+              "z": 8.405529975891113
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0.6436923146247864,
+              "z": 0,
+              "w": 0.7652843594551086
+            },
+            "scale": {
+              "x": 0.15000000596046448,
+              "y": 0.15000000596046448,
+              "z": 0.15000000596046448
+            },
+            "parent": 0
           }
         },
         "521": {
@@ -216,6 +321,27 @@
             "parent": 0
           }
         },
+        "523": {
+          "json": {
+            "position": {
+              "x": 8.04038143157959,
+              "y": 1.2799999713897705,
+              "z": 8.351347923278809
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0.7071067690849304,
+              "z": 0,
+              "w": 0.7071067690849304
+            },
+            "scale": {
+              "x": 0.15000000596046448,
+              "y": 0.15000000596046448,
+              "z": 0.15000000596046448
+            },
+            "parent": 0
+          }
+        },
         "524": {
           "json": {
             "position": {
@@ -223,16 +349,37 @@
               "y": 0,
               "z": 8
             },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
             "rotation": {
               "x": 0,
               "y": 0,
               "z": 0,
               "w": 1
             },
+            "parent": 0
+          }
+        },
+        "525": {
+          "json": {
+            "position": {
+              "x": 7.809122085571289,
+              "y": 1.2799999713897705,
+              "z": 8.385285377502441
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0.7933533191680908,
+              "z": 0,
+              "w": 0.6087614297866821
+            },
             "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
+              "x": 0.15000000596046448,
+              "y": 0.15000000596046448,
+              "z": 0.15000000596046448
             },
             "parent": 0
           }
@@ -334,6 +481,59 @@
       }
     },
     {
+      "name": "core::Animator",
+      "jsonSchema": {
+        "type": "object",
+        "properties": {},
+        "serializationType": "protocol-buffer",
+        "protocolBuffer": "PBAnimator"
+      },
+      "data": {
+        "520": {
+          "json": {
+            "states": [
+              {
+                "clip": "Select",
+                "playing": false,
+                "weight": 1,
+                "speed": 1,
+                "loop": false,
+                "shouldReset": false
+              }
+            ]
+          }
+        },
+        "523": {
+          "json": {
+            "states": [
+              {
+                "clip": "Select",
+                "playing": false,
+                "weight": 1,
+                "speed": 1,
+                "loop": false,
+                "shouldReset": false
+              }
+            ]
+          }
+        },
+        "525": {
+          "json": {
+            "states": [
+              {
+                "clip": "Select",
+                "playing": false,
+                "weight": 1,
+                "speed": 1,
+                "loop": false,
+                "shouldReset": false
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "name": "core::GltfContainer",
       "jsonSchema": {
         "type": "object",
@@ -356,6 +556,34 @@
             "invisibleMeshesCollisionMask": 3
           }
         },
+        "517": {
+          "json": {
+            "src": "assets/models/card_deck.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
+        "518": {
+          "json": {
+            "src": "assets/models/card_deck.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
+        "519": {
+          "json": {
+            "src": "assets/models/card_deck.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
+        "520": {
+          "json": {
+            "src": "assets/models/card.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
         "521": {
           "json": {
             "src": "assets/models/chair.glb",
@@ -370,9 +598,23 @@
             "invisibleMeshesCollisionMask": 1
           }
         },
+        "523": {
+          "json": {
+            "src": "assets/models/card.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
         "524": {
           "json": {
             "src": "assets/models/tent.glb",
+            "visibleMeshesCollisionMask": 0,
+            "invisibleMeshesCollisionMask": 3
+          }
+        },
+        "525": {
+          "json": {
+            "src": "assets/models/card.glb",
             "visibleMeshesCollisionMask": 0,
             "invisibleMeshesCollisionMask": 3
           }
@@ -416,6 +658,11 @@
             "value": "carpetcandles.glb"
           }
         },
+        "514": {
+          "json": {
+            "value": "Spotlight_2"
+          }
+        },
         "515": {
           "json": {
             "value": "Music"
@@ -424,6 +671,26 @@
         "516": {
           "json": {
             "value": "Spotlight"
+          }
+        },
+        "517": {
+          "json": {
+            "value": "card_deck_01"
+          }
+        },
+        "518": {
+          "json": {
+            "value": "card_deck_02"
+          }
+        },
+        "519": {
+          "json": {
+            "value": "card_deck_03"
+          }
+        },
+        "520": {
+          "json": {
+            "value": "card_01"
           }
         },
         "521": {
@@ -436,9 +703,19 @@
             "value": "Sit Spot: Guest"
           }
         },
+        "523": {
+          "json": {
+            "value": "card_2"
+          }
+        },
         "524": {
           "json": {
             "value": "tent.glb"
+          }
+        },
+        "525": {
+          "json": {
+            "value": "card_3"
           }
         },
         "526": {
@@ -569,7 +846,7 @@
         "protocolBuffer": "PBLightSource"
       },
       "data": {
-        "516": {
+        "514": {
           "json": {
             "active": true,
             "color": {
@@ -585,6 +862,26 @@
               "spot": {
                 "innerAngle": 49,
                 "outerAngle": 168
+              }
+            }
+          }
+        },
+        "516": {
+          "json": {
+            "active": true,
+            "color": {
+              "r": 1,
+              "g": 0.6470588445663452,
+              "b": 0
+            },
+            "intensity": 118061,
+            "range": -1,
+            "shadow": true,
+            "type": {
+              "$case": "spot",
+              "spot": {
+                "innerAngle": 74,
+                "outerAngle": 180
               }
             }
           }
@@ -604,9 +901,9 @@
         "serializationType": "map"
       },
       "data": {
-        "522": {
+        "518": {
           "json": {
-            "gizmo": 1
+            "gizmo": 2
           }
         }
       }
@@ -657,13 +954,20 @@
                 "entity": 0,
                 "open": true,
                 "children": [
+                  514,
                   524,
                   527,
                   522,
                   521,
                   528,
                   512,
-                  513
+                  513,
+                  517,
+                  518,
+                  519,
+                  520,
+                  523,
+                  525
                 ]
               },
               {
@@ -700,6 +1004,7 @@
               },
               {
                 "entity": 527,
+                "open": true,
                 "children": [
                   516
                 ]
@@ -717,6 +1022,34 @@
               },
               {
                 "entity": 513,
+                "children": []
+              },
+              {
+                "entity": 514,
+                "children": []
+              },
+              {
+                "entity": 517,
+                "children": []
+              },
+              {
+                "entity": 518,
+                "children": []
+              },
+              {
+                "entity": 519,
+                "children": []
+              },
+              {
+                "entity": 520,
+                "children": []
+              },
+              {
+                "entity": 523,
+                "children": []
+              },
+              {
+                "entity": 525,
                 "children": []
               }
             ]
@@ -747,10 +1080,25 @@
         "513": {
           "json": {}
         },
+        "514": {
+          "json": {}
+        },
         "515": {
           "json": {}
         },
         "516": {
+          "json": {}
+        },
+        "517": {
+          "json": {}
+        },
+        "518": {
+          "json": {}
+        },
+        "519": {
+          "json": {}
+        },
+        "520": {
           "json": {}
         },
         "521": {
@@ -759,7 +1107,13 @@
         "522": {
           "json": {}
         },
+        "523": {
+          "json": {}
+        },
         "524": {
+          "json": {}
+        },
+        "525": {
           "json": {}
         },
         "526": {
@@ -1202,6 +1556,98 @@
         "serializationType": "map"
       },
       "data": {
+        "514": {
+          "json": {
+            "isBasicViewEnabled": true,
+            "componentName": "",
+            "fields": [],
+            "assetId": "87c829b3-8e8d-4fcb-9f43-85d3aa9084f6",
+            "label": "Light Settings",
+            "sections": [
+              {
+                "id": "light-settings",
+                "items": [
+                  {
+                    "component": "core::LightSource",
+                    "widget": "ColorField",
+                    "label": "Color",
+                    "type": "Color3",
+                    "path": "color",
+                    "props": {
+                      "basic": true
+                    },
+                    "transform": {
+                      "in": {
+                        "steps": [
+                          {
+                            "op": "toHex"
+                          }
+                        ]
+                      },
+                      "out": {
+                        "steps": [
+                          {
+                            "op": "toColor3"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "component": "core::LightSource",
+                    "widget": "RangeField",
+                    "label": "Intensity",
+                    "path": "intensity",
+                    "constraints": {
+                      "max": 300000,
+                      "step": 1,
+                      "default": "16000"
+                    }
+                  },
+                  {
+                    "component": "core::LightSource",
+                    "widget": "RangeField",
+                    "label": "Inner Angle",
+                    "path": "type.spot.innerAngle",
+                    "constraints": {
+                      "max": 180,
+                      "step": 1,
+                      "default": "30"
+                    }
+                  },
+                  {
+                    "component": "core::LightSource",
+                    "widget": "RangeField",
+                    "label": "Outer Angle",
+                    "path": "type.spot.outerAngle",
+                    "constraints": {
+                      "max": 180,
+                      "step": 1,
+                      "default": "40"
+                    }
+                  }
+                ],
+                "columns": 1
+              },
+              {
+                "id": "shadow-mask",
+                "items": [
+                  {
+                    "component": "core::LightSource",
+                    "widget": "FileUploadField",
+                    "label": "Shadow Mask Texture",
+                    "path": "shadowMaskTexture.tex.texture.src",
+                    "props": {}
+                  }
+                ]
+              }
+            ],
+            "helpTooltip": {
+              "text": "A spotlight that can be used to illuminate a scene."
+            },
+            "version": 2
+          }
+        },
         "516": {
           "json": {
             "isBasicViewEnabled": true,
@@ -1679,19 +2125,22 @@
             "thumbnail": "assets/images/thumbnail.png",
             "categories": [],
             "author": "SDK",
+            "email": "",
             "tags": [],
             "layout": {
-              "base": {
-                "x": 0,
-                "y": 0
-              },
               "parcels": [
                 {
                   "x": 0,
                   "y": 0
                 }
-              ]
+              ],
+              "base": {
+                "x": 0,
+                "y": 0
+              }
             },
+            "silenceVoiceChat": false,
+            "disablePortableExperiences": false,
             "spawnPoints": [
               {
                 "name": "spawn1",
@@ -1726,7 +2175,9 @@
                 }
               }
             ],
-            "skyboxConfig": {}
+            "skyboxConfig": {},
+            "creator": "",
+            "disableNearbyVoiceChat": false
           }
         }
       }
@@ -2073,6 +2524,23 @@
         "serializationType": "map"
       },
       "data": {
+        "514": {
+          "json": {
+            "id": 14,
+            "value": [
+              {
+                "name": "Turn On",
+                "type": "lights_on",
+                "jsonPayload": "{}"
+              },
+              {
+                "name": "Turn Off",
+                "type": "lights_off",
+                "jsonPayload": "{}"
+              }
+            ]
+          }
+        },
         "515": {
           "json": {
             "id": 5,
@@ -2232,7 +2700,7 @@
         "0": {
           "json": {
             "id": 0,
-            "value": 13
+            "value": 14
           }
         }
       }
@@ -2426,6 +2894,41 @@
                     "name": "Mark as free"
                   }
                 ]
+              },
+              {
+                "type": "on_input_action",
+                "conditions": [
+                  {
+                    "id": 8,
+                    "type": "when_state_is",
+                    "value": "Free"
+                  }
+                ],
+                "operation": "and",
+                "actions": [
+                  {
+                    "id": 7,
+                    "name": "Sit Here"
+                  }
+                ],
+                "basicViewId": "trigger-when-clicked"
+              },
+              {
+                "type": "on_input_action",
+                "conditions": [
+                  {
+                    "id": 8,
+                    "type": "when_state_is",
+                    "value": "Taken"
+                  }
+                ],
+                "operation": "and",
+                "actions": [
+                  {
+                    "id": 7,
+                    "name": "Show text"
+                  }
+                ]
               }
             ]
           }
@@ -2447,6 +2950,41 @@
                   {
                     "id": 9,
                     "name": "Mark as free"
+                  }
+                ]
+              },
+              {
+                "type": "on_input_action",
+                "conditions": [
+                  {
+                    "id": 10,
+                    "type": "when_state_is",
+                    "value": "Free"
+                  }
+                ],
+                "operation": "and",
+                "actions": [
+                  {
+                    "id": 9,
+                    "name": "Sit Here"
+                  }
+                ],
+                "basicViewId": "trigger-when-clicked"
+              },
+              {
+                "type": "on_input_action",
+                "conditions": [
+                  {
+                    "id": 10,
+                    "type": "when_state_is",
+                    "value": "Taken"
+                  }
+                ],
+                "operation": "and",
+                "actions": [
+                  {
+                    "id": 9,
+                    "name": "Show text"
                   }
                 ]
               }
@@ -2535,6 +3073,11 @@
         "serializationType": "map"
       },
       "data": {
+        "514": {
+          "json": {
+            "src": "assets/asset-packs/spotlight/spotlight.glb"
+          }
+        },
         "516": {
           "json": {
             "src": "assets/asset-packs/spotlight/spotlight.glb"

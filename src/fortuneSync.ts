@@ -61,44 +61,51 @@ export type FortuneTellerSessionUpdateMessage = {
   centerBannerUntilMs?: number
 }
 
-const REVEAL_SOUND_FILENAME = 'magic_reveal.mp3'
-const REVEAL_SOUND_PATH = 'assets/audio/' + encodeURIComponent(REVEAL_SOUND_FILENAME)
+const REVEAL_SOUND_PATH = 'assets/audio/magic_reveal.mp3'
+const BUTTON_CLICK_SOUND_PATH = 'assets/audio/button_short_click.mp3'
 
-const SOUND_CLEANUP_DELAY = 8
+const AUDIO_CLEANUP_MS = 2000
 
-let pendingSoundCleanup: { entity: ReturnType<typeof engine.addEntity>; elapsed: number } | null = null
-
-export function playRevealSound() {
-  if (pendingSoundCleanup) {
-    engine.removeEntity(pendingSoundCleanup.entity)
-    pendingSoundCleanup = null
-  }
-  const audioEntity = engine.addEntity()
-  Transform.create(audioEntity, {
-    position: Vector3.create(FORTUNE_TELLER_POSITION.x, FORTUNE_TELLER_POSITION.y + 1, FORTUNE_TELLER_POSITION.z)
-  })
-  AudioSource.create(audioEntity, {
-    audioClipUrl: REVEAL_SOUND_PATH,
-    playing: true,
-    volume: 1
-  })
-  pendingSoundCleanup = { entity: audioEntity, elapsed: 0 }
+interface PendingAudio {
+  entity: ReturnType<typeof engine.addEntity>
+  createdAt: number
 }
 
-function soundCleanupSystem(dt: number) {
-  if (!pendingSoundCleanup) return
-  pendingSoundCleanup.elapsed += dt
-  if (pendingSoundCleanup.elapsed >= SOUND_CLEANUP_DELAY) {
-    engine.removeEntity(pendingSoundCleanup.entity)
-    pendingSoundCleanup = null
+const pendingAudios: PendingAudio[] = []
+
+function audioCleanupSystem(): void {
+  const now = Date.now()
+  for (let i = pendingAudios.length - 1; i >= 0; i--) {
+    if (now - pendingAudios[i].createdAt >= AUDIO_CLEANUP_MS) {
+      engine.removeEntity(pendingAudios[i].entity)
+      pendingAudios.splice(i, 1)
+    }
   }
+}
+
+function setupSoundEntities(): void {
+  engine.addSystem(audioCleanupSystem)
+}
+
+export function playRevealSound(): void {
+  const e = engine.addEntity()
+  Transform.create(e, { position: Vector3.create(FORTUNE_TELLER_POSITION.x, FORTUNE_TELLER_POSITION.y + 1, FORTUNE_TELLER_POSITION.z) })
+  AudioSource.create(e, { audioClipUrl: REVEAL_SOUND_PATH, playing: true, loop: false, volume: 1 })
+  pendingAudios.push({ entity: e, createdAt: Date.now() })
+}
+
+export function playButtonClick(): void {
+  const e = engine.addEntity()
+  Transform.create(e, { position: Vector3.create(8, 1, 8) })
+  AudioSource.create(e, { audioClipUrl: BUTTON_CLICK_SOUND_PATH, playing: true, loop: false, volume: 1 })
+  pendingAudios.push({ entity: e, createdAt: Date.now() })
 }
 
 /**
  * Registers listeners so all clients update gameData and show 3D text when someone reveals a fortune (same realm).
  */
 export function setupFortuneSync() {
-  engine.addSystem(soundCleanupSystem)
+  setupSoundEntities()
   onStateEnter((state) => {
     if (state === 'REVEAL') playRevealSound()
   })

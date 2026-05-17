@@ -1,5 +1,6 @@
 import ReactEcs, { Label, UiEntity } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
+import { playButtonClick } from './fortuneSync'
 
 type LeaveRoleDialogState = {
   visible: boolean
@@ -31,6 +32,7 @@ export function isLeaveRoleDialogVisible(): boolean {
 }
 
 function handleYes(): void {
+  playButtonClick()
   dialogState.visible = false
   const cb = dialogState.onConfirm
   dialogState.onConfirm = null
@@ -39,6 +41,7 @@ function handleYes(): void {
 }
 
 function handleNo(): void {
+  playButtonClick()
   dialogState.visible = false
   const cb = dialogState.onCancel
   dialogState.onConfirm = null

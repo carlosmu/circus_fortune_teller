@@ -12,6 +12,7 @@ import {
   hostPickDeck,
   hostPickFortune
 } from './actions'
+import { playButtonClick } from '../fortuneSync'
 import type { FortuneCategory } from '../types'
 import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
 import { getFsmRevealFortuneText, getFsmRevealKindTitle } from './resolveRevealFortune'
@@ -371,7 +372,7 @@ function HostPanel() {
           <UiEntity
             uiTransform={{ width: '72%', height: 52 }}
             uiBackground={BTN}
-            onMouseDown={() => hostOpenCategorySelection()}
+            onMouseDown={() => { playButtonClick(); hostOpenCategorySelection() }}
           >
             <Label
               uiTransform={{ width: '100%', height: '100%' }}
@@ -412,7 +413,7 @@ function HostPanel() {
               key={d}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
               uiBackground={BTN}
-              onMouseDown={() => hostPickDeck(d)}
+              onMouseDown={() => { playButtonClick(); hostPickDeck(d) }}
             >
               <Label
                 uiTransform={{ width: '100%', height: '100%' }}
@@ -465,7 +466,7 @@ function HostPanel() {
               key={choice}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
               uiBackground={BTN}
-              onMouseDown={() => hostPickFortune(choice)}
+              onMouseDown={() => { playButtonClick(); hostPickFortune(choice) }}
             >
               <Label
                 uiTransform={{ width: '100%', height: '100%' }}
@@ -537,7 +538,7 @@ function GuestPanel() {
               key={cat}
               uiTransform={{ width: btnWidth, height: '100%', margin: { left: i === 0 ? 0 : 8 } }}
               uiBackground={CATEGORY_BTN_BG}
-              onMouseDown={() => guestPickCategory(cat)}
+              onMouseDown={() => { playButtonClick(); guestPickCategory(cat) }}
             >
               <Label
                 uiTransform={{ width: '100%', height: '100%' }}
@@ -598,7 +599,7 @@ function GuestPanel() {
                   alignItems: 'center'
                 }}
                 uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
-                onMouseDown={() => guestPickCard(key, idx)}
+                onMouseDown={() => { playButtonClick(); guestPickCard(key, idx) }}
               >
                 {flipped && (
                   <Label
@@ -657,7 +658,7 @@ function GuestPanel() {
           <UiEntity
             uiTransform={{ width: '44%', height: '100%', margin: { right: 12 }, borderRadius: BUTTON_BORDER_RADIUS }}
             uiBackground={{ color: BTN_YES }}
-            onMouseDown={() => guestContinueYes()}
+            onMouseDown={() => { playButtonClick(); guestContinueYes() }}
           >
             <Label
               uiTransform={{ width: '100%', height: '100%' }}
@@ -671,7 +672,7 @@ function GuestPanel() {
           <UiEntity
             uiTransform={{ width: '44%', height: '100%', borderRadius: BUTTON_BORDER_RADIUS }}
             uiBackground={{ color: BTN_NO }}
-            onMouseDown={() => guestContinueNo()}
+            onMouseDown={() => { playButtonClick(); guestContinueNo() }}
           >
             <Label
               uiTransform={{ width: '100%', height: '100%' }}

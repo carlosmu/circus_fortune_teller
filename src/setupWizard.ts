@@ -14,7 +14,7 @@ import { getEntityWorldPosition } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { gameData } from './gameState'
-import { fortuneMessageBus } from './fortuneSync'
+import { fortuneMessageBus, playButtonClick } from './fortuneSync'
 import {
   WIZARD,
   FORTUNE_TELLER_POSITION,
@@ -256,6 +256,7 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
 }
 
 function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
+  playButtonClick()
   const fromSitSpot = opts?.fromSitSpot === true
   const player = getPlayer()
   const userId = player?.userId ?? null
