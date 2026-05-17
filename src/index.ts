@@ -6,6 +6,7 @@ import { setupGuestSpot } from './setupGuestSpot'
 import { setupWizard } from './setupWizard'
 import { setupDeckCards } from './setupDeckCards'
 import { setupDeckMeanings } from './setupDeckMeanings'
+import { setupCards } from './setupCards'
 import { setupUi } from './ui'
 import { setupScene } from './scene'
 import { setupPlayerRoleLabels } from './playerRoleLabels'
@@ -26,6 +27,7 @@ export function main() {
   setupWizard()
   setupDeckCards()
   setupDeckMeanings()
+  setupCards()
 }
 
 
