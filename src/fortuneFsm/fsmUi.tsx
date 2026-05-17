@@ -449,7 +449,7 @@ function HostPanel() {
       <HostCardShell>
         {/* FIX */}
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
-          value={`Guest chose card ${fsmSession.selectedCardType}. Fortune Teller, pick a meaning:`}
+          value={`Guest chose card ${fsmSession.selectedCardType}.\nFortune Teller, pick a meaning:`}
           fontSize={CARD_UI_FONT_SIZE}
           color={GOLD}
           height={88}

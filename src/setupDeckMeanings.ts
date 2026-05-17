@@ -1,41 +1,40 @@
 import { engine, pointerEventsSystem, InputAction, PointerEventType, inputSystem, PointerEvents, VisibilityComponent } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
-import { hostPickDeck } from './fortuneFsm/actions'
+import { hostPickFortune } from './fortuneFsm/actions'
 import { playButtonClick } from './fortuneSync'
 import { fsmSession } from './fortuneFsm/session'
-import { onStateEnter } from './fortuneFsm/machine'
-import type { FsmDeck } from './fortuneFsm/types'
+import type { FsmCardChoice } from './fortuneFsm/types'
 
-interface DeckCardConfig {
+interface DeckMeaningConfig {
   entityName: string
   entity: ReturnType<typeof engine.addEntity>
-  deck: FsmDeck
+  choice: FsmCardChoice
   label: string
 }
 
-const DECK_CARDS: DeckCardConfig[] = []
+const DECK_MEANINGS: DeckMeaningConfig[] = []
 
 
-export function setupDeckCards(): void {
-  console.log('[setupDeckCards] Starting setup...')
+export function setupDeckMeanings(): void {
+  console.log('[setupDeckMeanings] Starting setup...')
 
-  const deckConfigs = [
-    { entityName: 'card_deck_01', deck: 'Funny' as FsmDeck, label: 'Funny' },
-    { entityName: 'card_deck_02', deck: 'Serious' as FsmDeck, label: 'Serious' },
-    { entityName: 'card_deck_03', deck: 'Strange' as FsmDeck, label: 'Strange' }
+  const meaningConfigs = [
+    { entityName: 'card_meaning_01', choice: 'A' as FsmCardChoice, label: 'Prediction' },
+    { entityName: 'card_meaning_02', choice: 'B' as FsmCardChoice, label: 'Advice' },
+    { entityName: 'card_meaning_03', choice: 'C' as FsmCardChoice, label: 'Warning' }
   ]
 
   let foundCount = 0
-  for (const config of deckConfigs) {
+  for (const config of meaningConfigs) {
     const entity = engine.getEntityOrNullByName(config.entityName)
-    console.log(`[setupDeckCards] Looking for "${config.entityName}":`, entity ? 'FOUND' : 'NOT FOUND')
+    console.log(`[setupDeckMeanings] Looking for "${config.entityName}":`, entity ? 'FOUND' : 'NOT FOUND')
     if (!entity) {
-      console.log(`[setupDeckCards] Entity not found: "${config.entityName}"`)
+      console.log(`[setupDeckMeanings] Entity not found: "${config.entityName}"`)
       continue
     }
     foundCount++
-    console.log(`[setupDeckCards] [${foundCount}] Setting up ${config.label}`)
+    console.log(`[setupDeckMeanings] [${foundCount}] Setting up ${config.label}`)
 
     pointerEventsSystem.removeOnPointerDown(entity)
 
@@ -54,7 +53,7 @@ export function setupDeckCards(): void {
         const localUserId = getPlayer()?.userId ?? null
         if (!localUserId || gameData.currentFortuneTellerId !== localUserId) return
         playButtonClick()
-        hostPickDeck(config.deck)
+        hostPickFortune(config.choice)
       }
     )
 
@@ -72,16 +71,16 @@ export function setupDeckCards(): void {
       })
     }
 
-    DECK_CARDS.push({ ...config, entity })
+    DECK_MEANINGS.push({ ...config, entity })
   }
 
-  console.log(`[setupDeckCards] Successfully setup ${foundCount} deck cards`)
+  console.log(`[setupDeckMeanings] Successfully setup ${foundCount} meaning cards`)
 
   // Manage visibility and pointer interactivity based on FSM state
   engine.addSystem(() => {
-    const shouldShow = fsmSession.state === 'DECK_SELECTION'
+    const shouldShow = fsmSession.state === 'FORTUNE_SELECTION'
 
-    for (const card of DECK_CARDS) {
+    for (const card of DECK_MEANINGS) {
       // Control visibility
       if (VisibilityComponent.has(card.entity)) {
         VisibilityComponent.getMutable(card.entity).visible = shouldShow
@@ -99,14 +98,14 @@ export function setupDeckCards(): void {
 
   // Single system for all E key detections
   engine.addSystem(() => {
-    if (fsmSession.state !== 'DECK_SELECTION') return
+    if (fsmSession.state !== 'FORTUNE_SELECTION') return
     const localUserId = getPlayer()?.userId ?? null
     if (!localUserId || gameData.currentFortuneTellerId !== localUserId) return
 
-    for (const config of DECK_CARDS) {
+    for (const config of DECK_MEANINGS) {
       if (inputSystem.isTriggered(InputAction.IA_PRIMARY, PointerEventType.PET_DOWN, config.entity)) {
         playButtonClick()
-        hostPickDeck(config.deck)
+        hostPickFortune(config.choice)
       }
     }
   })
