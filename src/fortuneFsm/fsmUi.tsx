@@ -1,4 +1,4 @@
-import ReactEcs, { Label, UiEntity } from '@dcl/sdk/react-ecs'
+import ReactEcs, { Label, UiEntity, type UiTransformProps } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from '../gameState'
@@ -29,18 +29,20 @@ import {
 import { CenteredLabelRow } from '../centeredLabelRow'
 
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
-/** Fondo de los botones de categoría (Love, Money, Luck, …) en CATEGORY_SELECTION. */
-const CATEGORY_BTN_BG = {
-  texture: { src: 'assets/images/button.png' },
-  textureMode: CARD_BG.textureMode
+/** Botones sobre card.png (prompt, categoría, deck, meanings). No usar en Yes/No. */
+const CARD_BTN_BG = { color: Color4.create(0.48, 0.14, 0.68, 0.4) }
+const CARD_BTN_BORDER = Color4.create(0.82, 0.28, 0.78, 0.42)
+const CARD_BTN_RADIUS = 10
+const CARD_BTN_PADDING = { top: 7, bottom: 7, left: 12, right: 12 } as const
+const CARD_BTN_BASE_TRANSFORM = {
+  padding: CARD_BTN_PADDING,
+  borderRadius: CARD_BTN_RADIUS,
+  borderWidth: 1,
+  borderColor: CARD_BTN_BORDER,
+  flexDirection: 'row' as const,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const
 }
-/** Host INIT: un solo fondo (textura + tinte violeta, alpha 0.5) y borde magenta sutil. */
-const HOST_PROMPT_BTN_BG = {
-  color: Color4.create(0.48, 0.14, 0.68, 0.4)
-}
-const HOST_PROMPT_BTN_BORDER = Color4.create(0.82, 0.28, 0.78, 0.42)
-const HOST_PROMPT_BTN_RADIUS = 10
-const HOST_PROMPT_BTN_PADDING = { top: 7, bottom: 7, left: 12, right: 12 } as const
 const SESSION_FINISHED_FADE_MS = 500
 const REVEAL_TEXT_FADE_IN_MS = SESSION_FINISHED_FADE_MS
 const REVEAL_TEXT_FADE_OUT_MS = SESSION_FINISHED_FADE_MS
@@ -366,30 +368,40 @@ function GuestCardShell(props: { children?: any; contentJustify?: 'center' | 'fl
   )
 }
 
-/** Botón host "What do you want to know?" — una capa, tamaño al texto + padding. */
-function HostCategoryPromptButton({ onPress }: { onPress: () => void }) {
+/** Botón violeta/magenta sobre card.png. `layout="auto"` = tamaño al texto; `fill` = ocupa el uiTransform del padre. */
+function CardStyledButton({
+  label,
+  onPress,
+  layout = 'fill',
+  uiTransform,
+  key
+}: {
+  label: string
+  onPress: () => void
+  layout?: 'auto' | 'fill'
+  uiTransform?: UiTransformProps
+  key?: string | number
+}) {
+  const transform: UiTransformProps =
+    layout === 'auto'
+      ? { ...CARD_BTN_BASE_TRANSFORM, width: 'auto', height: 'auto', ...uiTransform }
+      : { ...CARD_BTN_BASE_TRANSFORM, ...uiTransform }
+  const labelTransform: UiTransformProps =
+    layout === 'auto' ? { width: 'auto', height: 'auto' } : { width: '100%', height: '100%' }
+
   return (
     <UiEntity
-      uiTransform={{
-        width: 'auto',
-        height: 'auto',
-        padding: HOST_PROMPT_BTN_PADDING,
-        borderRadius: HOST_PROMPT_BTN_RADIUS,
-        borderWidth: 1,
-        borderColor: HOST_PROMPT_BTN_BORDER,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
-      uiBackground={HOST_PROMPT_BTN_BG}
+      key={key}
+      uiTransform={transform}
+      uiBackground={CARD_BTN_BG}
       onMouseDown={() => {
         playButtonClick()
         onPress()
       }}
     >
       <Label
-        uiTransform={{ width: 'auto', height: 'auto' }}
-        value="What do you want to know?"
+        uiTransform={labelTransform}
+        value={label}
         textAlign={CARD_TEXT_ALIGN}
         fontSize={CARD_UI_FONT_SIZE}
         font="serif"
@@ -409,7 +421,7 @@ function HostPanel() {
         {/* FIX: CenteredLabelRow garantiza width:100% con altura fija → textAlign middle-center funciona */}
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Ask the Guest:" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
-          <HostCategoryPromptButton onPress={() => hostOpenCategorySelection()} />
+          <CardStyledButton layout="auto" label="What do you want to know?" onPress={() => hostOpenCategorySelection()} />
         </UiEntity>
       </HostCardShell>
     )
@@ -436,21 +448,12 @@ function HostPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Fortune Teller clicks one deck" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={56} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 18 }, height: BTN_ROW_HEIGHT }}>
           {DECKS.map((d, i) => (
-            <UiEntity
+            <CardStyledButton
               key={d}
+              label={d}
+              onPress={() => hostPickDeck(d)}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
-              uiBackground={CATEGORY_BTN_BG}
-              onMouseDown={() => { playButtonClick(); hostPickDeck(d) }}
-            >
-              <Label
-                uiTransform={{ width: '100%', height: '100%' }}
-                value={d}
-                textAlign={CARD_TEXT_ALIGN}
-                fontSize={CARD_UI_FONT_SIZE}
-                font="serif"
-                color={Color4.White()}
-              />
-            </UiEntity>
+            />
           ))}
         </UiEntity>
       </HostCardShell>
@@ -489,21 +492,12 @@ function HostPanel() {
               { choice: 'C' as const, label: 'Warning' }
             ] as const
           ).map(({ choice, label }, i) => (
-            <UiEntity
+            <CardStyledButton
               key={choice}
+              label={label}
+              onPress={() => hostPickFortune(choice)}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
-              uiBackground={CATEGORY_BTN_BG}
-              onMouseDown={() => { playButtonClick(); hostPickFortune(choice) }}
-            >
-              <Label
-                uiTransform={{ width: '100%', height: '100%' }}
-                value={label}
-                textAlign={CARD_TEXT_ALIGN}
-                fontSize={CARD_UI_FONT_SIZE}
-                font="serif"
-                color={Color4.White()}
-              />
-            </UiEntity>
+            />
           ))}
         </UiEntity>
       </HostCardShell>
@@ -561,21 +555,12 @@ function GuestPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="What do you want to know?" fontSize={CARD_UI_FONT_SIZE} color={CARD_WHITE} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 20 }, height: BTN_ROW_HEIGHT }}>
           {offer.map((cat: FortuneCategory, i: number) => (
-            <UiEntity
+            <CardStyledButton
               key={cat}
+              label={FSM_CATEGORY_LABELS[cat]}
+              onPress={() => guestPickCategory(cat)}
               uiTransform={{ width: btnWidth, height: '100%', margin: { left: i === 0 ? 0 : 8 } }}
-              uiBackground={CATEGORY_BTN_BG}
-              onMouseDown={() => { playButtonClick(); guestPickCategory(cat) }}
-            >
-              <Label
-                uiTransform={{ width: '100%', height: '100%' }}
-                value={FSM_CATEGORY_LABELS[cat]}
-                textAlign={CARD_TEXT_ALIGN}
-                fontSize={CARD_UI_FONT_SIZE}
-                font="serif"
-                color={Color4.White()}
-              />
-            </UiEntity>
+            />
           ))}
         </UiEntity>
       </GuestCardShell>
