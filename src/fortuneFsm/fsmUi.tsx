@@ -34,6 +34,13 @@ const CATEGORY_BTN_BG = {
   texture: { src: 'assets/images/button.png' },
   textureMode: CARD_BG.textureMode
 }
+/** Host INIT: un solo fondo (textura + tinte violeta, alpha 0.5) y borde magenta sutil. */
+const HOST_PROMPT_BTN_BG = {
+  color: Color4.create(0.48, 0.14, 0.68, 0.4)
+}
+const HOST_PROMPT_BTN_BORDER = Color4.create(0.82, 0.28, 0.78, 0.42)
+const HOST_PROMPT_BTN_RADIUS = 10
+const HOST_PROMPT_BTN_PADDING = { top: 7, bottom: 7, left: 12, right: 12 } as const
 const SESSION_FINISHED_FADE_MS = 500
 const REVEAL_TEXT_FADE_IN_MS = SESSION_FINISHED_FADE_MS
 const REVEAL_TEXT_FADE_OUT_MS = SESSION_FINISHED_FADE_MS
@@ -359,6 +366,39 @@ function GuestCardShell(props: { children?: any; contentJustify?: 'center' | 'fl
   )
 }
 
+/** Botón host "What do you want to know?" — una capa, tamaño al texto + padding. */
+function HostCategoryPromptButton({ onPress }: { onPress: () => void }) {
+  return (
+    <UiEntity
+      uiTransform={{
+        width: 'auto',
+        height: 'auto',
+        padding: HOST_PROMPT_BTN_PADDING,
+        borderRadius: HOST_PROMPT_BTN_RADIUS,
+        borderWidth: 1,
+        borderColor: HOST_PROMPT_BTN_BORDER,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+      uiBackground={HOST_PROMPT_BTN_BG}
+      onMouseDown={() => {
+        playButtonClick()
+        onPress()
+      }}
+    >
+      <Label
+        uiTransform={{ width: 'auto', height: 'auto' }}
+        value="What do you want to know?"
+        textAlign={CARD_TEXT_ALIGN}
+        fontSize={CARD_UI_FONT_SIZE}
+        font="serif"
+        color={CARD_WHITE}
+      />
+    </UiEntity>
+  )
+}
+
 function HostPanel() {
   const st = fsmSession.state
   const cat = fsmSession.selectedCategory
@@ -369,25 +409,7 @@ function HostPanel() {
         {/* FIX: CenteredLabelRow garantiza width:100% con altura fija → textAlign middle-center funciona */}
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Ask the Guest:" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
-          <UiEntity
-            uiTransform={{ width: '85%', height: 85, borderRadius: 16, padding: { top: 1, bottom: 1, left: 1, right: 1 } }}
-            uiBackground={{ color: Color4.create(0.65, 0.45, 0.75, 0.4) }}
-          >
-            <UiEntity
-              uiTransform={{ width: '100%', height: '100%', borderRadius: 14 }}
-              uiBackground={{ color: Color4.create(0.45, 0.2, 0.6, 0.7) }}
-              onMouseDown={() => { playButtonClick(); hostOpenCategorySelection() }}
-            >
-              <Label
-                uiTransform={{ width: '100%', height: '100%' }}
-                value="What do you want to know?"
-                textAlign={CARD_TEXT_ALIGN}
-                fontSize={CARD_UI_FONT_SIZE}
-                font="serif"
-                color={Color4.White()}
-              />
-            </UiEntity>
-          </UiEntity>
+          <HostCategoryPromptButton onPress={() => hostOpenCategorySelection()} />
         </UiEntity>
       </HostCardShell>
     )
