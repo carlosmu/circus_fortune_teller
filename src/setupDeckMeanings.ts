@@ -90,7 +90,9 @@ export function setupDeckMeanings(): void {
       const pe = PointerEvents.getMutableOrNull(card.entity)
       if (pe && pe.pointerEvents.length > 0) {
         for (const evt of pe.pointerEvents) {
-          evt.eventInfo.maxDistance = shouldShow ? 16 : 0
+          if (evt.eventInfo) {
+            evt.eventInfo.maxDistance = shouldShow ? 16 : 0
+          }
         }
       }
     }

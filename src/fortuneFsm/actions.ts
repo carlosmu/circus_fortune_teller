@@ -208,6 +208,15 @@ export function guestContinueYes(): void {
   const p = getPlayer()
   if (!p || p.userId !== fsmSession.guestId) return
   if (fsmSession.state !== 'CONTINUE_DECISION') return
+
+  // Add 30 seconds to both timers
+  const TIME_EXTENSION_MS = 30000
+  const now = nowMs()
+  if (gameData.fortuneTellerSessionEndsAtMs !== null) {
+    gameData.fortuneTellerSessionEndsAtMs += TIME_EXTENSION_MS
+  }
+  gameData.guestLastInteractionAtMs = now
+
   fsmSession.selectedCategory = null
   fsmSession.selectedDeck = null
   fsmSession.selectedCardType = null

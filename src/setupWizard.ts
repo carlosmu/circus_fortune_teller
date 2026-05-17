@@ -42,7 +42,7 @@ const FORTUNE_TELLER_SIT_SPOT_HOVER = 'Become The Fortune Teller'
 const WIZARD_MOVE_OFFSET_X = 0
 const WIZARD_MOVE_OFFSET_Z = -1.65
 const WIZARD_MOVE_SPEED = 6
-const FORTUNE_TELLER_SESSION_INITIAL_MS = 60000
+const FORTUNE_TELLER_SESSION_INITIAL_MS = 120000
 const FORTUNE_TELLER_RANDOM_MIN_X = 5
 const FORTUNE_TELLER_RANDOM_MAX_X = 11
 const FORTUNE_TELLER_RANDOM_MIN_Z = 9
@@ -464,14 +464,7 @@ export function setupWizard() {
     if (gameData.currentFortuneTellerId !== null && gameData.fortuneTellerSessionEndsAtMs !== null) {
       const now = Date.now()
       const remainingSecTarget = Math.max(0, (gameData.fortuneTellerSessionEndsAtMs - now) / 1000)
-      if (remainingSecTarget > gameData.fortuneTellerTimeRemainingSec) {
-        gameData.fortuneTellerTimeRemainingSec = Math.min(
-          remainingSecTarget,
-          gameData.fortuneTellerTimeRemainingSec + dt * 20
-        )
-      } else {
-        gameData.fortuneTellerTimeRemainingSec = remainingSecTarget
-      }
+      gameData.fortuneTellerTimeRemainingSec = remainingSecTarget
 
       const localUserIdForTimer = getPlayer()?.userId ?? null
       const localIsFortuneTellerForTimer =

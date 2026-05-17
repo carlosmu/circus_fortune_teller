@@ -15,7 +15,7 @@ export const fortuneMessageBus = new MessageBus()
 /** Máximo de pedidos de lectura por sesión en la silla de invitado. */
 export const GUEST_MAX_READINGS_PER_SEAT = 3
 /** Sin interacción durante OCUPADO tras este tiempo → expulsión + teleport (solo cliente invitado mueve). */
-export const GUEST_READING_IDLE_TIMEOUT_MS = 30000
+export const GUEST_READING_IDLE_TIMEOUT_MS = 60000
 
 let previousGuestSeatUserId: string | null = null
 

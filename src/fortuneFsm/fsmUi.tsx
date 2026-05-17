@@ -370,18 +370,23 @@ function HostPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Ask the Guest:" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
           <UiEntity
-            uiTransform={{ width: '85%', height: 85 }}
-            uiBackground={CATEGORY_BTN_BG}
-            onMouseDown={() => { playButtonClick(); hostOpenCategorySelection() }}
+            uiTransform={{ width: '85%', height: 85, borderRadius: 16, padding: { top: 1, bottom: 1, left: 1, right: 1 } }}
+            uiBackground={{ color: Color4.create(0.65, 0.45, 0.75, 0.4) }}
           >
-            <Label
-              uiTransform={{ width: '100%', height: '100%' }}
-              value="What do you want to know?"
-              textAlign={CARD_TEXT_ALIGN}
-              fontSize={CARD_UI_FONT_SIZE}
-              font="serif"
-              color={Color4.White()}
-            />
+            <UiEntity
+              uiTransform={{ width: '100%', height: '100%', borderRadius: 14 }}
+              uiBackground={{ color: Color4.create(0.45, 0.2, 0.6, 0.7) }}
+              onMouseDown={() => { playButtonClick(); hostOpenCategorySelection() }}
+            >
+              <Label
+                uiTransform={{ width: '100%', height: '100%' }}
+                value="What do you want to know?"
+                textAlign={CARD_TEXT_ALIGN}
+                fontSize={CARD_UI_FONT_SIZE}
+                font="serif"
+                color={Color4.White()}
+              />
+            </UiEntity>
           </UiEntity>
         </UiEntity>
       </HostCardShell>
