@@ -30,7 +30,8 @@ import { CenteredLabelRow } from '../centeredLabelRow'
 
 const TAROT_BACK = 'assets/images/tarot_back_01.png'
 /** Botones sobre card.png (prompt, categoría, deck, meanings). No usar en Yes/No. */
-const CARD_BTN_BG = { color: Color4.create(0.48, 0.14, 0.68, 0.4) }
+/** Fondo #1e003a; borde magenta sin cambiar. */
+const CARD_BTN_BG = { color: Color4.create(30 / 255, 0, 58 / 255, 0.5) }
 const CARD_BTN_BORDER = Color4.create(0.82, 0.28, 0.78, 0.42)
 const CARD_BTN_RADIUS = 10
 const CARD_BTN_PADDING = { top: 7, bottom: 7, left: 12, right: 12 } as const

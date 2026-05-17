@@ -3,8 +3,9 @@ import { Color4 } from '@dcl/sdk/math'
 import { gameData } from './gameState'
 import { GUEST_MAX_READINGS_PER_SEAT, GUEST_READING_IDLE_TIMEOUT_MS } from './fortuneSync'
 
-/** Mismo fondo y radio que el panel del `InfoBanner` (`BANNER_BG` + `borderRadius: 12`). */
-const STATUS_PANEL_BG = Color4.create(0.35, 0.08, 0.55, 1)
+/** Fondo #1e003a; borde magenta (mismo tono que botones de card.png). */
+const STATUS_PANEL_BG = Color4.create(30 / 255, 0, 58 / 255, 1)
+const STATUS_PANEL_BORDER = Color4.create(0.82, 0.28, 0.78, 0.42)
 const STATUS_PANEL_BORDER_RADIUS = 12
 const TEXT = Color4.White()
 const TIMER_LABEL = 'Time:'
@@ -15,7 +16,8 @@ const GUEST_ICON_SRC = 'assets/images/icon-bust-in-silhouette.png'
 /** Tamaño en layout UI para ambos iconos. */
 const STATUS_ICON_SIZE = 22
 /** Ancho útil del texto al lado del icono (fila 460px − icono − margen). Evita wrap raro que parecía “[]”. */
-const STATUS_TEXT_INNER_WIDTH = 460 - STATUS_ICON_SIZE - 8
+const STATUS_ROW_WIDTH = 580
+const STATUS_TEXT_INNER_WIDTH = STATUS_ROW_WIDTH - STATUS_ICON_SIZE - 8
 
 /**
  * Barra inferior centrada: Fortune Teller y Guest (lee gameData cada frame de UI).
@@ -69,7 +71,7 @@ export function FortuneTellerGuestStatusBar() {
     >
       <UiEntity
         uiTransform={{
-          width: 480,
+          width: 600,
           height: 72,
           flexDirection: 'column',
           justifyContent: 'flex-start',
@@ -84,13 +86,15 @@ export function FortuneTellerGuestStatusBar() {
           justifyContent: 'center',
           alignItems: 'center',
           padding: { top: 8, bottom: 8, left: 16, right: 16 },
-          borderRadius: STATUS_PANEL_BORDER_RADIUS
+          borderRadius: STATUS_PANEL_BORDER_RADIUS,
+          borderWidth: 1,
+          borderColor: STATUS_PANEL_BORDER
         }}
         uiBackground={{ color: STATUS_PANEL_BG }}
       >
         <UiEntity
           uiTransform={{
-            width: 460,
+            width: STATUS_ROW_WIDTH,
             height: 24,
             flexDirection: 'row',
             justifyContent: 'center',
@@ -120,7 +124,7 @@ export function FortuneTellerGuestStatusBar() {
         </UiEntity>
         <UiEntity
           uiTransform={{
-            width: 460,
+            width: STATUS_ROW_WIDTH,
             height: 24,
             flexDirection: 'row',
             justifyContent: 'center',
