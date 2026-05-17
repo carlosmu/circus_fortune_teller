@@ -370,8 +370,8 @@ function HostPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Ask the Guest:" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
           <UiEntity
-            uiTransform={{ width: '72%', height: 52 }}
-            uiBackground={BTN}
+            uiTransform={{ width: '85%', height: 85 }}
+            uiBackground={CATEGORY_BTN_BG}
             onMouseDown={() => { playButtonClick(); hostOpenCategorySelection() }}
           >
             <Label
@@ -380,7 +380,7 @@ function HostPanel() {
               textAlign={CARD_TEXT_ALIGN}
               fontSize={CARD_UI_FONT_SIZE}
               font="serif"
-              color={CARD_WHITE}
+              color={Color4.White()}
             />
           </UiEntity>
         </UiEntity>
@@ -412,7 +412,7 @@ function HostPanel() {
             <UiEntity
               key={d}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
-              uiBackground={BTN}
+              uiBackground={CATEGORY_BTN_BG}
               onMouseDown={() => { playButtonClick(); hostPickDeck(d) }}
             >
               <Label
@@ -421,7 +421,7 @@ function HostPanel() {
                 textAlign={CARD_TEXT_ALIGN}
                 fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
-                color={GOLD}
+                color={Color4.White()}
               />
             </UiEntity>
           ))}
@@ -465,7 +465,7 @@ function HostPanel() {
             <UiEntity
               key={choice}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
-              uiBackground={BTN}
+              uiBackground={CATEGORY_BTN_BG}
               onMouseDown={() => { playButtonClick(); hostPickFortune(choice) }}
             >
               <Label
@@ -474,7 +474,7 @@ function HostPanel() {
                 textAlign={CARD_TEXT_ALIGN}
                 fontSize={CARD_UI_FONT_SIZE}
                 font="serif"
-                color={GOLD}
+                color={Color4.White()}
               />
             </UiEntity>
           ))}

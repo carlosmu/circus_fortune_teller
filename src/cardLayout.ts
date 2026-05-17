@@ -72,7 +72,7 @@ export const CARD_CONTENT_LAYER = {
  * height 100%: evita que hijos con maxHeight en % colapsen a 0 en Yoga.
  */
 export const CARD_ROOT_COLUMN = {
-  width: '75%' as const,
+  width: '85%' as const,
   height: '100%' as const,
   flexDirection: 'column' as const,
   justifyContent: 'center' as const,
