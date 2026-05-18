@@ -27,10 +27,14 @@ import {
 } from '../cardLayout'
 import { CenteredLabelRow } from '../centeredLabelRow'
 
-const TAROT_BACK = 'assets/images/tarot_back_01.png'
-/** Slot clickeable; textura en `center` para no estirar el PNG (proporción ~2:3). */
-const TAROT_CARD_SLOT_WIDTH = 80
-const TAROT_CARD_SLOT_HEIGHT = 120
+const TAROT_BACK = 'assets/images/tarot_back_01.jpg'
+/** Proporción real del asset (ancho ÷ alto). Ajusta si cambias la imagen. */
+const TAROT_TEXTURE_WIDTH = 722
+const TAROT_TEXTURE_HEIGHT = 1226
+const TAROT_CARD_DISPLAY_HEIGHT = 120
+const TAROT_CARD_DISPLAY_WIDTH = Math.round(
+  (TAROT_CARD_DISPLAY_HEIGHT * TAROT_TEXTURE_WIDTH) / TAROT_TEXTURE_HEIGHT
+)
 /** Botones sobre card.png (prompt, categoría, deck, meanings). No usar en Yes/No. */
 /** Fondo #1e003a; borde magenta sin cambiar. */
 const CARD_BTN_BG = { color: Color4.create(30 / 255, 0, 58 / 255, 0.5) }
@@ -85,6 +89,8 @@ const CARD_LABEL_TEXT_ALIGN: 'top-center' = 'top-center'
 const FSM_CONTINUE_PROMPT = 'Do you want another reading?'
 /** Altura de fila acorde a {@link CARD_UI_FONT_SIZE} (una línea de pregunta antes de Sí/No / texto host). */
 const FSM_CONTINUE_PROMPT_ROW_HEIGHT = 52
+/** Una línea en CenteredLabelRow (DCL no respeta `\n` en Label de forma fiable). */
+const CARD_SINGLE_LINE_ROW_HEIGHT = 36
 
 const DECKS: FsmDeck[] = ['Funny', 'Serious', 'Strange']
 const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
@@ -208,10 +214,17 @@ function SpectatorPanel() {
       <HostCardShell>
         <CenteredLabelRow
           textAlign={CARD_LABEL_TEXT_ALIGN}
-          value="The guest is choosing a focus for the reading..."
+          value="The guest is choosing"
           fontSize={CARD_UI_FONT_SIZE}
           color={CARD_WHITE}
-          height={120}
+          height={CARD_SINGLE_LINE_ROW_HEIGHT}
+        />
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="a focus for the reading..."
+          fontSize={CARD_UI_FONT_SIZE}
+          color={CARD_WHITE}
+          height={CARD_SINGLE_LINE_ROW_HEIGHT}
         />
       </HostCardShell>
     )
@@ -394,11 +407,19 @@ function HostPanel() {
     return (
       <HostCardShell>
         {/* FIX */}
-        <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
-          value="The Guest is choosing a focus for the reading."
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="The Guest is choosing"
           fontSize={CARD_UI_FONT_SIZE}
           color={Color4.create(0.95, 0.95, 0.95, 1)}
-          height={120}
+          height={CARD_SINGLE_LINE_ROW_HEIGHT}
+        />
+        <CenteredLabelRow
+          textAlign={CARD_LABEL_TEXT_ALIGN}
+          value="a focus for the reading."
+          fontSize={CARD_UI_FONT_SIZE}
+          color={Color4.create(0.95, 0.95, 0.95, 1)}
+          height={CARD_SINGLE_LINE_ROW_HEIGHT}
         />
       </HostCardShell>
     )
@@ -537,8 +558,8 @@ function GuestPanel() {
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN}
           value={
             topic
-              ? `The Fortune Teller is choosing the deck…`
-              : 'The Fortune Teller is choosing the deck…'
+              ? `The Fortune Teller \nis choosing the deck…`
+              : 'The Fortune Teller \nis choosing the deck…'
           }
           fontSize={CARD_UI_FONT_SIZE}
           color={GOLD}
@@ -556,7 +577,7 @@ function GuestPanel() {
         <UiEntity
           uiTransform={{
             ...CARD_CONTROL_ROW,
-            height: TAROT_CARD_SLOT_HEIGHT,
+            height: TAROT_CARD_DISPLAY_HEIGHT,
             maxWidth: '100%'
           }}
         >
@@ -566,14 +587,14 @@ function GuestPanel() {
               <UiEntity
                 key={key}
                 uiTransform={{
-                  width: TAROT_CARD_SLOT_WIDTH,
-                  height: TAROT_CARD_SLOT_HEIGHT,
+                  width: TAROT_CARD_DISPLAY_WIDTH,
+                  height: TAROT_CARD_DISPLAY_HEIGHT,
                   margin: { left: i === 0 ? 0 : 12 },
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}
-                uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'center' }}
+                uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
                 onMouseDown={() => { playButtonClick(); guestPickCard(key, idx) }}
               >
                 {flipped && (
