@@ -87,6 +87,25 @@ const CARD_LABEL_TEXT_ALIGN: 'top-center' = 'top-center'
 
 /** Pregunta fija en CONTINUE_DECISION (invitado + host); el legacy sigue usando `repeatFortunePrompt.ts`. */
 const FSM_CONTINUE_PROMPT = 'Do you want another reading?'
+/** Tras elegir meaning (A/B/C) hasta la pantalla REVEAL. */
+const FSM_REVEALING_DESTINY_MESSAGE = 'Revealing your destiny...'
+
+function isFortuneRevealWait(): boolean {
+  return fsmSession.selectedFortune !== null && fsmSession.hostFortunePickedAtMs !== null
+}
+
+function RevealingDestinyPanel(props: { guest?: boolean }) {
+  const inner = (
+    <CenteredLabelRow
+      textAlign={CARD_LABEL_TEXT_ALIGN}
+      value={FSM_REVEALING_DESTINY_MESSAGE}
+      fontSize={CARD_UI_FONT_SIZE}
+      color={GOLD}
+      height={CARD_READING_BOOKEND_ROW_HEIGHT}
+    />
+  )
+  return props.guest ? <GuestCardShell>{inner}</GuestCardShell> : <HostCardShell>{inner}</HostCardShell>
+}
 /** Altura de fila acorde a {@link CARD_UI_FONT_SIZE} (una línea de pregunta antes de Sí/No / texto host). */
 const FSM_CONTINUE_PROMPT_ROW_HEIGHT = 52
 /** Una línea en CenteredLabelRow (DCL no respeta `\n` en Label de forma fiable). */
@@ -259,6 +278,7 @@ function SpectatorPanel() {
   }
 
   if (st === 'FORTUNE_SELECTION') {
+    if (isFortuneRevealWait()) return <RevealingDestinyPanel />
     const hint =
       fsmSession.fortuneGuestHint === 'clear'
         ? 'It is becoming clear...'
@@ -458,6 +478,10 @@ function HostPanel() {
     )
   }
 
+  if (st === 'FORTUNE_SELECTION' && isFortuneRevealWait()) {
+    return <RevealingDestinyPanel />
+  }
+
   if (st === 'FORTUNE_SELECTION' && fsmSession.selectedCardType) {
     return (
       <HostCardShell>
@@ -616,6 +640,7 @@ function GuestPanel() {
   }
 
   if (st === 'FORTUNE_SELECTION') {
+    if (isFortuneRevealWait()) return <RevealingDestinyPanel guest />
     const hint =
       fsmSession.fortuneGuestHint === 'clear'
         ? 'It is becoming clear…'
