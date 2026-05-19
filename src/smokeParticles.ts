@@ -11,6 +11,7 @@ import {
   Transform
 } from '@dcl/sdk/ecs'
 import { Color4, Quaternion, Vector3 } from '@dcl/sdk/math'
+import { playCardGongSound } from './fortuneSync'
 import { getEntityWorldPosition } from './worldTransform'
 
 /** Parámetros de un spawn de humo (cartas y carpet usan presets distintos). */
@@ -241,5 +242,7 @@ export function fireSmokeIfCardRevealed(entity: Entity, nowVisible: boolean, was
   if (!nowVisible || wasVisible) return
   const pos = getEntityWorldPosition(entity)
   if (!pos) return
-  fireCardSmoke(Vector3.create(pos.x, pos.y, pos.z))
+  const world = Vector3.create(pos.x, pos.y, pos.z)
+  playCardGongSound()
+  fireCardSmoke(world)
 }

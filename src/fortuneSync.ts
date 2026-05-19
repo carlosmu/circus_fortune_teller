@@ -63,6 +63,9 @@ export type FortuneTellerSessionUpdateMessage = {
 
 const REVEAL_SOUND_PATH = 'assets/audio/magic_reveal.mp3'
 const BUTTON_CLICK_SOUND_PATH = 'assets/audio/button_short_click.mp3'
+const CARD_GONG_SOUND_PATH = 'assets/audio/gong.mp3'
+const CARD_GONG_VOLUME = 1
+const CARD_GONG_DEBOUNCE_MS = 120
 
 const AUDIO_CLEANUP_MS = 2000
 
@@ -99,6 +102,26 @@ export function playButtonClick(): void {
   Transform.create(e, { position: Vector3.create(8, 1, 8) })
   AudioSource.create(e, { audioClipUrl: BUTTON_CLICK_SOUND_PATH, playing: true, loop: false, volume: 1 })
   pendingAudios.push({ entity: e, createdAt: Date.now() })
+}
+
+let lastCardGongAtMs = 0
+
+/** Gong al aparecer cartas 3D (card_*). Global = mismo volumen en toda la escena. */
+export function playCardGongSound(): void {
+  const now = Date.now()
+  if (now - lastCardGongAtMs < CARD_GONG_DEBOUNCE_MS) return
+  lastCardGongAtMs = now
+
+  const e = engine.addEntity()
+  Transform.create(e, { position: Vector3.create(8, 1, 8) })
+  AudioSource.create(e, {
+    audioClipUrl: CARD_GONG_SOUND_PATH,
+    playing: true,
+    loop: false,
+    volume: CARD_GONG_VOLUME,
+    global: true
+  })
+  pendingAudios.push({ entity: e, createdAt: now })
 }
 
 /**
