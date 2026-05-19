@@ -15,6 +15,7 @@ import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog
 import { fsmSession } from './fortuneFsm/session'
 import { registerPointerClickOnly, setPointerHoverText } from './pointerClickUtil'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
+import { displacePlayerToRandomLeaveArea } from './guestSeatDisplace'
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.01
 /**
@@ -22,8 +23,6 @@ const FORTUNE_TELLER_MOVE_THRESHOLD = 0.01
  * así que podías ir a la mesa y seguir siendo FT. Ahora solo cuenta la silla: al levantarte sales del radio enseguida.
  */
 const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.001
-/** Tras soltar el rol por dejar la silla, empuja al jugador al menos esta distancia desde el sit (XZ). */
-const FORTUNE_TELLER_LEAVE_NUDGE_METERS = 2.5
 /** Fallback si Sit Spot: Fortune_Teller no existe en runtime. */
 const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
 /** Tiempo en ms antes de aplicar la regla de alejamiento (solo para dejar terminar movePlayerTo/emote). */
@@ -36,10 +35,6 @@ const WIZARD_MOVE_OFFSET_X = 0
 const WIZARD_MOVE_OFFSET_Z = -1.65
 const WIZARD_MOVE_SPEED = 6
 const FORTUNE_TELLER_SESSION_INITIAL_MS = 120000
-const FORTUNE_TELLER_RANDOM_MIN_X = 5
-const FORTUNE_TELLER_RANDOM_MAX_X = 11
-const FORTUNE_TELLER_RANDOM_MIN_Z = 9
-const FORTUNE_TELLER_RANDOM_MAX_Z = 11
 let fortuneTellerSitSpotRegistered = false
 let fortuneTellerSitSpotEntity: ReturnType<typeof engine.addEntity> | null = null
 /** True si el rol se tomó clicando el Sit Spot (la zona de “sigo en el puesto” incluye silla + mesa). */
@@ -134,36 +129,6 @@ function playerStillAtFortuneTellerStation(playerPos: { x: number; y: number; z:
   return distance(playerPos, lastFortuneTellerPosition) <= FORTUNE_TELLER_MOVE_THRESHOLD
 }
 
-/** Empuja al jugador local lejos del sit del FT (dirección “hacia invitado”, alejándose del mago). */
-function scheduleNudgeAwayFromFortuneTellerChair(): void {
-  const chair = getFortuneTellerSitSpotXZ()
-  const wizardX = FORTUNE_TELLER_POSITION.x
-  const wizardZ = FORTUNE_TELLER_POSITION.z
-  let dx = chair.x - wizardX
-  let dz = chair.z - wizardZ
-  const len = Math.sqrt(dx * dx + dz * dz) || 1
-  dx /= len
-  dz /= len
-  const n = FORTUNE_TELLER_LEAVE_NUDGE_METERS
-  const target = {
-    x: chair.x + dx * n,
-    y: 0,
-    z: chair.z + dz * n
-  }
-  executeTask(async () => {
-    try {
-      await movePlayerTo({
-        newRelativePosition: target,
-        cameraTarget: {
-          x: FORTUNE_TELLER_CAMERA_TARGET.x,
-          y: FORTUNE_TELLER_CAMERA_TARGET.y,
-          z: FORTUNE_TELLER_CAMERA_TARGET.z
-        }
-      })
-    } catch (_e) {}
-  })
-}
-
 function clearFortuneTellerAndShowWizard() {
   const previousName = gameData.currentFortuneTellerName?.trim() || 'Someone'
   gameData.currentFortuneTellerId = null
@@ -204,34 +169,11 @@ function clearFortuneTellerAndShowWizard() {
   })
 }
 
-function randomInRange(min: number, max: number): number {
-  return min + Math.random() * (max - min)
-}
-
-function moveFortuneTellerToRandomArea(): void {
-  executeTask(async () => {
-    try {
-      await movePlayerTo({
-        newRelativePosition: {
-          x: randomInRange(FORTUNE_TELLER_RANDOM_MIN_X, FORTUNE_TELLER_RANDOM_MAX_X),
-          y: 1,
-          z: randomInRange(FORTUNE_TELLER_RANDOM_MIN_Z, FORTUNE_TELLER_RANDOM_MAX_Z)
-        },
-        cameraTarget: {
-          x: FORTUNE_TELLER_CAMERA_TARGET.x,
-          y: FORTUNE_TELLER_CAMERA_TARGET.y,
-          z: FORTUNE_TELLER_CAMERA_TARGET.z
-        }
-      })
-    } catch (_e) {}
-  })
-}
-
 function releaseFortuneTellerBySessionRules(): void {
   const localUserId = getPlayer()?.userId ?? null
   if (localUserId === null || gameData.currentFortuneTellerId !== localUserId) return
   clearFortuneTellerAndShowWizard()
-  moveFortuneTellerToRandomArea()
+  displacePlayerToRandomLeaveArea()
 }
 
 /** Quita prompts E / “Sit Here” del composite en runtime (ver `sitSpotPointerStrip.ts`). */
@@ -500,9 +442,7 @@ export function setupWizard() {
           // Cancela lectura / FSM en curso; luego se libera el rol FT y el banner (clearFortuneTeller…).
           fortuneMessageBus.emit('hide-fortune', {})
           clearFortuneTellerAndShowWizard()
-          if (wasSitSpotFt) {
-            scheduleNudgeAwayFromFortuneTellerChair()
-          }
+          displacePlayerToRandomLeaveArea()
         },
         () => {
           fortuneTellerBecameAtMs = Date.now()

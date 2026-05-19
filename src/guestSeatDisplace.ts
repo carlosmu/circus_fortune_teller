@@ -3,26 +3,26 @@ import { movePlayerTo } from '~system/RestrictedActions'
 import { FORTUNE_TELLER_CAMERA_TARGET } from './scene'
 
 /**
- * Rectángulo XZ al salir de la silla de invitado (idle, tope de lecturas, o “No” a más fortuna).
- * Alineado con `moveFortuneTellerToRandomArea` / `FORTUNE_TELLER_RANDOM_*` en setupWizard.ts.
+ * Rectángulo XZ al abandonar silla de invitado o rol de Fortune Teller (leave dialog, tope de lecturas, etc.).
  */
-const GUEST_SEAT_DISPLACE_RANDOM_MIN_X = 5
-const GUEST_SEAT_DISPLACE_RANDOM_MAX_X = 11
-const GUEST_SEAT_DISPLACE_RANDOM_MIN_Z = 9
-const GUEST_SEAT_DISPLACE_RANDOM_MAX_Z = 11
+const ROLE_LEAVE_DISPLACE_RANDOM_MIN_X = 5
+const ROLE_LEAVE_DISPLACE_RANDOM_MAX_X = 11
+const ROLE_LEAVE_DISPLACE_RANDOM_MIN_Z = 9
+const ROLE_LEAVE_DISPLACE_RANDOM_MAX_Z = 11
 
 function randomInRange(min: number, max: number): number {
   return min + Math.random() * (max - min)
 }
 
-export function displaceGuestSeatOccupantToRandomArea(): void {
+/** Teletransporte aleatorio compartido (guest y fortune teller al soltar su rol). */
+export function displacePlayerToRandomLeaveArea(): void {
   executeTask(async () => {
     try {
       await movePlayerTo({
         newRelativePosition: {
-          x: randomInRange(GUEST_SEAT_DISPLACE_RANDOM_MIN_X, GUEST_SEAT_DISPLACE_RANDOM_MAX_X),
+          x: randomInRange(ROLE_LEAVE_DISPLACE_RANDOM_MIN_X, ROLE_LEAVE_DISPLACE_RANDOM_MAX_X),
           y: 1,
-          z: randomInRange(GUEST_SEAT_DISPLACE_RANDOM_MIN_Z, GUEST_SEAT_DISPLACE_RANDOM_MAX_Z)
+          z: randomInRange(ROLE_LEAVE_DISPLACE_RANDOM_MIN_Z, ROLE_LEAVE_DISPLACE_RANDOM_MAX_Z)
         },
         cameraTarget: {
           x: FORTUNE_TELLER_CAMERA_TARGET.x,
@@ -32,4 +32,9 @@ export function displaceGuestSeatOccupantToRandomArea(): void {
       })
     } catch (_e) {}
   })
+}
+
+/** @deprecated Usar `displacePlayerToRandomLeaveArea`; alias para call sites del guest. */
+export function displaceGuestSeatOccupantToRandomArea(): void {
+  displacePlayerToRandomLeaveArea()
 }
