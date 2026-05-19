@@ -12,7 +12,8 @@ import {
 import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 import { EntityNames } from '../assets/scene/entity-names'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
-import { registerPointerClickOnly } from './pointerClickUtil'
+import { fsmSession } from './fortuneFsm/session'
+import { registerPointerClickOnly, setPointerHoverText } from './pointerClickUtil'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.01
@@ -28,7 +29,9 @@ const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
 /** Tiempo en ms antes de aplicar la regla de alejamiento (solo para dejar terminar movePlayerTo/emote). */
 const FORTUNE_TELLER_GRACE_MS = 700
 /** Texto al apuntar con el cursor al Sit Spot del Fortune Teller (clic para tomar el rol). */
-const FORTUNE_TELLER_SIT_SPOT_HOVER = 'Become The Fortune Teller'
+const FORTUNE_TELLER_SIT_SPOT_HOVER_AVAILABLE = 'Become The Fortune Teller'
+const FORTUNE_TELLER_SIT_SPOT_HOVER_READING = 'Reading in progress. Please wait.'
+const FORTUNE_TELLER_SIT_SPOT_MAX_DISTANCE = 8
 const WIZARD_MOVE_OFFSET_X = 0
 const WIZARD_MOVE_OFFSET_Z = -1.65
 const WIZARD_MOVE_SPEED = 6
@@ -45,6 +48,34 @@ let fortuneTellerJoinedViaSitSpot = false
 let sitSpotFtTeleportPending = false
 let lastFortuneTellerPosition: { x: number; y: number; z: number } | null = null
 let fortuneTellerBecameAtMs: number = 0
+let lastFortuneTellerSitSpotHoverText: string | null = null
+
+/** Guest en silla y lectura activa: otro jugador no puede tomar el rol FT hasta que termine. */
+function isFortuneTellerChairBlockedByReading(localUserId: string | null): boolean {
+  if (localUserId === gameData.currentFortuneTellerId) return false
+  if (gameData.guestSeatUserId === null) return false
+  return (
+    gameData.gameState === 'OCUPADO' ||
+    gameData.gameState === 'MOSTRANDO_FORTUNA' ||
+    fsmSession.active
+  )
+}
+
+function canClickFortuneTellerSitSpot(localUserId: string | null): boolean {
+  if (localUserId === null) return false
+  if (localUserId === gameData.currentFortuneTellerId) return true
+  if (gameData.currentFortuneTellerId !== null) return false
+  if (isFortuneTellerChairBlockedByReading(localUserId)) return false
+  return true
+}
+
+function getFortuneTellerSitSpotHoverText(localUserId: string | null): string {
+  if (isFortuneTellerChairBlockedByReading(localUserId)) {
+    return FORTUNE_TELLER_SIT_SPOT_HOVER_READING
+  }
+  return FORTUNE_TELLER_SIT_SPOT_HOVER_AVAILABLE
+}
+
 let originalWizardPosition: { x: number; y: number; z: number } | null = null
 let displacedWizardPosition: { x: number; y: number; z: number } | null = null
 /** Clips del GLB `fortune_teller.glb` (más animaciones después). */
@@ -215,20 +246,20 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
   }
   registerPointerClickOnly(
     entity,
-    { hoverText: FORTUNE_TELLER_SIT_SPOT_HOVER, maxDistance: 8 },
+    { hoverText: FORTUNE_TELLER_SIT_SPOT_HOVER_AVAILABLE, maxDistance: FORTUNE_TELLER_SIT_SPOT_MAX_DISTANCE },
     onInteract
   )
   stripSitSpotFortuneTellerProximityUi(entity)
 }
 
 function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
-  playButtonClick()
   const fromSitSpot = opts?.fromSitSpot === true
   const player = getPlayer()
   const userId = player?.userId ?? null
   if (!userId) return
   if (gameData.currentFortuneTellerId === userId) return
-  if (gameData.currentFortuneTellerId !== null) return
+  if (!canClickFortuneTellerSitSpot(userId)) return
+  playButtonClick()
   const hostEntryPathStart = Transform.has(engine.PlayerEntity)
     ? Transform.get(engine.PlayerEntity).position
     : { x: FORTUNE_TELLER_POSITION.x, y: 0, z: FORTUNE_TELLER_POSITION.z }
@@ -401,6 +432,15 @@ export function setupWizard() {
       }
     } else if (fortuneTellerSitSpotEntity !== null) {
       stripSitSpotFortuneTellerProximityUi(fortuneTellerSitSpotEntity)
+    }
+
+    const localUserIdForSitSpot = getPlayer()?.userId ?? null
+    if (fortuneTellerSitSpotEntity !== null) {
+      const hoverText = getFortuneTellerSitSpotHoverText(localUserIdForSitSpot)
+      if (hoverText !== lastFortuneTellerSitSpotHoverText) {
+        lastFortuneTellerSitSpotHoverText = hoverText
+        setPointerHoverText(fortuneTellerSitSpotEntity, hoverText)
+      }
     }
 
     const desiredIdleClip: WizardIdleClip =

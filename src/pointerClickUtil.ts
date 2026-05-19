@@ -78,6 +78,8 @@ export function setPointerHoverText(entity: ReturnType<typeof engine.addEntity>,
   for (const evt of pe.pointerEvents) {
     if (evt.eventInfo?.button === InputAction.IA_POINTER) {
       evt.eventInfo.hoverText = hoverText
+      evt.eventInfo.showFeedback = true
+      evt.eventInfo.showHighlight = true
     }
   }
 }
