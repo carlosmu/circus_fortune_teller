@@ -1,4 +1,5 @@
 import type { FsmSession, FsmState } from './types'
+import { clearRevealFortuneMemo } from './resolveRevealFortune'
 
 export function createInitialSession(): FsmSession {
   return {
@@ -15,6 +16,7 @@ export function createInitialSession(): FsmSession {
     fortuneGuestHint: 'idle',
     hostFortunePickedAtMs: null,
     revealEnteredAtMs: null,
+    revealFortuneText: null,
     usedCategories: [],
     cardFlipIndex: null,
     sessionFinishedMessage: null,
@@ -45,6 +47,7 @@ export function sessionForSync(): FsmSession {
 
 export function restoreSessionFromPayload(s: FsmSession): void {
   replaceSession(s)
+  clearRevealFortuneMemo()
 }
 
 export function assertState(expected: FsmState): boolean {

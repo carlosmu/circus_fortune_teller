@@ -15,7 +15,7 @@ import {
 import { playButtonClick } from '../fortuneSync'
 import type { FortuneCategory } from '../types'
 import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
-import { getFsmRevealFortuneText, getFsmRevealKindTitle } from './resolveRevealFortune'
+import { getFsmRevealKindTitle, getSyncedRevealFortuneText } from './resolveRevealFortune'
 import { fsmSession } from './session'
 import type { FsmCardChoice, FsmDeck } from './types'
 import {
@@ -126,7 +126,7 @@ function RevealFortuneCardContent() {
   const name = fsmSession.guestName?.trim() || 'Guest'
   const choice = fsmSession.selectedFortune
   const kindTitle = getFsmRevealKindTitle(choice)
-  const body = getFsmRevealFortuneText(fsmSession)
+  const body = getSyncedRevealFortuneText(fsmSession)
   const fortuneText = `${name}, ${body}`
   const revealElapsedMs = fsmSession.revealEnteredAtMs === null ? null : Date.now() - fsmSession.revealEnteredAtMs
   const fadeInAlpha =

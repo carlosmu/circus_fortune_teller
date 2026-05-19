@@ -8,6 +8,7 @@ import {
   FSM_REVEAL_SHOW_AT_MS
 } from '../sceneConfig'
 import { pickGuestMaxReadingsFarewellLine } from '../revelationRng'
+import { getFsmRevealFortuneText } from './resolveRevealFortune'
 import { FSM_DEBOUNCE_MS, type FsmCardChoice, type FsmDeck } from './types'
 import { fsmSession, hardResetSession, sessionForSync } from './session'
 import { debounceOk, tryTransition } from './machine'
@@ -29,6 +30,11 @@ function delayMs(ms: number): Promise<void> {
 }
 
 const REVEAL_TO_CONTINUE_MS = FORTUNE_DISPLAY_DURATION * 1000
+
+function isFsmHostClient(): boolean {
+  const localUserId = getPlayer()?.userId ?? null
+  return fsmSession.isVirtualHost || (localUserId !== null && localUserId === fsmSession.hostId)
+}
 
 function emitFsmSessionEnded(message: string): void {
   const gid = fsmSession.guestId
@@ -110,6 +116,7 @@ export function guestPickCard(slot: FsmCardChoice, index: 0 | 1 | 2): void {
   fsmSession.fortuneGuestHint = 'reading'
   fsmSession.hostFortunePickedAtMs = null
   fsmSession.selectedFortune = null
+  fsmSession.revealFortuneText = null
   const r = tryTransition('FORTUNE_SELECTION')
   if (r.ok) {
     if (fsmSession.isVirtualHost) fsmSession.virtualHostPendingAtMs = nowMs()
@@ -126,13 +133,15 @@ export function hostPickFortune(choice: FsmCardChoice): void {
   fsmSession.selectedFortune = choice
   fsmSession.hostFortunePickedAtMs = nowMs()
   fsmSession.fortuneGuestHint = 'reading'
+  fsmSession.revealFortuneText = null
   emit()
 }
 
-/** Called from engine: fases de hint invitado y transición a REVEAL (ver sceneConfig). */
+/** Called from engine: fases de hint invitado y transición a REVEAL (ver sceneConfig). Solo el host emite. */
 export function fsmTickRevealIfReady(t: number): void {
   if (!fsmSession.active || fsmSession.state !== 'FORTUNE_SELECTION') return
   if (fsmSession.selectedFortune === null || fsmSession.hostFortunePickedAtMs === null) return
+  if (!isFsmHostClient()) return
   const dt = t - fsmSession.hostFortunePickedAtMs
   if (dt >= FSM_REVEAL_READING_PHASE_MS && fsmSession.fortuneGuestHint === 'reading') {
     fsmSession.fortuneGuestHint = 'clear'
@@ -142,7 +151,8 @@ export function fsmTickRevealIfReady(t: number): void {
   if (dt >= FSM_REVEAL_SHOW_AT_MS && fsmSession.fortuneGuestHint === 'clear') {
     const r = tryTransition('REVEAL', {
       revealEnteredAtMs: nowMs(),
-      fortuneGuestHint: 'idle'
+      fortuneGuestHint: 'idle',
+      revealFortuneText: getFsmRevealFortuneText(fsmSession)
     })
     if (r.ok) emit()
   }
@@ -153,11 +163,10 @@ export function fsmTickContinueIfReady(t: number): void {
   if (!fsmSession.active || fsmSession.state !== 'REVEAL') return
   if (fsmSession.revealEnteredAtMs === null) return
   if (t - fsmSession.revealEnteredAtMs < REVEAL_TO_CONTINUE_MS) return
+  if (!isFsmHostClient()) return
 
-  // Only the host client increments readings done (once per completed REVEAL)
-  const localUserId = getPlayer()?.userId ?? null
-  const isHost = fsmSession.isVirtualHost || (localUserId !== null && localUserId === fsmSession.hostId)
-  if (isHost) {
+  // Solo el host incrementa lecturas y avanza la FSM (el resto recibe por MessageBus).
+  {
     gameData.fortuneTellerReadingsDone = Math.min(
       gameData.fortuneTellerMaxReadings,
       gameData.fortuneTellerReadingsDone + 1
@@ -246,6 +255,7 @@ export function guestContinueYes(): void {
   fsmSession.cardFlipIndex = null
   fsmSession.hostFortunePickedAtMs = null
   fsmSession.revealEnteredAtMs = null
+  fsmSession.revealFortuneText = null
   fsmSession.fortuneGuestHint = 'idle'
   fsmSession.sessionFinishedMessage = null
   fsmSession.sessionFinishedExpiresAtMs = null
@@ -294,6 +304,7 @@ export function fsmActivateSession(hostId: string | null, guestId: string, guest
     fortuneGuestHint: 'idle' as const,
     hostFortunePickedAtMs: null,
     revealEnteredAtMs: null,
+    revealFortuneText: null,
     usedCategories: [],
     cardFlipIndex: null,
     sessionFinishedMessage: null,

@@ -35,6 +35,8 @@ export type FsmSession = {
   hostFortunePickedAtMs: number | null
   /** When REVEAL started (ms) for auto-advance to CONTINUE. */
   revealEnteredAtMs: number | null
+  /** Texto de fortuna elegido por el host al entrar en REVEAL (todos los clientes muestran esto). */
+  revealFortuneText: string | null
   /** Categorías ya elegidas en esta sesión FSM (no vuelven a salir en la terna hasta agotar las 6). */
   usedCategories: FortuneCategory[]
   /** Card row: which slot flipped (UI). */

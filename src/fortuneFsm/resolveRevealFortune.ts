@@ -1,4 +1,5 @@
 import { FORTUNES } from '../fortunes'
+import { gameData } from '../gameState'
 import { hashString } from '../revelationRng'
 import type { FortuneCategory, FortuneKind } from '../types'
 import type { FsmCardChoice, FsmDeck, FsmSession } from './types'
@@ -24,7 +25,12 @@ function deckToDataDeck(d: FsmDeck): 'funny' | 'serious' | 'strange' {
 let revealTextMemoKey = ''
 let revealTextMemo = ''
 
-/** Texto de fortuna en todos los clientes (misma semilla). */
+export function clearRevealFortuneMemo(): void {
+  revealTextMemoKey = ''
+  revealTextMemo = ''
+}
+
+/** Texto de fortuna (solo lo calcula el host al entrar en REVEAL; el resto usa `revealFortuneText` sincronizado). */
 export function getFsmRevealFortuneText(session: Pick<FsmSession, 'guestId' | 'selectedCategoryKey' | 'selectedDeck' | 'selectedFortune'>): string {
   const key = session.selectedCategoryKey
   const deck = session.selectedDeck
@@ -46,7 +52,7 @@ export function getFsmRevealFortuneText(session: Pick<FsmSession, 'guestId' | 's
     revealTextMemo = 'The cards are unclear.'
     return revealTextMemo
   }
-  const seed = `${session.guestId ?? ''}:reveal:${key}:${d}:${kind}:${choice}`
+  const seed = `${session.guestId ?? ''}:${gameData.revelationRoundSalt}:reveal:${key}:${d}:${kind}:${choice}`
   const idx = hashString(seed) % pool.length
   const text = pool[idx]!.text
   revealTextMemoKey = memoKey
@@ -57,4 +63,12 @@ export function getFsmRevealFortuneText(session: Pick<FsmSession, 'guestId' | 's
 export function getFsmRevealKindTitle(choice: FsmCardChoice | null): string {
   if (!choice) return ''
   return KIND_TITLE[FSM_CHOICE_TO_KIND[choice]]
+}
+
+/** Texto mostrado en REVEAL: prioriza el elegido por el host y sincronizado por MessageBus. */
+export function getSyncedRevealFortuneText(session: Pick<FsmSession, 'revealFortuneText' | 'guestId' | 'selectedCategoryKey' | 'selectedDeck' | 'selectedFortune'>): string {
+  if (session.revealFortuneText !== null && session.revealFortuneText.length > 0) {
+    return session.revealFortuneText
+  }
+  return getFsmRevealFortuneText(session)
 }
