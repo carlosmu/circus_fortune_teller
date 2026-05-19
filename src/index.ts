@@ -10,10 +10,12 @@ import { setupCards } from './setupCards'
 import { setupUi } from './ui'
 import { setupScene } from './scene'
 import { setupPlayerRoleLabels } from './playerRoleLabels'
+import { initCarpetSmokeLoop } from './carpetSmokeLoop'
 import { initSmokeParticles } from './smokeParticles'
 
 export function main() {
   initSmokeParticles()
+  initCarpetSmokeLoop()
 
   // Fortune sync across players (MessageBus)
   setupFortuneSync()
