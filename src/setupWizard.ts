@@ -56,16 +56,21 @@ function isFortuneTellerChairBlockedByReading(localUserId: string | null): boole
   )
 }
 
+/** Otro jugador ya es FT o hay lectura en curso: tooltip “Please wait” y clic bloqueado. */
+function isFortuneTellerSitSpotUnavailable(localUserId: string | null): boolean {
+  if (localUserId === gameData.currentFortuneTellerId) return false
+  if (gameData.currentFortuneTellerId !== null) return true
+  return isFortuneTellerChairBlockedByReading(localUserId)
+}
+
 function canClickFortuneTellerSitSpot(localUserId: string | null): boolean {
   if (localUserId === null) return false
   if (localUserId === gameData.currentFortuneTellerId) return true
-  if (gameData.currentFortuneTellerId !== null) return false
-  if (isFortuneTellerChairBlockedByReading(localUserId)) return false
-  return true
+  return !isFortuneTellerSitSpotUnavailable(localUserId)
 }
 
 function getFortuneTellerSitSpotHoverText(localUserId: string | null): string {
-  if (isFortuneTellerChairBlockedByReading(localUserId)) {
+  if (isFortuneTellerSitSpotUnavailable(localUserId)) {
     return FORTUNE_TELLER_SIT_SPOT_HOVER_READING
   }
   return FORTUNE_TELLER_SIT_SPOT_HOVER_AVAILABLE
