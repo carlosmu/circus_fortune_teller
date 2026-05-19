@@ -25,7 +25,7 @@ import { EntityNames } from '../assets/scene/entity-names'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
-const FORTUNE_TELLER_MOVE_THRESHOLD = 0.001
+const FORTUNE_TELLER_MOVE_THRESHOLD = 0.01
 /**
  * Solo radio horizontal alrededor del Sit Spot: Fortune_Teller. Antes se usaba min(dist silla, dist mago) ≤ 2.5 m,
  * así que podías ir a la mesa y seguir siendo FT. Ahora solo cuenta la silla: al levantarte sales del radio enseguida.

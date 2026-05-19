@@ -37,7 +37,7 @@ const AVATAR_LOOK_AHEAD_METERS = 2.5
  * que el diálogo salga en cuanto el cliente ajusta la pose al levantarse; GUEST_SEAT_GRACE_MS
  * evita falsos positivos durante el movePlayerTo inicial.
  */
-const GUEST_SEAT_MOVE_THRESHOLD = 0.001
+const GUEST_SEAT_MOVE_THRESHOLD = 0.01
 const GUEST_SEAT_GRACE_MS = 1500
 
 const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
