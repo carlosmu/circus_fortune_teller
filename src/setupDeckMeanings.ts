@@ -5,6 +5,7 @@ import { hostPickFortune } from './fortuneFsm/actions'
 import { playButtonClick } from './fortuneSync'
 import { fsmSession } from './fortuneFsm/session'
 import type { FsmCardChoice } from './fortuneFsm/types'
+import { fireSmokeIfCardRevealed } from './smokeParticles'
 
 interface DeckMeaningConfig {
   entityName: string
@@ -81,9 +82,11 @@ export function setupDeckMeanings(): void {
     const shouldShow = fsmSession.state === 'FORTUNE_SELECTION'
 
     for (const card of DECK_MEANINGS) {
-      // Control visibility
       if (VisibilityComponent.has(card.entity)) {
-        VisibilityComponent.getMutable(card.entity).visible = shouldShow
+        const vis = VisibilityComponent.getMutable(card.entity)
+        const wasVisible = vis.visible ?? false
+        vis.visible = shouldShow
+        fireSmokeIfCardRevealed(card.entity, shouldShow, wasVisible)
       }
 
       // Control pointer by adjusting maxDistance (0 = disabled)

@@ -6,6 +6,7 @@ import { playButtonClick } from './fortuneSync'
 import { fsmSession } from './fortuneFsm/session'
 import { onStateEnter } from './fortuneFsm/machine'
 import type { FsmDeck } from './fortuneFsm/types'
+import { fireSmokeIfCardRevealed } from './smokeParticles'
 
 interface DeckCardConfig {
   entityName: string
@@ -82,9 +83,11 @@ export function setupDeckCards(): void {
     const shouldShow = fsmSession.state === 'DECK_SELECTION'
 
     for (const card of DECK_CARDS) {
-      // Control visibility
       if (VisibilityComponent.has(card.entity)) {
-        VisibilityComponent.getMutable(card.entity).visible = shouldShow
+        const vis = VisibilityComponent.getMutable(card.entity)
+        const wasVisible = vis.visible ?? false
+        vis.visible = shouldShow
+        fireSmokeIfCardRevealed(card.entity, shouldShow, wasVisible)
       }
 
       // Control pointer by adjusting maxDistance (0 = disabled)

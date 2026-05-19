@@ -23,6 +23,8 @@ export enum EntityNames {
   card_meaning_03 = "card_meaning_03",
   carpetcandles_glb = "carpetcandles.glb",
   floatcarpet_glb = "floatcarpet.glb",
+  particles_FT = "particles_FT",
+  particles_Guest = "particles_Guest",
   table_glb = "table.glb",
   tent_glb = "tent.glb",
 } 

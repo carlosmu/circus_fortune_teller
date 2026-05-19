@@ -5,6 +5,7 @@ import { guestPickCard } from './fortuneFsm/actions'
 import { playButtonClick } from './fortuneSync'
 import { fsmSession } from './fortuneFsm/session'
 import type { FsmCardChoice } from './fortuneFsm/types'
+import { fireSmokeIfCardRevealed } from './smokeParticles'
 
 interface CardConfig {
   entityName: string
@@ -80,7 +81,10 @@ export function setupCards(): void {
 
     for (const card of CARDS) {
       if (VisibilityComponent.has(card.entity)) {
-        VisibilityComponent.getMutable(card.entity).visible = shouldShow
+        const vis = VisibilityComponent.getMutable(card.entity)
+        const wasVisible = vis.visible ?? false
+        vis.visible = shouldShow
+        fireSmokeIfCardRevealed(card.entity, shouldShow, wasVisible)
       }
 
       const pe = PointerEvents.getMutableOrNull(card.entity)
