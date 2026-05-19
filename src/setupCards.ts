@@ -1,4 +1,4 @@
-import { engine, pointerEventsSystem, InputAction, PointerEventType, inputSystem, PointerEvents, VisibilityComponent } from '@dcl/sdk/ecs'
+import { engine, VisibilityComponent } from '@dcl/sdk/ecs'
 import { getPlayer } from '@dcl/sdk/players'
 import { gameData } from './gameState'
 import { guestPickCard } from './fortuneFsm/actions'
@@ -6,6 +6,7 @@ import { playButtonClick } from './fortuneSync'
 import { fsmSession } from './fortuneFsm/session'
 import type { FsmCardChoice } from './fortuneFsm/types'
 import { fireSmokeIfCardRevealed } from './smokeParticles'
+import { registerPointerClickOnly, setPointerMaxDistance } from './pointerClickUtil'
 
 interface CardConfig {
   entityName: string
@@ -36,19 +37,9 @@ export function setupCards(): void {
     }
     foundCount++
 
-    pointerEventsSystem.removeOnPointerDown(entity)
-
-    pointerEventsSystem.onPointerDown(
-      {
-        entity,
-        opts: {
-          button: InputAction.IA_POINTER,
-          hoverText: config.label,
-          maxDistance: 16,
-          showFeedback: true,
-          showHighlight: true
-        }
-      },
+    registerPointerClickOnly(
+      entity,
+      { hoverText: config.label, maxDistance: 16 },
       () => {
         const localUserId = getPlayer()?.userId ?? null
         if (!localUserId || gameData.currentGuestId !== localUserId) return
@@ -56,20 +47,6 @@ export function setupCards(): void {
         guestPickCard(config.slot, config.idx)
       }
     )
-
-    const pe = PointerEvents.getMutableOrNull(entity)
-    if (pe) {
-      pe.pointerEvents.push({
-        eventType: PointerEventType.PET_DOWN,
-        eventInfo: {
-          button: InputAction.IA_PRIMARY,
-          hoverText: '',
-          maxDistance: 16,
-          showFeedback: false,
-          showHighlight: false
-        }
-      })
-    }
 
     CARDS.push({ ...config, entity })
   }
@@ -87,27 +64,7 @@ export function setupCards(): void {
         fireSmokeIfCardRevealed(card.entity, shouldShow, wasVisible)
       }
 
-      const pe = PointerEvents.getMutableOrNull(card.entity)
-      if (pe && pe.pointerEvents.length > 0) {
-        for (const evt of pe.pointerEvents) {
-          if (evt.eventInfo) {
-            evt.eventInfo.maxDistance = shouldShow ? 16 : 0
-          }
-        }
-      }
-    }
-  })
-
-  engine.addSystem(() => {
-    if (fsmSession.state !== 'CARD_SELECTION') return
-    const localUserId = getPlayer()?.userId ?? null
-    if (!localUserId || gameData.currentGuestId !== localUserId) return
-
-    for (const config of CARDS) {
-      if (inputSystem.isTriggered(InputAction.IA_PRIMARY, PointerEventType.PET_DOWN, config.entity)) {
-        playButtonClick()
-        guestPickCard(config.slot, config.idx)
-      }
+      setPointerMaxDistance(card.entity, shouldShow ? 16 : 0)
     }
   })
 }

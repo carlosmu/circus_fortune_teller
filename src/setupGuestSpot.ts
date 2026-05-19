@@ -1,14 +1,4 @@
-import {
-  engine,
-  Transform,
-  pointerEventsSystem,
-  InputAction,
-  InputModifier,
-  PointerEvents,
-  PointerEventType,
-  inputSystem,
-  executeTask
-} from '@dcl/sdk/ecs'
+import { engine, Transform, InputModifier, executeTask } from '@dcl/sdk/ecs'
 import { Vector3 } from '@dcl/sdk/math'
 import { getEntityWorldPosition, getEntityWorldRotation } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
@@ -23,6 +13,7 @@ import {
 } from './fortuneSync'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
+import { registerPointerClickOnly } from './pointerClickUtil'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
 export const GUEST_SPOT = engine.addEntity()
@@ -133,35 +124,11 @@ function stripSitSpotGuestProximityUi(entity: ReturnType<typeof engine.addEntity
 function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEntity>): void {
   if (lastAppliedGuestSitMode !== null) return
   lastAppliedGuestSitMode = 'registered'
-  // Eliminamos los eventos del composite para que solo el nuestro procese el clic
-  pointerEventsSystem.removeOnPointerDown(entity)
-  pointerEventsSystem.onPointerDown(
-    {
-      entity,
-      opts: {
-        button: InputAction.IA_POINTER,
-        hoverText: GUEST_SIT_SPOT_HOVER,
-        maxDistance: 8,
-        showFeedback: true,
-        showHighlight: true
-      }
-    },
+  registerPointerClickOnly(
+    entity,
+    { hoverText: GUEST_SIT_SPOT_HOVER, maxDistance: 8 },
     guestSitSpotClickCallback
   )
-  // Añadir entrada IA_PRIMARY para que E también muestre el hint y pueda detectarse
-  const pe = PointerEvents.getMutableOrNull(entity)
-  if (pe) {
-    pe.pointerEvents.push({
-      eventType: PointerEventType.PET_DOWN,
-      eventInfo: {
-        button: InputAction.IA_PRIMARY,
-        hoverText: '',
-        maxDistance: 8,
-        showFeedback: false,
-        showHighlight: false
-      }
-    })
-  }
   stripSitSpotGuestProximityUi(entity)
 }
 
@@ -259,9 +226,6 @@ export function setupGuestSpot() {
       }
     } else if (guestSitSpotEntity !== null) {
       stripSitSpotGuestProximityUi(guestSitSpotEntity)
-      if (inputSystem.isTriggered(InputAction.IA_PRIMARY, PointerEventType.PET_DOWN, guestSitSpotEntity)) {
-        guestSitSpotClickCallback()
-      }
     }
 
     const localUserId = getPlayer()?.userId ?? null

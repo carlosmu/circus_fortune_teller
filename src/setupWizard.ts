@@ -1,15 +1,4 @@
-import {
-  engine,
-  Animator,
-  Transform,
-  pointerEventsSystem,
-  InputAction,
-  InputModifier,
-  PointerEvents,
-  PointerEventType,
-  inputSystem,
-  executeTask
-} from '@dcl/sdk/ecs'
+import { engine, Animator, Transform, InputModifier, executeTask } from '@dcl/sdk/ecs'
 import { getEntityWorldPosition } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
@@ -23,6 +12,7 @@ import {
 import { startHostCinematicCamera, stopOrbitCinematic, setupCinematicCamera } from './cinematicCamera'
 import { EntityNames } from '../assets/scene/entity-names'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
+import { registerPointerClickOnly } from './pointerClickUtil'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
 const FORTUNE_TELLER_MOVE_THRESHOLD = 0.01
@@ -223,35 +213,11 @@ function registerFortuneTellerSitSpotHandlers(entity: ReturnType<typeof engine.a
   const onInteract = () => {
     fortuneTellerClickCallback({ fromSitSpot: true })
   }
-  // Eliminamos los eventos del composite para que solo el nuestro procese el clic
-  pointerEventsSystem.removeOnPointerDown(entity)
-  pointerEventsSystem.onPointerDown(
-    {
-      entity,
-      opts: {
-        button: InputAction.IA_POINTER,
-        hoverText: FORTUNE_TELLER_SIT_SPOT_HOVER,
-        maxDistance: 8,
-        showFeedback: true,
-        showHighlight: true
-      }
-    },
+  registerPointerClickOnly(
+    entity,
+    { hoverText: FORTUNE_TELLER_SIT_SPOT_HOVER, maxDistance: 8 },
     onInteract
   )
-  // Añadir entrada IA_PRIMARY para que E también muestre el hint y pueda detectarse
-  const pe = PointerEvents.getMutableOrNull(entity)
-  if (pe) {
-    pe.pointerEvents.push({
-      eventType: PointerEventType.PET_DOWN,
-      eventInfo: {
-        button: InputAction.IA_PRIMARY,
-        hoverText: '',
-        maxDistance: 8,
-        showFeedback: false,
-        showHighlight: false
-      }
-    })
-  }
   stripSitSpotFortuneTellerProximityUi(entity)
 }
 
@@ -435,9 +401,6 @@ export function setupWizard() {
       }
     } else if (fortuneTellerSitSpotEntity !== null) {
       stripSitSpotFortuneTellerProximityUi(fortuneTellerSitSpotEntity)
-      if (inputSystem.isTriggered(InputAction.IA_PRIMARY, PointerEventType.PET_DOWN, fortuneTellerSitSpotEntity)) {
-        fortuneTellerClickCallback({ fromSitSpot: true })
-      }
     }
 
     const desiredIdleClip: WizardIdleClip =
