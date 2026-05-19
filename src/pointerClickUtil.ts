@@ -71,3 +71,13 @@ export function setPointerMaxDistance(entity: ReturnType<typeof engine.addEntity
     if (evt.eventInfo) evt.eventInfo.maxDistance = maxDistance
   }
 }
+
+export function setPointerHoverText(entity: ReturnType<typeof engine.addEntity>, hoverText: string): void {
+  const pe = PointerEvents.getMutableOrNull(entity)
+  if (!pe) return
+  for (const evt of pe.pointerEvents) {
+    if (evt.eventInfo?.button === InputAction.IA_POINTER) {
+      evt.eventInfo.hoverText = hoverText
+    }
+  }
+}

@@ -13,7 +13,7 @@ import {
 } from './fortuneSync'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
-import { registerPointerClickOnly } from './pointerClickUtil'
+import { registerPointerClickOnly, setPointerHoverText } from './pointerClickUtil'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
 
 export const GUEST_SPOT = engine.addEntity()
@@ -31,7 +31,8 @@ const AVATAR_LOOK_AHEAD_METERS = 2.5
 const GUEST_SEAT_MOVE_THRESHOLD = 0.01
 const GUEST_SEAT_GRACE_MS = 1500
 
-const GUEST_SIT_SPOT_HOVER = 'Ask For Your Fortune'
+const GUEST_SIT_SPOT_HOVER_AVAILABLE = 'Ask For Your Fortune'
+const GUEST_SIT_SPOT_HOVER_OCCUPIED = 'Reading in progress. Please wait.'
 
 let guestSitSpotRegistered = false
 let guestSitSpotEntity: ReturnType<typeof engine.addEntity> | null = null
@@ -41,6 +42,15 @@ let guestSatAtMs = 0
 let lastAppliedGuestSitMode: 'registered' | null = null
 let guestReadingIdleKickDispatched = false
 let guestMaxReadingsDisplaceDispatched = false
+let lastGuestSitSpotHoverText: string | null = null
+
+function getGuestSitSpotHoverText(localUserId: string | null): string {
+  const occupantId = gameData.guestSeatUserId
+  if (occupantId !== null && occupantId !== localUserId) {
+    return GUEST_SIT_SPOT_HOVER_OCCUPIED
+  }
+  return GUEST_SIT_SPOT_HOVER_AVAILABLE
+}
 
 function horizontalDistance(
   a: { x: number; z: number },
@@ -126,7 +136,7 @@ function applyGuestSitSpotPointerIfNeeded(entity: ReturnType<typeof engine.addEn
   lastAppliedGuestSitMode = 'registered'
   registerPointerClickOnly(
     entity,
-    { hoverText: GUEST_SIT_SPOT_HOVER, maxDistance: 8 },
+    { hoverText: GUEST_SIT_SPOT_HOVER_AVAILABLE, maxDistance: 8 },
     guestSitSpotClickCallback
   )
   stripSitSpotGuestProximityUi(entity)
@@ -229,6 +239,14 @@ export function setupGuestSpot() {
     }
 
     const localUserId = getPlayer()?.userId ?? null
+
+    if (guestSitSpotEntity !== null) {
+      const hoverText = getGuestSitSpotHoverText(localUserId)
+      if (hoverText !== lastGuestSitSpotHoverText) {
+        lastGuestSitSpotHoverText = hoverText
+        setPointerHoverText(guestSitSpotEntity, hoverText)
+      }
+    }
 
     if (
       gameData.gameState !== 'OCUPADO' ||
