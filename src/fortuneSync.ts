@@ -64,7 +64,7 @@ export type FortuneTellerSessionUpdateMessage = {
 const REVEAL_SOUND_PATH = 'assets/audio/magic_reveal.mp3'
 const BUTTON_CLICK_SOUND_PATH = 'assets/audio/button_short_click.mp3'
 const CARD_GONG_SOUND_PATH = 'assets/audio/gong.mp3'
-const CARD_GONG_VOLUME = 1
+const CARD_GONG_VOLUME = 0.5
 const CARD_GONG_DEBOUNCE_MS = 120
 
 const AUDIO_CLEANUP_MS = 2000

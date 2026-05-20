@@ -1,5 +1,4 @@
-﻿import { engine } from '@dcl/sdk/ecs'
-import ReactEcs, { UiEntity, Label } from '@dcl/sdk/react-ecs'
+﻿import ReactEcs, { UiEntity } from '@dcl/sdk/react-ecs'
 import { ReactEcsRenderer } from '@dcl/sdk/react-ecs'
 import { Color4 } from '@dcl/sdk/math'
 import { gameData } from './gameState'
@@ -36,7 +35,6 @@ function CinematicLetterbox({ alpha }: { alpha: number }) {
 }
 
 function uiComponent() {
-  const phase = gameData.revelationPhase
   const nowMs = Date.now()
   const showCenterBanner =
     gameData.centerBannerText !== null && gameData.centerBannerUntilMs > nowMs
@@ -65,22 +63,6 @@ function uiComponent() {
           zIndex: 10
         }}
       >
-        <UiEntity
-          uiTransform={{
-            width: '40%',
-            height: '10%',
-            margin: { top: '2%', left: '2%' }
-          }}
-        >
-          <Label
-            uiTransform={{ width: '100%', height: '100%' }}
-            value={`State: ${gameData.gameState === 'LIBRE' ? 'Free' : gameData.gameState === 'OCUPADO' ? 'Occupied' : 'Showing fortune'} · ${phase}`}
-            textAlign="top-left"
-            fontSize={14}
-            font="serif"
-          />
-        </UiEntity>
-
         <WelcomeIntroPanel />
         <FortuneFsmLayer />
         <InfoBanner
