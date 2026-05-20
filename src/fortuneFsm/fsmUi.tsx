@@ -118,6 +118,11 @@ const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
   { key: 'C', idx: 2 }
 ]
 
+/** Hover en tarjetas de CARD_SELECTION (guest). */
+let cardSelectionHoveredKey: FsmCardChoice | null = null
+const CARD_SELECTION_HOVER_LIFT_PX = 6
+const CARD_SELECTION_HOVER_OVERLAY = Color4.create(GOLD.r, GOLD.g, GOLD.b, 0.05)
+
 /**
  * Contenido de la revelación (sin card.png): host/invitado lo incrustan en su mismo {@link HostCardShell}
  * para no desmontar la textura al pasar de FORTUNE_SELECTION a REVEAL.
@@ -539,6 +544,9 @@ function HostPanel() {
 
 function GuestPanel() {
   const st = fsmSession.state
+  if (st !== 'CARD_SELECTION' && cardSelectionHoveredKey !== null) {
+    cardSelectionHoveredKey = null
+  }
 
   if (st === 'INIT') {
     return (
@@ -607,20 +615,49 @@ function GuestPanel() {
         >
           {CARD_SLOTS.map(({ key, idx }, i) => {
             const flipped = fsmSession.cardFlipIndex === idx
+            const hovered = cardSelectionHoveredKey === key
             return (
               <UiEntity
                 key={key}
                 uiTransform={{
                   width: TAROT_CARD_DISPLAY_WIDTH,
                   height: TAROT_CARD_DISPLAY_HEIGHT,
-                  margin: { left: i === 0 ? 0 : 32 },
+                  positionType: 'relative',
+                  margin: {
+                    left: i === 0 ? 0 : 32,
+                    top: hovered ? -CARD_SELECTION_HOVER_LIFT_PX : 0,
+                    bottom: hovered ? CARD_SELECTION_HOVER_LIFT_PX : 0
+                  },
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}
-                uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
-                onMouseDown={() => { playButtonClick(); guestPickCard(key, idx) }}
+                onMouseEnter={() => {
+                  cardSelectionHoveredKey = key
+                }}
+                onMouseLeave={() => {
+                  if (cardSelectionHoveredKey === key) cardSelectionHoveredKey = null
+                }}
+                onMouseDown={() => {
+                  playButtonClick()
+                  guestPickCard(key, idx)
+                }}
               >
+                <UiEntity
+                  uiTransform={{ width: '100%', height: '100%' }}
+                  uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
+                />
+                {hovered && (
+                  <UiEntity
+                    uiTransform={{
+                      positionType: 'absolute',
+                      position: { top: 0, left: 0 },
+                      width: '100%',
+                      height: '100%'
+                    }}
+                    uiBackground={{ color: CARD_SELECTION_HOVER_OVERLAY }}
+                  />
+                )}
                 {flipped && (
                   <Label
                     uiTransform={{ width: '100%', height: '100%' }}
