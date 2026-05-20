@@ -484,6 +484,9 @@ function CardStyledButton({
 function HostPanel() {
   const st = fsmSession.state
   const cat = fsmSession.selectedCategory
+  if (st !== 'INIT' && uiHoverTargetId === 'host-open-category') {
+    uiHoverTargetId = null
+  }
 
   if (st === 'INIT') {
     return (
@@ -491,7 +494,12 @@ function HostPanel() {
         {/* FIX: CenteredLabelRow garantiza width:100% con altura fija → textAlign middle-center funciona */}
         <CenteredLabelRow textAlign={CARD_LABEL_TEXT_ALIGN} value="Ask the Guest:" fontSize={CARD_UI_FONT_SIZE} color={GOLD} height={52} />
         <UiEntity uiTransform={{ ...CARD_CONTROL_ROW, margin: { top: 16 } }}>
-          <CardStyledButton layout="auto" label="What do you want to know?" onPress={() => hostOpenCategorySelection()} />
+          <CardStyledButton
+            hoverId="host-open-category"
+            layout="auto"
+            label="What do you want to know?"
+            onPress={() => hostOpenCategorySelection()}
+          />
         </UiEntity>
       </HostCardShell>
     )
