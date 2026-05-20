@@ -490,6 +490,9 @@ function HostPanel() {
   if (st !== 'DECK_SELECTION' && uiHoverTargetId !== null && DECKS.includes(uiHoverTargetId as FsmDeck)) {
     uiHoverTargetId = null
   }
+  if (st !== 'FORTUNE_SELECTION' && uiHoverTargetId !== null && uiHoverTargetId.startsWith('meaning-')) {
+    uiHoverTargetId = null
+  }
 
   if (st === 'INIT') {
     return (
@@ -588,6 +591,7 @@ function HostPanel() {
           ).map(({ choice, label }, i) => (
             <CardStyledButton
               key={choice}
+              hoverId={`meaning-${choice}`}
               label={label}
               onPress={() => hostPickFortune(choice)}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
