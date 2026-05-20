@@ -487,6 +487,9 @@ function HostPanel() {
   if (st !== 'INIT' && uiHoverTargetId === 'host-open-category') {
     uiHoverTargetId = null
   }
+  if (st !== 'DECK_SELECTION' && uiHoverTargetId !== null && DECKS.includes(uiHoverTargetId as FsmDeck)) {
+    uiHoverTargetId = null
+  }
 
   if (st === 'INIT') {
     return (
@@ -536,6 +539,7 @@ function HostPanel() {
           {DECKS.map((d, i) => (
             <CardStyledButton
               key={d}
+              hoverId={d}
               label={d}
               onPress={() => hostPickDeck(d)}
               uiTransform={{ width: '29%', height: '100%', margin: { left: i === 0 ? 0 : 10 } }}
