@@ -118,10 +118,21 @@ const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
   { key: 'C', idx: 2 }
 ]
 
-/** Hover en tarjetas de CARD_SELECTION (guest). */
-let cardSelectionHoveredKey: FsmCardChoice | null = null
-const CARD_SELECTION_HOVER_LIFT_PX = 6
-const CARD_SELECTION_HOVER_OVERLAY = Color4.create(GOLD.r, GOLD.g, GOLD.b, 0.05)
+/** Hover compartido: tarjetas CARD_SELECTION y botones con `hoverId` en CardStyledButton. */
+let uiHoverTargetId: string | null = null
+const UI_HOVER_LIFT_PX = 6
+const UI_HOVER_GOLD_OVERLAY = Color4.create(GOLD.r, GOLD.g, GOLD.b, 0.05)
+
+function mergeHoverLiftMargin(
+  base: UiTransformProps['margin'],
+  hovered: boolean
+): UiTransformProps['margin'] {
+  if (!hovered) return base
+  const lift = { top: -UI_HOVER_LIFT_PX, bottom: UI_HOVER_LIFT_PX }
+  if (base === undefined) return lift
+  if (typeof base === 'number') return lift
+  return { ...(base as Record<string, number>), ...lift }
+}
 
 /**
  * Contenido de la revelación (sin card.png): host/invitado lo incrustan en su mismo {@link HostCardShell}
@@ -369,37 +380,95 @@ function GuestCardShell(props: { children?: any; contentJustify?: 'center' | 'fl
   )
 }
 
+const CARD_BTN_ABSOLUTE_FILL: UiTransformProps = {
+  positionType: 'absolute',
+  position: { top: 0, left: 0 },
+  width: '100%',
+  height: '100%'
+}
+
 /** Botón violeta/magenta sobre card.png. `layout="auto"` = tamaño al texto; `fill` = ocupa el uiTransform del padre. */
 function CardStyledButton({
   label,
   onPress,
   layout = 'fill',
   uiTransform,
+  hoverId,
   key
 }: {
   label: string
   onPress: () => void
   layout?: 'auto' | 'fill'
   uiTransform?: UiTransformProps
+  /** Si se define, activa elevación + overlay gold al hover (mismo patrón que CARD_SELECTION). */
+  hoverId?: string
   key?: string | number
 }) {
+  const hovered = hoverId !== undefined && uiHoverTargetId === hoverId
+  const { margin: baseMargin, ...uiTransformRest } = uiTransform ?? {}
   const transform: UiTransformProps =
     layout === 'auto'
-      ? { ...CARD_BTN_BASE_TRANSFORM, width: 'auto', height: 'auto', ...uiTransform }
-      : { ...CARD_BTN_BASE_TRANSFORM, ...uiTransform }
+      ? {
+          ...CARD_BTN_BASE_TRANSFORM,
+          width: 'auto',
+          height: 'auto',
+          ...uiTransformRest,
+          margin: hoverId !== undefined ? mergeHoverLiftMargin(baseMargin, hovered) : baseMargin
+        }
+      : {
+          ...CARD_BTN_BASE_TRANSFORM,
+          ...uiTransformRest,
+          margin: hoverId !== undefined ? mergeHoverLiftMargin(baseMargin, hovered) : baseMargin
+        }
   const labelTransform: UiTransformProps =
     layout === 'auto' ? { width: 'auto', height: 'auto' } : { width: '100%', height: '100%' }
 
+  const mouseHandlers =
+    hoverId !== undefined
+      ? {
+          onMouseEnter: () => {
+            uiHoverTargetId = hoverId
+          },
+          onMouseLeave: () => {
+            if (uiHoverTargetId === hoverId) uiHoverTargetId = null
+          }
+        }
+      : {}
+
+  const onPressHandler = () => {
+    playButtonClick()
+    onPress()
+  }
+
+  if (hoverId === undefined) {
+    return (
+      <UiEntity key={key} uiTransform={transform} uiBackground={CARD_BTN_BG} onMouseDown={onPressHandler}>
+        <Label
+          uiTransform={labelTransform}
+          value={label}
+          textAlign={CARD_TEXT_ALIGN}
+          fontSize={CARD_UI_FONT_SIZE}
+          font="serif"
+          color={CARD_WHITE}
+        />
+      </UiEntity>
+    )
+  }
+
+  const hoverTransform: UiTransformProps = {
+    ...transform,
+    positionType: 'relative',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center'
+  }
+
   return (
-    <UiEntity
-      key={key}
-      uiTransform={transform}
-      uiBackground={CARD_BTN_BG}
-      onMouseDown={() => {
-        playButtonClick()
-        onPress()
-      }}
-    >
+    <UiEntity key={key} uiTransform={hoverTransform} onMouseDown={onPressHandler} {...mouseHandlers}>
+      <UiEntity uiTransform={CARD_BTN_ABSOLUTE_FILL} uiBackground={CARD_BTN_BG} />
+      {hovered && (
+        <UiEntity uiTransform={CARD_BTN_ABSOLUTE_FILL} uiBackground={{ color: UI_HOVER_GOLD_OVERLAY }} />
+      )}
       <Label
         uiTransform={labelTransform}
         value={label}
@@ -544,8 +613,8 @@ function HostPanel() {
 
 function GuestPanel() {
   const st = fsmSession.state
-  if (st !== 'CARD_SELECTION' && cardSelectionHoveredKey !== null) {
-    cardSelectionHoveredKey = null
+  if (st !== 'CARD_SELECTION' && st !== 'CATEGORY_SELECTION' && uiHoverTargetId !== null) {
+    uiHoverTargetId = null
   }
 
   if (st === 'INIT') {
@@ -573,6 +642,7 @@ function GuestPanel() {
           {offer.map((cat: FortuneCategory, i: number) => (
             <CardStyledButton
               key={cat}
+              hoverId={cat}
               label={FSM_CATEGORY_LABELS[cat]}
               onPress={() => guestPickCategory(cat)}
               uiTransform={{ width: btnWidth, height: '100%', margin: { left: i === 0 ? 0 : 8 } }}
@@ -615,7 +685,7 @@ function GuestPanel() {
         >
           {CARD_SLOTS.map(({ key, idx }, i) => {
             const flipped = fsmSession.cardFlipIndex === idx
-            const hovered = cardSelectionHoveredKey === key
+            const hovered = uiHoverTargetId === key
             return (
               <UiEntity
                 key={key}
@@ -623,20 +693,16 @@ function GuestPanel() {
                   width: TAROT_CARD_DISPLAY_WIDTH,
                   height: TAROT_CARD_DISPLAY_HEIGHT,
                   positionType: 'relative',
-                  margin: {
-                    left: i === 0 ? 0 : 32,
-                    top: hovered ? -CARD_SELECTION_HOVER_LIFT_PX : 0,
-                    bottom: hovered ? CARD_SELECTION_HOVER_LIFT_PX : 0
-                  },
+                  margin: mergeHoverLiftMargin({ left: i === 0 ? 0 : 32 }, hovered),
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center'
                 }}
                 onMouseEnter={() => {
-                  cardSelectionHoveredKey = key
+                  uiHoverTargetId = key
                 }}
                 onMouseLeave={() => {
-                  if (cardSelectionHoveredKey === key) cardSelectionHoveredKey = null
+                  if (uiHoverTargetId === key) uiHoverTargetId = null
                 }}
                 onMouseDown={() => {
                   playButtonClick()
@@ -655,7 +721,7 @@ function GuestPanel() {
                       width: '100%',
                       height: '100%'
                     }}
-                    uiBackground={{ color: CARD_SELECTION_HOVER_OVERLAY }}
+                    uiBackground={{ color: UI_HOVER_GOLD_OVERLAY }}
                   />
                 )}
                 {flipped && (
