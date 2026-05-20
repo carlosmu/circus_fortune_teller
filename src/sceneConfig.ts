@@ -29,3 +29,6 @@ export const FSM_REVEAL_READING_PHASE_MS = 2000
  * Debe ser mayor que {@link FSM_REVEAL_READING_PHASE_MS}; deja otros 2s para “It is becoming clear…”.
  */
 export const FSM_REVEAL_SHOW_AT_MS = 4000
+
+/** Tras completar al menos 1 revelación en un ciclo de silla, el guest no puede volver a sentarse este tiempo (ms). */
+export const GUEST_READING_COOLDOWN_MS = 60_000

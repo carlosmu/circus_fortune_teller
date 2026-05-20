@@ -175,6 +175,7 @@ export function setupFortuneSync() {
     if (typeof data.centerBannerUntilMs === 'number') {
       gameData.centerBannerText = data.centerBannerText ?? null
       gameData.centerBannerUntilMs = data.centerBannerUntilMs
+      gameData.centerBannerVariant = 'default'
     }
   })
 
@@ -251,6 +252,7 @@ export function setupFortuneSync() {
       if (typeof data.centerBannerUntilMs === 'number') {
         gameData.centerBannerText = data.centerBannerText ?? null
         gameData.centerBannerUntilMs = data.centerBannerUntilMs
+        gameData.centerBannerVariant = 'default'
       }
     }
   )
@@ -264,6 +266,7 @@ export function setupFortuneSync() {
     if (typeof data.centerBannerUntilMs === 'number') {
       gameData.centerBannerUntilMs = data.centerBannerUntilMs
       gameData.centerBannerText = data.centerBannerText ?? null
+      gameData.centerBannerVariant = 'default'
     }
   })
 }

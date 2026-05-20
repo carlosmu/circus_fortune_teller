@@ -145,6 +145,7 @@ function clearFortuneTellerAndShowWizard() {
   gameData.fortuneTellerTimeRemainingSec = 0
   gameData.centerBannerText = `${previousName} is no longer the Fortune Teller`
   gameData.centerBannerUntilMs = Date.now() + 2200
+  gameData.centerBannerVariant = 'default'
   lastFortuneTellerPosition = null
   fortuneTellerBecameAtMs = 0
   fortuneTellerJoinedViaSitSpot = false
@@ -221,6 +222,7 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   gameData.fortuneTellerTimeRemainingSec = 60
   gameData.centerBannerText = `${ftName ?? 'Someone'} is becoming the Fortune Teller`
   gameData.centerBannerUntilMs = now + 2200
+  gameData.centerBannerVariant = 'default'
   fortuneMessageBus.emit('set-fortune-teller', {
     fortuneTellerId: userId,
     fortuneTellerName: ftName,

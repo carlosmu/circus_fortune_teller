@@ -3,6 +3,7 @@ import { getPlayer } from '@dcl/sdk/players'
 import { setupFortuneSync } from './fortuneSync'
 import { setupFortuneFsm } from './fortuneFsm/setup'
 import { setupGuestSpot } from './setupGuestSpot'
+import { setupGuestReadingCooldown } from './guestReadingCooldown'
 import { setupWizard } from './setupWizard'
 import { setupDeckCards } from './setupDeckCards'
 import { setupDeckMeanings } from './setupDeckMeanings'
@@ -20,6 +21,7 @@ export function main() {
   // Fortune sync across players (MessageBus)
   setupFortuneSync()
   setupFortuneFsm()
+  setupGuestReadingCooldown()
 
   // Inicializar la UI base
   setupUi()

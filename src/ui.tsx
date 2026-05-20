@@ -83,7 +83,11 @@ function uiComponent() {
 
         <WelcomeIntroPanel />
         <FortuneFsmLayer />
-        <InfoBanner text={showCenterBanner ? gameData.centerBannerText : null} expiresAtMs={gameData.centerBannerUntilMs} />
+        <InfoBanner
+          text={showCenterBanner ? gameData.centerBannerText : null}
+          expiresAtMs={gameData.centerBannerUntilMs}
+          variant={gameData.centerBannerVariant}
+        />
         <FortuneTellerGuestStatusBar />
       </UiEntity>
       <LeaveRoleDialog />

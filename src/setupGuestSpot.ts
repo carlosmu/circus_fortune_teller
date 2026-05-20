@@ -12,6 +12,11 @@ import {
   playButtonClick
 } from './fortuneSync'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
+import {
+  isLocalGuestOnReadingCooldown,
+  resetGuestRevealProgressForNewSeat,
+  showGuestReadingCooldownBanner
+} from './guestReadingCooldown'
 import { showLeaveRoleDialog, isLeaveRoleDialogVisible } from './leaveRoleDialog'
 import { registerPointerClickOnly, setPointerHoverText } from './pointerClickUtil'
 import { stripBuiltInSitSpotPointerUi } from './sitSpotPointerStrip'
@@ -157,11 +162,19 @@ function guestSitSpotClickCallback() {
 
   if (gameData.guestSeatUserId !== null) return
 
+  if (isLocalGuestOnReadingCooldown()) {
+    showGuestReadingCooldownBanner()
+    return
+  }
+
+  resetGuestRevealProgressForNewSeat()
+
   const player = getPlayer()
   const guestDisplayName = player?.name?.trim() || null
   const name = guestDisplayName ?? 'Visitor'
   const now = Date.now()
 
+  gameData.centerBannerVariant = 'default'
   fortuneMessageBus.emit('guest-seat-update', {
     seatUserId: localUserId,
     seatUserName: name,

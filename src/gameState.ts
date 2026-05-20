@@ -16,6 +16,7 @@ export const gameData: GlobalGameData = {
   fortuneTellerTimeRemainingSec: 0,
   centerBannerText: null,
   centerBannerUntilMs: 0,
+  centerBannerVariant: 'default',
   gameState: 'LIBRE',
   currentFortune: null,
   revelationPhase: 'idle',

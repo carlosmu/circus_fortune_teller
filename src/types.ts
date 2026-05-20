@@ -55,6 +55,8 @@ export type GlobalGameData = {
   centerBannerText: string | null
   /** Absolute timestamp (ms) when center banner should disappear. */
   centerBannerUntilMs: number
+  /** Estilo del banner central (p. ej. cooldown guest = golden). */
+  centerBannerVariant: 'default' | 'golden'
   gameState: GameState
   currentFortune: Fortune | null
   revelationPhase: RevelationPhase
