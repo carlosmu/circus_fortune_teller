@@ -120,18 +120,44 @@ const CARD_SLOTS: { key: FsmCardChoice; idx: 0 | 1 | 2 }[] = [
 
 /** Hover compartido: tarjetas CARD_SELECTION y botones con `hoverId` en CardStyledButton. */
 let uiHoverTargetId: string | null = null
-const UI_HOVER_LIFT_PX = 6
-const UI_HOVER_GOLD_OVERLAY = Color4.create(GOLD.r, GOLD.g, GOLD.b, 0.05)
+/** Reservado; 0 = sin desplazamiento por margin al hover. */
+const UI_HOVER_LIFT_PX = 0
+const UI_HOVER_UNDERLINE_HEIGHT = 5
+const UI_HOVER_UNDERLINE_WIDTH = '80%' as const
+/** Mismo magenta que el borde de botones (`CARD_BTN_BORDER`), opaco. */
+const UI_HOVER_UNDERLINE_COLOR = Color4.create(0.82, 0.28, 0.78, 1)
 
 function mergeHoverLiftMargin(
   base: UiTransformProps['margin'],
   hovered: boolean
 ): UiTransformProps['margin'] {
-  if (!hovered) return base
+  if (!hovered || UI_HOVER_LIFT_PX === 0) return base
   const lift = { top: -UI_HOVER_LIFT_PX, bottom: UI_HOVER_LIFT_PX }
   if (base === undefined) return lift
   if (typeof base === 'number') return lift
   return { ...(base as Record<string, number>), ...lift }
+}
+
+/** Subrayado inferior al hover (línea magenta, 80% del ancho del control). */
+function HoverUnderline() {
+  return (
+    <UiEntity
+      uiTransform={{
+        positionType: 'absolute',
+        position: { bottom: 0, left: 0 },
+        width: '100%',
+        height: UI_HOVER_UNDERLINE_HEIGHT,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'stretch'
+      }}
+    >
+      <UiEntity
+        uiTransform={{ width: UI_HOVER_UNDERLINE_WIDTH, height: '100%' }}
+        uiBackground={{ color: UI_HOVER_UNDERLINE_COLOR }}
+      />
+    </UiEntity>
+  )
 }
 
 /**
@@ -400,7 +426,7 @@ function CardStyledButton({
   onPress: () => void
   layout?: 'auto' | 'fill'
   uiTransform?: UiTransformProps
-  /** Si se define, activa elevación + overlay gold al hover (mismo patrón que CARD_SELECTION). */
+  /** Si se define, activa subrayado magenta al hover (mismo patrón que CARD_SELECTION). */
   hoverId?: string
   key?: string | number
 }) {
@@ -466,9 +492,7 @@ function CardStyledButton({
   return (
     <UiEntity key={key} uiTransform={hoverTransform} onMouseDown={onPressHandler} {...mouseHandlers}>
       <UiEntity uiTransform={CARD_BTN_ABSOLUTE_FILL} uiBackground={CARD_BTN_BG} />
-      {hovered && (
-        <UiEntity uiTransform={CARD_BTN_ABSOLUTE_FILL} uiBackground={{ color: UI_HOVER_GOLD_OVERLAY }} />
-      )}
+      {hovered && <HoverUnderline />}
       <Label
         uiTransform={labelTransform}
         value={label}
@@ -729,17 +753,7 @@ function GuestPanel() {
                   uiTransform={{ width: '100%', height: '100%' }}
                   uiBackground={{ texture: { src: TAROT_BACK }, textureMode: 'stretch' }}
                 />
-                {hovered && (
-                  <UiEntity
-                    uiTransform={{
-                      positionType: 'absolute',
-                      position: { top: 0, left: 0 },
-                      width: '100%',
-                      height: '100%'
-                    }}
-                    uiBackground={{ color: UI_HOVER_GOLD_OVERLAY }}
-                  />
-                )}
+                {hovered && <HoverUnderline />}
                 {flipped && (
                   <Label
                     uiTransform={{ width: '100%', height: '100%' }}
