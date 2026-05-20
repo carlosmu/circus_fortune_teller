@@ -613,7 +613,7 @@ function GuestPanel() {
                 uiTransform={{
                   width: TAROT_CARD_DISPLAY_WIDTH,
                   height: TAROT_CARD_DISPLAY_HEIGHT,
-                  margin: { left: i === 0 ? 0 : 12 },
+                  margin: { left: i === 0 ? 0 : 32 },
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'center'
