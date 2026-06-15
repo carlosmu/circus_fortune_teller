@@ -37,7 +37,7 @@ function isFsmHostClient(): boolean {
   return fsmSession.isVirtualHost || (localUserId !== null && localUserId === fsmSession.hostId)
 }
 
-function emitFsmSessionEnded(message: string): void {
+function emitFsmSessionEnded(message: string, reason: string = 'guest_declined'): void {
   const gid = fsmSession.guestId
   fsmSession.sessionFinishedMessage = message
   fsmSession.sessionFinishedExpiresAtMs = nowMs() + 4500
@@ -54,7 +54,7 @@ function emitFsmSessionEnded(message: string): void {
     ...(gid ? { guestSeatUserId: null, guestSeatUserName: null } : {}),
     centerBannerText: guestBannerName ? `${guestBannerName} is no longer the Guest` : null,
     centerBannerUntilMs: bannerUntil,
-    sessionEndReason: 'guest_declined',
+    sessionEndReason: reason,
   })
   executeTask(async () => {
     await delayMs(4500)
@@ -181,7 +181,8 @@ export function fsmTickContinueIfReady(t: number): void {
 
   if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) {
     emitFsmSessionEnded(
-      pickGuestMaxReadingsFarewellLine(fsmSession.guestId ?? '', gameData.revelationRoundSalt)
+      pickGuestMaxReadingsFarewellLine(fsmSession.guestId ?? '', gameData.revelationRoundSalt),
+      'max_readings_reached'
     )
     return
   }
@@ -245,6 +246,7 @@ export function guestContinueYes(): void {
   gameData.guestLastInteractionAtMs = now
 
   fsmSession.selectedCategory = null
+  fsmSession.selectedCategoryKey = null
   fsmSession.selectedDeck = null
   fsmSession.selectedCardType = null
   fsmSession.selectedFortune = null
