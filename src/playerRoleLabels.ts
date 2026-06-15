@@ -76,8 +76,6 @@ function createRoleLabel(line: string, textColor: typeof COLOR_FT): ReturnType<t
     text: line,
     fontSize: FONT_SIZE,
     textColor,
-    outlineColor: Color4.Black(),
-    outlineWidth: 0.1,
     width: LABEL_W,
     height: LABEL_H
   })

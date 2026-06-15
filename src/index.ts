@@ -18,7 +18,7 @@ export function main() {
   initSmokeParticles()
   initCarpetSmokeLoop()
 
-  // Fortune sync across players (MessageBus)
+  // Fortune sync across players (syncEntity)
   setupFortuneSync()
   setupFortuneFsm()
   setupGuestReadingCooldown()

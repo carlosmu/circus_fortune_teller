@@ -6,11 +6,13 @@ import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { EntityNames } from '../assets/scene/entity-names'
 import { gameData } from './gameState'
 import {
-  fortuneMessageBus,
   GUEST_MAX_READINGS_PER_SEAT,
   GUEST_READING_IDLE_TIMEOUT_MS,
-  playButtonClick
+  playButtonClick,
+  patchSharedGameState,
+  onGuestDeclinedMore
 } from './fortuneSync'
+import { fsmActivateSession, fsmDeactivateSession } from './fortuneFsm/actions'
 import { displaceGuestSeatOccupantToRandomArea } from './guestSeatDisplace'
 import {
   isLocalGuestOnReadingCooldown,
@@ -83,12 +85,17 @@ function emitGuestFortuneRequestFromChair() {
     const userId = player?.userId ?? 'unknown'
     const name = player?.name ?? 'Visitor'
     const roundSalt = Date.now()
-    fortuneMessageBus.emit('guest-requested-fortune', {
-      guestId: userId,
-      guestName: name,
-      roundSalt,
-      sessionReadingIndex
+    const hostId = gameData.currentFortuneTellerId
+    patchSharedGameState({
+      gameState: 'OCUPADO',
+      currentGuestId: userId,
+      currentGuestName: name,
+      revelationRoundSalt: roundSalt,
+      currentIteration: sessionReadingIndex,
+      guestReadingsUsedThisSeat: sessionReadingIndex,
+      sessionEndReason: '',
     })
+    fsmActivateSession(hostId, userId, name)
   })
 }
 
@@ -175,11 +182,12 @@ function guestSitSpotClickCallback() {
   const now = Date.now()
 
   gameData.centerBannerVariant = 'default'
-  fortuneMessageBus.emit('guest-seat-update', {
-    seatUserId: localUserId,
-    seatUserName: name,
+  patchSharedGameState({
+    guestSeatUserId: localUserId,
+    guestSeatUserName: name,
     centerBannerText: `${guestDisplayName ?? 'Someone'} is becoming the Guest`,
-    centerBannerUntilMs: now + 2200
+    centerBannerUntilMs: now + 2200,
+    guestReadingsUsedThisSeat: 0,
   })
 
   guestJoinedViaSitSpot = true
@@ -224,15 +232,8 @@ export function setupGuestSpot() {
     position: Vector3.create(8, 1, 8.6)
   })
 
-  fortuneMessageBus.on('guest-reading-idle-kick', (data: { guestId: string }) => {
-    if (getPlayer()?.userId === data.guestId) {
-      guestJoinedViaSitSpot = false
-      unblockGuestInput()
-    }
-  })
-
-  fortuneMessageBus.on('guest-chair-decline-more', (data: { guestId: string }) => {
-    if (getPlayer()?.userId === data.guestId) {
+  onGuestDeclinedMore((prevGuestId) => {
+    if (getPlayer()?.userId === prevGuestId) {
       guestJoinedViaSitSpot = false
       unblockGuestInput()
       displaceGuestSeatOccupantToRandomArea()
@@ -273,7 +274,19 @@ export function setupGuestSpot() {
       !guestReadingIdleKickDispatched
     ) {
       guestReadingIdleKickDispatched = true
-      fortuneMessageBus.emit('guest-reading-idle-kick', { guestId: localUserId })
+      guestJoinedViaSitSpot = false
+      unblockGuestInput()
+      fsmDeactivateSession()
+      patchSharedGameState({
+        gameState: 'LIBRE',
+        currentGuestId: null,
+        currentGuestName: null,
+        guestSeatUserId: null,
+        guestSeatUserName: null,
+        guestReadingsUsedThisSeat: 0,
+        revelationRoundSalt: 0,
+        sessionEndReason: 'idle_kick',
+      })
       displaceGuestSeatOccupantToRandomArea()
     }
 
@@ -290,10 +303,7 @@ export function setupGuestSpot() {
       guestMaxReadingsDisplaceDispatched = true
       guestJoinedViaSitSpot = false
       unblockGuestInput()
-      fortuneMessageBus.emit('guest-seat-update', {
-        seatUserId: null,
-        seatUserName: null
-      })
+      patchSharedGameState({ guestSeatUserId: null, guestSeatUserName: null })
       displaceGuestSeatOccupantToRandomArea()
     }
 
@@ -319,15 +329,17 @@ export function setupGuestSpot() {
             guestJoinedViaSitSpot = false
             sitSpotGuestTeleportPending = true
             unblockGuestInput()
-            // Limpieza local inmediata para evitar re-disparo del diálogo mientras sincroniza el bus.
             gameData.guestSeatUserId = null
             gameData.guestSeatUserName = null
-            fortuneMessageBus.emit('hide-fortune', {})
-            fortuneMessageBus.emit('guest-seat-update', {
-              seatUserId: null,
-              seatUserName: null,
+            patchSharedGameState({
+              gameState: 'LIBRE',
+              currentGuestId: null,
+              currentGuestName: null,
+              guestSeatUserId: null,
+              guestSeatUserName: null,
               centerBannerText: `${guestName} is no longer the Guest`,
-              centerBannerUntilMs: now + 2200
+              centerBannerUntilMs: now + 2200,
+              sessionEndReason: 'guest_left',
             })
             displaceGuestSeatOccupantToRandomArea()
             sitSpotGuestTeleportPending = false

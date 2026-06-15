@@ -7,13 +7,14 @@ import {
   FSM_REVEAL_READING_PHASE_MS,
   FSM_REVEAL_SHOW_AT_MS
 } from '../sceneConfig'
-import { pickGuestMaxReadingsFarewellLine } from '../revelationRng'
+import { hashString, pickGuestMaxReadingsFarewellLine } from '../revelationRng'
 import { getFsmRevealFortuneText } from './resolveRevealFortune'
 import { FSM_DEBOUNCE_MS, type FsmCardChoice, type FsmDeck } from './types'
 import { fsmSession, hardResetSession, sessionForSync } from './session'
 import { debounceOk, tryTransition } from './machine'
 import { broadcastFsmSession } from './sync'
-import { fortuneMessageBus, GUEST_MAX_READINGS_PER_SEAT, touchGuestReadingInteractionDeadline } from '../fortuneSync'
+import { GUEST_MAX_READINGS_PER_SEAT, touchGuestReadingInteractionDeadline } from '../fortuneSync'
+import { patchSharedGameState } from '../syncedState'
 import { FSM_CATEGORY_LABELS, getFsmCategoryOffer } from './categories'
 
 function nowMs(): number {
@@ -36,7 +37,7 @@ function isFsmHostClient(): boolean {
   return fsmSession.isVirtualHost || (localUserId !== null && localUserId === fsmSession.hostId)
 }
 
-function emitFsmSessionEnded(message: string): void {
+function emitFsmSessionEnded(message: string, reason: string = 'guest_declined'): void {
   const gid = fsmSession.guestId
   fsmSession.sessionFinishedMessage = message
   fsmSession.sessionFinishedExpiresAtMs = nowMs() + 4500
@@ -44,18 +45,17 @@ function emitFsmSessionEnded(message: string): void {
   if (!r.ok) return
   fsmSession.active = false
   emit()
-  fortuneMessageBus.emit('hide-fortune', {})
-  if (gid) {
-    const guestBannerName = (fsmSession.guestName ?? 'Someone').trim() || 'Someone'
-    const bannerUntil = nowMs() + 2200
-    fortuneMessageBus.emit('guest-seat-update', {
-      seatUserId: null,
-      seatUserName: null,
-      centerBannerText: `${guestBannerName} is no longer the Guest`,
-      centerBannerUntilMs: bannerUntil
-    })
-    fortuneMessageBus.emit('guest-chair-decline-more', { guestId: gid })
-  }
+  const guestBannerName = gid ? ((fsmSession.guestName ?? 'Someone').trim() || 'Someone') : null
+  const bannerUntil = nowMs() + 2200
+  patchSharedGameState({
+    gameState: 'LIBRE',
+    currentGuestId: null,
+    currentGuestName: null,
+    ...(gid ? { guestSeatUserId: null, guestSeatUserName: null } : {}),
+    centerBannerText: guestBannerName ? `${guestBannerName} is no longer the Guest` : null,
+    centerBannerUntilMs: bannerUntil,
+    sessionEndReason: reason,
+  })
   executeTask(async () => {
     await delayMs(4500)
     hardResetSession()
@@ -165,28 +165,24 @@ export function fsmTickContinueIfReady(t: number): void {
   if (t - fsmSession.revealEnteredAtMs < REVEAL_TO_CONTINUE_MS) return
   if (!isFsmHostClient()) return
 
-  // Solo el host incrementa lecturas y avanza la FSM (el resto recibe por MessageBus).
-  {
-    gameData.fortuneTellerReadingsDone = Math.min(
-      gameData.fortuneTellerMaxReadings,
-      gameData.fortuneTellerReadingsDone + 1
-    )
-    if (gameData.fortuneTellerReadingsDone >= gameData.fortuneTellerMaxReadings) {
-      // Schedule FT release after farewell message (4500ms) + buffer
-      gameData.fortuneTellerReleaseAtMs = nowMs() + 5500
-    }
-    fortuneMessageBus.emit('fortune-teller-session-update', {
-      fortuneTellerId: gameData.currentFortuneTellerId,
-      fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
-      fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
-      fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
-      fortuneTellerReleaseAtMs: gameData.fortuneTellerReleaseAtMs
-    })
+  gameData.fortuneTellerReadingsDone = Math.min(
+    gameData.fortuneTellerMaxReadings,
+    gameData.fortuneTellerReadingsDone + 1
+  )
+  if (gameData.fortuneTellerReadingsDone >= gameData.fortuneTellerMaxReadings) {
+    gameData.fortuneTellerReleaseAtMs = nowMs() + 5500
   }
+  patchSharedGameState({
+    fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
+    fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
+    fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
+    fortuneTellerReleaseAtMs: gameData.fortuneTellerReleaseAtMs,
+  })
 
   if (gameData.guestReadingsUsedThisSeat >= GUEST_MAX_READINGS_PER_SEAT) {
     emitFsmSessionEnded(
-      pickGuestMaxReadingsFarewellLine(fsmSession.guestId ?? '', gameData.revelationRoundSalt)
+      pickGuestMaxReadingsFarewellLine(fsmSession.guestId ?? '', gameData.revelationRoundSalt),
+      'max_readings_reached'
     )
     return
   }
@@ -214,7 +210,8 @@ export function fsmTickVirtualHost(t: number): void {
   if (fsmSession.state === 'DECK_SELECTION' && dt >= VIRTUAL_HOST_DECK_MS) {
     fsmSession.virtualHostPendingAtMs = null
     const decks: FsmDeck[] = ['Funny', 'Serious', 'Strange']
-    const deck = decks[Math.floor(Math.random() * decks.length)]!
+    const seed = `${fsmSession.guestId ?? ''}:${gameData.revelationRoundSalt}:vhDeck`
+    const deck = decks[hashString(seed) % decks.length]!
     fsmSession.selectedDeck = deck
     const r = tryTransition('CARD_SELECTION', { cardFlipIndex: null })
     if (r.ok) emit()
@@ -224,7 +221,8 @@ export function fsmTickVirtualHost(t: number): void {
   if (fsmSession.state === 'FORTUNE_SELECTION' && dt >= VIRTUAL_HOST_FORTUNE_MS) {
     fsmSession.virtualHostPendingAtMs = null
     const choices: FsmCardChoice[] = ['A', 'B', 'C']
-    const choice = choices[Math.floor(Math.random() * choices.length)]!
+    const seed = `${fsmSession.guestId ?? ''}:${gameData.revelationRoundSalt}:vhFortune`
+    const choice = choices[hashString(seed) % choices.length]!
     fsmSession.selectedFortune = choice
     fsmSession.hostFortunePickedAtMs = nowMs()
     fsmSession.fortuneGuestHint = 'reading'
@@ -240,7 +238,6 @@ export function guestContinueYes(): void {
   if (!p || p.userId !== fsmSession.guestId) return
   if (fsmSession.state !== 'CONTINUE_DECISION') return
 
-  // Add 30 seconds to both timers
   const TIME_EXTENSION_MS = 30000
   const now = nowMs()
   if (gameData.fortuneTellerSessionEndsAtMs !== null) {
@@ -249,6 +246,7 @@ export function guestContinueYes(): void {
   gameData.guestLastInteractionAtMs = now
 
   fsmSession.selectedCategory = null
+  fsmSession.selectedCategoryKey = null
   fsmSession.selectedDeck = null
   fsmSession.selectedCardType = null
   fsmSession.selectedFortune = null
@@ -264,22 +262,18 @@ export function guestContinueYes(): void {
   if (!r.ok) return
   const nextReading = gameData.guestReadingsUsedThisSeat + 1
   if (nextReading <= GUEST_MAX_READINGS_PER_SEAT && fsmSession.guestId !== null) {
-    const guestName =
-      fsmSession.guestName?.trim() ||
-      gameData.currentGuestName?.trim() ||
-      gameData.guestSeatUserName?.trim() ||
-      'Visitor'
-    fortuneMessageBus.emit('guest-requested-fortune', {
-      guestId: fsmSession.guestId,
-      guestName,
-      roundSalt: nowMs(),
-      sessionReadingIndex: nextReading
+    const roundSalt = nowMs()
+    patchSharedGameState({
+      revelationRoundSalt: roundSalt,
+      currentIteration: nextReading,
+      guestReadingsUsedThisSeat: nextReading,
+      fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
     })
   }
   emit()
 }
 
-/** Guest: done → RESET (release via MessageBus + bridge) */
+/** Guest: done → RESET */
 export function guestContinueNo(): void {
   if (!debounceOk(nowMs(), FSM_DEBOUNCE_MS)) return
   const p = getPlayer()
