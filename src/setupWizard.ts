@@ -3,7 +3,7 @@ import { getEntityWorldPosition } from './worldTransform'
 import { getPlayer } from '@dcl/sdk/players'
 import { movePlayerTo, triggerEmote } from '~system/RestrictedActions'
 import { gameData } from './gameState'
-import { fortuneMessageBus, playButtonClick } from './fortuneSync'
+import { playButtonClick, patchSharedGameState } from './fortuneSync'
 import {
   WIZARD,
   FORTUNE_TELLER_POSITION,
@@ -163,15 +163,16 @@ function clearFortuneTellerAndShowWizard() {
       }
     }
   }
-  fortuneMessageBus.emit('set-fortune-teller', {
-    fortuneTellerId: null,
-    fortuneTellerName: null,
+  patchSharedGameState({
+    currentFortuneTellerId: null,
+    currentFortuneTellerName: null,
     fortuneTellerSessionEndsAtMs: null,
     fortuneTellerReadingsDone: 0,
     fortuneTellerMaxReadings: 3,
     fortuneTellerReleaseAtMs: null,
     centerBannerText: gameData.centerBannerText,
-    centerBannerUntilMs: gameData.centerBannerUntilMs
+    centerBannerUntilMs: gameData.centerBannerUntilMs,
+    centerBannerVariant: 'default',
   })
 }
 
@@ -223,22 +224,16 @@ function fortuneTellerClickCallback(opts?: { fromSitSpot?: boolean }) {
   gameData.centerBannerText = `${ftName ?? 'Someone'} is becoming the Fortune Teller`
   gameData.centerBannerUntilMs = now + 2200
   gameData.centerBannerVariant = 'default'
-  fortuneMessageBus.emit('set-fortune-teller', {
-    fortuneTellerId: userId,
-    fortuneTellerName: ftName,
+  patchSharedGameState({
+    currentFortuneTellerId: userId,
+    currentFortuneTellerName: ftName,
     fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
     fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
     fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
-    fortuneTellerReleaseAtMs: null
-  })
-  fortuneMessageBus.emit('fortune-teller-session-update', {
-    fortuneTellerId: userId,
-    fortuneTellerSessionEndsAtMs: gameData.fortuneTellerSessionEndsAtMs,
-    fortuneTellerReadingsDone: gameData.fortuneTellerReadingsDone,
-    fortuneTellerMaxReadings: gameData.fortuneTellerMaxReadings,
-    fortuneTellerReleaseAtMs: gameData.fortuneTellerReleaseAtMs,
+    fortuneTellerReleaseAtMs: null,
     centerBannerText: gameData.centerBannerText,
-    centerBannerUntilMs: gameData.centerBannerUntilMs
+    centerBannerUntilMs: gameData.centerBannerUntilMs,
+    centerBannerVariant: 'default',
   })
   fortuneTellerBecameAtMs = now
   fortuneTellerJoinedViaSitSpot = fromSitSpot
@@ -447,7 +442,14 @@ export function setupWizard() {
         'Fortune Teller',
         () => {
           // Cancela lectura / FSM en curso; luego se libera el rol FT y el banner (clearFortuneTeller…).
-          fortuneMessageBus.emit('hide-fortune', {})
+          patchSharedGameState({
+            gameState: 'LIBRE',
+            currentGuestId: null,
+            currentGuestName: null,
+            guestSeatUserId: null,
+            guestSeatUserName: null,
+            sessionEndReason: 'ft_left',
+          })
           clearFortuneTellerAndShowWizard()
           displacePlayerToRandomLeaveArea()
         },

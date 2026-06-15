@@ -845,6 +845,9 @@ function GuestPanel() {
   return null
 }
 
+/** Cached local player ID — getPlayer() can return null on mobile mid-render. */
+let _localUid: string | null = null
+
 /** Capa UI del flujo FSM (Host / Guest / mundo). */
 export function FortuneFsmLayer() {
   if (!USE_FORTUNE_FSM_FLOW || !SHOW_UI_FORTUNE) return null
@@ -854,7 +857,8 @@ export function FortuneFsmLayer() {
   if (!showWorld) return null
 
   const player = getPlayer()
-  const uid = player?.userId ?? null
+  if (player?.userId) _localUid = player.userId
+  const uid = _localUid
   /** Host = adivino en sesión; doble chequeo por si hostId del snapshot y gameData desincronizan. */
   const isHost =
     !fsmSession.isVirtualHost &&
