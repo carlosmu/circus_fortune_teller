@@ -22,7 +22,7 @@ const FORTUNE_TELLER_MOVE_THRESHOLD = 0.01
  * Solo radio horizontal alrededor del Sit Spot: Fortune_Teller. Antes se usaba min(dist silla, dist mago) ≤ 2.5 m,
  * así que podías ir a la mesa y seguir siendo FT. Ahora solo cuenta la silla: al levantarte sales del radio enseguida.
  */
-const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.001
+const FORTUNE_TELLER_CHAIR_STAY_RADIUS = 0.01
 /** Fallback si Sit Spot: Fortune_Teller no existe en runtime. */
 const SIT_SPOT_FT_STATION = { x: 7.954911708831787, y: 0, z: 5.17503547668457 }
 /** Tiempo en ms antes de aplicar la regla de alejamiento (solo para dejar terminar movePlayerTo/emote). */

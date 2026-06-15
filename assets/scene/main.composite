@@ -347,12 +347,12 @@
             "position": {
               "x": 8,
               "y": 0,
-              "z": 8
+              "z": 6.75
             },
             "scale": {
-              "x": 1,
-              "y": 1,
-              "z": 1
+              "x": 1.100000023841858,
+              "y": 1.1299999952316284,
+              "z": 1.2000000476837158
             },
             "rotation": {
               "x": 0,
@@ -1553,7 +1553,7 @@
         "serializationType": "map"
       },
       "data": {
-        "1": {
+        "512": {
           "json": {
             "gizmo": 0
           }
@@ -1673,7 +1673,6 @@
               },
               {
                 "entity": 512,
-                "open": true,
                 "children": [
                   533,
                   534,
@@ -2915,19 +2914,22 @@
             "thumbnail": "assets/images/thumbnail.png",
             "categories": [],
             "author": "SDK",
+            "email": "",
             "tags": [],
             "layout": {
-              "base": {
-                "x": 0,
-                "y": 0
-              },
               "parcels": [
                 {
                   "x": 0,
                   "y": 0
                 }
-              ]
+              ],
+              "base": {
+                "x": 0,
+                "y": 0
+              }
             },
+            "silenceVoiceChat": false,
+            "disablePortableExperiences": false,
             "spawnPoints": [
               {
                 "name": "spawn1",
@@ -2941,8 +2943,11 @@
                     ]
                   },
                   "y": {
-                    "$case": "single",
-                    "value": 0
+                    "$case": "range",
+                    "value": [
+                      0,
+                      0
+                    ]
                   },
                   "z": {
                     "$case": "range",
@@ -2959,7 +2964,9 @@
                 }
               }
             ],
-            "skyboxConfig": {}
+            "skyboxConfig": {},
+            "creator": "",
+            "disableNearbyVoiceChat": false
           }
         }
       }
